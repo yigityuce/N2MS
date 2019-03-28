@@ -57,6 +57,7 @@ Notes to myself about technology stack.
 ### Java
 ### Python
 ### Bash
+[Goto Link](Languages%20&%20Frameworks/Bash/README.md)
 ### CSS
 #### SCSS
 #### Bootstrap
