@@ -1,94 +1,45 @@
-- [N2MS - Notes to Myself](#n2ms---notes-to-myself)
-  - [Languages & Frameworks](#languages--frameworks)
-    - [C++](#c)
-      - [Libraries & Frameworks](#libraries--frameworks)
-        - [STL](#stl)
-        - [QT](#qt)
-    - [Javascript](#javascript)
-      - [VanillaJS](#vanillajs)
-      - [NodeJS](#nodejs)
-      - [Libraries & Frameworks](#libraries--frameworks-1)
-        - [Vue.js](#vuejs)
-        - [React](#react)
-    - [Java](#java)
-    - [Python](#python)
-    - [Bash](#bash)
-    - [CSS](#css)
-      - [SCSS](#scss)
-      - [Bootstrap](#bootstrap)
-  - [Programming Concepts](#programming-concepts)
-    - [Version Controlling](#version-controlling)
-      - [Git](#git)
-    - [Parallel Programming](#parallel-programming)
-      - [Thread](#thread)
-      - [Mutex](#mutex)
-      - [Semaphore](#semaphore)
-    - [Design Patterns](#design-patterns)
-  - [Communication Protocols](#communication-protocols)
-    - [MQTT](#mqtt)
-    - [Websocket](#websocket)
-    - [Raw Socket](#raw-socket)
-  - [Database Systems](#database-systems)
-    - [MySQL](#mysql)
-    - [MongoDB](#mongodb)
-  - [Operating Systems](#operating-systems)
-    - [Linux Commands](#linux-commands)
-    - [RTOS](#rtos)
-  - [Hardwares](#hardwares)
-    - [Raspberry Pi](#raspberry-pi)
-    - [ESP8266](#esp8266)
 
 # N2MS - Notes to Myself
 
 Notes to myself about technology stack.
 
 ---
-## Languages & Frameworks
-### C++
-#### Libraries & Frameworks
-##### STL
-##### QT
-### Javascript
-#### VanillaJS
-#### NodeJS
-#### Libraries & Frameworks
-##### Vue.js
-##### React
-### Java
-### Python
-### Bash
-[Goto Link](Languages%20&%20Frameworks/Bash/README.md)
-### CSS
-#### SCSS
-#### Bootstrap
 
----
-## Programming Concepts
-### Version Controlling
-#### Git
-### Parallel Programming
-#### Thread
-#### Mutex
-#### Semaphore
-### Design Patterns
-
----
-## Communication Protocols
-### MQTT
-### Websocket
-### Raw Socket
-
----
-## Database Systems
-### MySQL
-### MongoDB
-
---- 
-## Operating Systems
-### Linux Commands
-### RTOS
-
----
-## Hardwares
-### Raspberry Pi
-### ESP8266
+* [Languages & Frameworks](Languages%20&%20Frameworks)
+  * [C++](Languages%20&%20Frameworks/C++/README.md)
+    * [Libraries & Frameworks](Languages%20&%20Frameworks/C++/Languages%20&%20Frameworks)
+      * [STL](Languages%20&%20Frameworks/C++/Languages%20&%20Frameworks/STL/README.md)
+      * [QT](Languages%20&%20Frameworks/C++/Languages%20&%20Frameworks/QT/README.md)
+  * [Javascript](Languages%20&%20Frameworks/Javascript/README.md)
+    * [VanillaJS](Languages%20&%20Frameworks/Javascript/VanillaJS/README.md)
+    * [NodeJS](Languages%20&%20Frameworks/Javascript/NodeJS/README.md)
+    * [Libraries & Frameworks](Languages%20&%20Frameworks/Javascript/Languages%20&%20Frameworks)
+      * [Vue.js](Languages%20&%20Frameworks/Javascript/Languages%20&%20Frameworks/Vue.js/README.md)
+      * [React](Languages%20&%20Frameworks/Javascript/Languages%20&%20Frameworks/React/README.md)
+  * [Java](Languages%20&%20Frameworks/Java/README.md)
+  * [Python](Languages%20&%20Frameworks/Python/README.md)
+  * [Bash](Languages%20&%20Frameworks/Bash/README.md)
+  * [CSS](Languages%20&%20Frameworks/CSS/README.md)
+    * [SCSS](Languages%20&%20Frameworks/CSS/SCSS/README.md)
+    * [Bootstrap](Languages%20&%20Frameworks/CSS/Bootstrap/README.md)
+* [Programming Concepts](Programming%20Concepts)
+  * [Version Controlling](Programming%20Concepts/Version%Controlling)
+    * [Git](Programming%20Concepts/Version%Controlling/Git/README.md)
+  * [Parallel Programming](Programming%20Concepts/Parallel%Programming)
+    * [Thread](Programming%20Concepts/Parallel%20Programming/Thread/README.md)
+    * [Mutex](Programming%20Concepts/Parallel%20Programming/Mutex/README.md)
+    * [Semaphore](Programming%20Concepts/Parallel%20Programming/Semaphore/README.md)
+  * [Design Patterns](Programming%20Concepts/Design%20Patterns)
+* [Communication Protocols](Communication%20Protocols)
+  * [MQTT](Communication%20Protocols/MQTT/README.md)
+  * [Websocket](Communication%20Protocols/Websocket/README.md)
+  * [Raw Socket](Communication%20Protocols/Raw%20Socket/README.md)
+* [Database Systems](Database%20Systems)
+  * [MySQL](Database%20Systems/MySQL/README.md)
+  * [MongoDB](Database%20Systems/MongoDB/README.md)
+* [Operating Systems](Operating%20Systems)
+  * [Linux Commands](Operating%20Systems/Linux%20Commands/README.md)
+  * [RTOS](Operating%20Systems/RTOS/README.md)
+* [Hardwares](Hardwares)
+  * [Raspberry Pi](Hardwares/Raspberry%20Pi/README.md)
+  * [ESP8266](Hardwares/ESP8266/README.md)
