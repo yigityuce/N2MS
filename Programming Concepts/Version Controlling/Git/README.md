@@ -38,6 +38,9 @@
   - [Feature Branch Workflow](#feature-branch-workflow)
   - [Gitflow Workflow](#gitflow-workflow)
   - [Forking Workflow](#forking-workflow)
+  - [Recommandations](#recommandations)
+    - [Short-lived branches](#short-lived-branches)
+    - [Minimize and simplify reverts](#minimize-and-simplify-reverts)
 - [OTHERS](#others)
   - [Config](#config)
   - [Gitignore](#gitignore)
@@ -577,13 +580,125 @@ git merge <branch>
 ![3-Way Merge](./git-3way-merge.svg)
 
 
+
+---
 # WORKFLOWS
+* These workflows are designed to be guidelines rather than concrete rules.
+* Some things to consider when evaluating a Git workflow are:
+  * Does this workflow scale with team size?
+  * Is it easy to undo mistakes and errors with this workflow?
+  * Does this workflow impose any new unnecessary cognitive overhead to the team?
+
+
 ## Centralized Workflow
+
+![Centralized Workflow](./centralized-workflow.svg)
+
+* Similar to SVN.
+* Uses a central repository to serve as the single point-of-entry for all changes to the project.
+* All changes are committed into master.
+* Does not require any other branch.
+* Compared to other workflows, the Centralized Workflow has no defined pull request or forking patterns.
+* Flow:
+  * Clone
+  * Edit
+  * Commit
+  * Push
+  * In any conflict:
+    *  Fetch
+    *  Rebase
+    *  Push
+
+
 ## Feature Branch Workflow
+* Feature Branching is a logical extension of Centralized Workflow.
+* All feature development should be done at seperate branch instead of master.
+* This makes it easy to developer to develop own features without distrubute the main codebase.
+* It also guarantees the main codebase never includes broken code.
+* It also makes it possible to do pull requests.
+  * Pull requests make it easy for your team to comment on each other’s work.
+* Flow:
+  * Pull (fetch + rebase --hard master) (fetch + merge)
+  * Create branch
+  * Checkout newly created branch
+  * Edit
+  * Commit
+  * Push
+  * Open pull request
+    * can add reviewers
+  * Resolve comments about pull request.
+  * If everything is ok then merge to master.
+
 ## Gitflow Workflow
+* It doesn't add any new concept to Feature Branch Workflow.
+* It defines strictly which, when and how branches will be used for.
+* [Git flow extension](https://github.com/nvie/gitflow) can be used.
+
+
+![Gitflow Workflow](./gitflow-workflow.svg)
+
+* Instead of a single master branch, it uses two branches to record the history.
+* The master branch stores the **official release** history.
+* The *develop* branch serves as an **integration** branch for features.
+* Tag all commits in the master branch with a version number.
+
+
+![Gitflow Workflow Feature](./gitflow-workflow-feature.svg)
+
+* Use feature branch for new feature.
+  * This feature branch should use *develop* branch as parent.
+  * After feature completed, this should be merged to *develop* branch. 
+
+
+![Gitflow Workflow Release](./gitflow-workflow-release.svg)
+
+* When the features are ready to new version,
+* Fork *release* branch from *develop* branch.
+* This starts new release cycle.
+* At this point no new features can be added.
+* Only release-related things can be done in this branch like:
+  * Bugfix
+  * Documentation
+  * etc.
+* When it is ready to go
+  * Get merged into master branch.
+  * Get tagged with version number. 
+  * Should be merged back into *develop* branch
+
+
 ## Forking Workflow
+* Instead of using a single server-side repository to act as the “central” codebase, it gives every developer their own server-side repository.
+  * Each developer has a server-side repository that forked from original repo
+  * And local copy of that.
+* This allows the maintainer to accept commits from any developer without giving them write access to the official codebase.
+* This also makes it an ideal workflow for **open source** projects.
+* Flow:
+  * A developer 'forks' an 'official' server-side repository. This creates their own server-side copy.
+  * The new server-side copy is cloned to their local system.
+  * A Git remote path for the 'official' repository is added to the local clone.
+  * A new local feature branch is created.
+  * The developer makes changes on the new branch.
+  * New commits are created for the changes.
+  * The branch gets pushed to the developer's own server-side copy.
+  * The developer opens a pull request from the new branch to the 'official' repository.
+  * The pull request gets approved for merge and is merged into the original server-side repository
 
 
+
+## Recommandations
+### Short-lived branches
+* The longer separate branch from the master causes the higher risk for merge conflicts and deployment challenges. 
+* Short-lived branches promote cleaner merges and deploys.
+
+### Minimize and simplify reverts
+* Define a workflow that helps to prevent committing the broken code and then will have to be reverted.
+  * This causes to merge revert commit.
+* For example define a rule that the development branch has to pass the tests before merging into master branch.
+* Define a workflow that allows easy reverts that will not disrupt the flow for other team members.
+
+
+
+---
 # OTHERS
 ## Config
 ## Gitignore
