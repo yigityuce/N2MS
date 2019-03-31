@@ -71,6 +71,7 @@ ReactDOM.render(
 
 ## Props
 * Components must never modify its own props.
+* super() method should always be called with props argument at class constructor.
 * Props will be set in the class with <pre>this.props</pre>
 
 ## States
@@ -163,4 +164,127 @@ class Clock extends React.Component {
 }
 
 ReactDOM.render(<Clock />, document.getElementById('root'));
+```
+
+
+
+## Event Handling
+* Event names are camelCase.
+* Must be binded this to handler.
+
+```jsx
+class Button extends Raect.Component {
+    constructor (props) {
+        super (props);
+        this.buttonClicked = this.buttonClicked.bind(this);
+    }
+
+    buttonClicked (ev) {
+        console.log(`${this.props.text} button clicked`);
+    }
+
+    render () {
+        return (
+            <button onClick={buttonClicked}>
+                {this.props.text}
+            </button>
+        );
+    }
+}
+
+ReactDOM.render(<Button text="Login"/>, document.getElementById('root'));
+```
+
+
+
+## Conditional Rendering
+* Conditional rendering is handled at render function with plain javascript if else statements.
+* Can be done with inline if statement.
+* Component can be hidden with returning null at render function.
+
+```jsx
+function UserGreeting(props) { return <h1>Welcome back!</h1>; }
+function GuestGreeting(props) { return <h1>Please sign up.</h1>; }
+function Greeting(props) {
+    return props.isLoggedIn ? <UserGreeting /> : <GuestGreeting />;
+}
+
+function LoginButton(props) { return <button onClick={props.onClick}>Login</button>; }
+function LogoutButton(props) { return <button onClick={props.onClick}>Logout</button>; }
+
+class LoginControl extends React.Component {
+    constructor (props) {
+        super(props);
+        this.handleLoginClick = this.handleLoginClick.bind(this);
+        this.handleLogoutClick = this.handleLogoutClick.bind(this);
+        this.state = { isLoggedIn:false };
+    }
+
+    handleLoginClick() { this.setState({isLoggedIn: true}); }
+    handleLogoutClick() { this.setState({isLoggedIn: false}); }
+    
+    render () {
+        const isLoggedIn = this.state.isLoggedIn;
+        let button;
+
+        if (isLoggedIn) {
+            button = <LogoutButton onClick={this.handleLogoutClick} />;
+        } 
+        else {
+            button = <LoginButton onClick={this.handleLoginClick} />;
+        }
+
+        return (
+            <div>
+                <Greeting isLoggedIn={isLoggedIn} />
+                {button}
+            </div>
+        );
+    }
+}
+
+ReactDOM.render(<LoginControl />, document.getElementById('root'));
+```
+
+
+
+## List Rendering
+* It is handled by plain javascript (like array.map, for loop etc.) inside the render function.
+* Key attribute have to be set for each element.
+
+```jsx
+class List extends React.Component {
+    constructor (props) {
+        super(props);
+    }
+
+    render () {
+        return (
+            <ul>
+            {
+                (this.props.elements || []).map((el, i) => {
+                    return (
+                        <li id={el.id} key={`item_${i}`}>
+                            {el.text}
+                        </li>
+                    )
+                });
+            }
+            </ul>
+        );
+    }
+}
+
+let elements = [
+    {
+        id: 'el-1'
+        text: 'First Element'
+    },
+    {
+        id: 'el-2'
+        text: 'Second Element'
+    },
+];
+
+ReactDOM.render(<List elements={elements}/>, document.getElementById('root'));
 ```
