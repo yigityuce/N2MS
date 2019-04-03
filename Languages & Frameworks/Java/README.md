@@ -139,7 +139,7 @@ for (int i = 0; i < varName.length; i++0) {
 * Access Table:
 
 
-- | default | private | protected | public
+. | default | private | protected | public
 --- | --- | --- | --- | --- |
 Same Pkg | Yes | No | Yes | Yes
 Different Pkg & Subclass | No | No | Yes | Yes
