@@ -34,6 +34,7 @@ Notes to myself about technology stack.
     * Mutex
     * Semaphore
   * Design Patterns
+    * MVC (Model-View-Controller)
   * DevOps
     * CI/CD
   * Containerization
