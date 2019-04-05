@@ -1,3 +1,4 @@
+- [Typescript](#typescript)
 - [Type Annotations](#type-annotations)
   - [string](#string)
   - [number](#number)
@@ -15,11 +16,17 @@
   - [Readonly Properties](#readonly-properties)
   - [Excess Property Checks](#excess-property-checks)
   - [Function Types](#function-types)
+  - [Hybrid Types](#hybrid-types)
   - [Indexable Types](#indexable-types)
+  - [Implementing an Interface](#implementing-an-interface)
+  - [Extending Interfaces](#extending-interfaces)
 - [Classes](#classes)
+  - [Inheritance](#inheritance)
+  - [Access Modifiers](#access-modifiers)
+  - [Readonly Modifier](#readonly-modifier)
 
 
-
+# Typescript
 * File extension is **.ts**
 * Plain javascript code can be used in ts file.
 * Compile with:
@@ -212,18 +219,15 @@ function print (usr:User): void {
 interface User {
     readonly id: number,
     username: string,
-    from?: string
 }
 
 function print (usr:User): void {
     usr.id = 5; // error
-    let str = `${usr.id}: ${usr.username}`;
-    if (usr.from) str += ` from ${usr.from}`;
-    console.log(str);
+    console.log(`${usr.id}: ${usr.username}`);
 }
 
 let usr: User = {
-    id:1,
+    id: 1,
     username: 'yigityuce'
 };
 
@@ -248,7 +252,7 @@ interface User {
     username: string,
     from?: string,
 
-    // adding string index signature    
+    // adding string index signature
     [propName: string]: any
 }
 ```
@@ -266,9 +270,120 @@ let mySearch: SearchFunc = function (src: string, substr:string) :boolean {
 }
 ```
 
-## Indexable Types
-* TODO: write something...
+## Hybrid Types
+* interfaces can be hybrid type like below.
 
+```ts
+interface Value {
+    _value: any;
+    (v: any): any;
+    toString(): string;
+    type(): string;
+}
+
+function create (): Value {
+    let value: Value = <Value> function (v:any) {};
+    value._value = null;
+    value.toString = function () {}
+    value.type = function () {}
+    return value;
+}
+
+let val: Value = create();
+val(10);
+val.toString();
+val.type();
+val._value;
+
+```
+
+
+
+
+## Indexable Types
+* The types that have *index signatures*.
+* Supported index signature types:
+  * number
+  * string
+* return type of number index signature must be subtype of the return type of string index signature
+
+```ts
+interface StringArray {
+    [index: number]: string; // number index signature
+}
+
+let myArray: StringArray = ["Bob", "Fred"];
+```
+
+```ts
+class Animal {
+    name: string;
+}
+class Dog extends Animal {
+    breed: string;
+}
+
+// Error: number index return type is not subtype of string index return type
+interface NotOkay {
+    [index: number]: Animal;
+    [index: string]: Dog;
+}
+```
+
+* index can be readonly
+
+```ts
+interface ReadonlyStringArray {
+    readonly [index: number]: string;
+}
+let myArray: ReadonlyStringArray = ['Yigit', 'Yuce'];
+myArray[1] = 'yigityuce'; // error!
+```
+
+## Implementing an Interface
+* used with **implements** keyword
+* Interfaces just describe public properties of class.
+* Interfaces could not describe static properties.
+  * constructor method is a static function
+
+```ts
+interface ClockInterface {
+    currentTime: Date;
+    setTime (d: Date): void;
+}
+
+class Clock implements ClockInterface {
+    currentTime: Date = new Date();
+    setTime (d: Date) {
+        this.currentTime = d;
+    }
+    constructor (h: number, m: number) {}
+}
+```
+
+## Extending Interfaces
+* used with **extends** keyword
+* An interface can extend multiple interfaces.
+
+```ts
+interface Size {
+    size: string
+}
+
+interface Color {
+    color: string
+}
+
+interface Border extends Size, Color {
+    type: string
+}
+
+let border: Border = <Border>{
+    size: '1px',
+    type: 'solid',
+    color: 'rgba(0, 0, 0, 0.5)'
+}
+```
 
 
 
@@ -284,5 +399,42 @@ class User {
         this.username = username;
     }
 
+    print (): void {
+        console.log(`${this.id}: ${this.username}`);
+    }
 }
 ```
+
+## Inheritance
+* can be done with **extends** keyword.
+* derived class constructor must call its base class constructor by calling **super()** method before use any *this* referenece.
+
+```ts
+class Animal {
+    name: string;
+    constructor (name: string) { this.name = name; }
+}
+
+class Rhino extends Animal {
+    constructor () { super('Rhino'); }
+}
+
+let r1: Rhino = new Rhino();
+let r2: Animal = new Rhino();
+
+```
+
+
+## Access Modifiers
+* can be public, private, protected.
+* If not specified its accesibilty is public.
+* Private properties can not be accessed from outside of the class.
+* Protected properties can be accessed from inside of the class or inside of the derived class.
+* Class constructor can be protected.
+  * In this method base class cannot be instantiated from outside of the derived class.
+
+## Readonly Modifier
+* Class properties can be marked as readonly.
+* Readonly properties must be set:
+  * when defining property
+  * or at the constructor.
