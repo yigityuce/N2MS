@@ -16,9 +16,10 @@ Notes to myself about technology stack.
     * Libraries & Frameworks
       * Vue.js
       * React
-      * Pug.js
+      * [Pug.js](Languages%20&%20Frameworks/Javascript/Libraries%20&%20Frameworks/Pug.js/README.md)
       * Electron
       * JWT (JSON Web Token)
+  * Typescript
   * [Java](Languages%20&%20Frameworks/Java/README.md)
   * Python
   * Bash
@@ -59,3 +60,16 @@ Notes to myself about technology stack.
 * Hardwares
   * Raspberry Pi
   * ESP8266
+* Configs & Setups
+  * Webpack
+    * Loaders
+      * Html
+      * js
+      * Vue
+      * ts
+      * scss
+    * Debug
+  * Linter
+    * ESLint
+    * StyleLint
+  
