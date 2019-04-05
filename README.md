@@ -19,7 +19,7 @@ Notes to myself about technology stack.
       * [Pug.js](Languages%20&%20Frameworks/Javascript/Libraries%20&%20Frameworks/Pug.js/README.md)
       * Electron
       * JWT (JSON Web Token)
-  * Typescript
+  * [Typescript](Languages%20&%20Frameworks/Typescript/README.md)
   * [Java](Languages%20&%20Frameworks/Java/README.md)
   * Python
   * Bash
