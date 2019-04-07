@@ -1,5 +1,5 @@
 - [Typescript](#typescript)
-- [Type Annotations](#type-annotations)
+- [Types](#types)
   - [string](#string)
   - [number](#number)
   - [array](#array)
@@ -10,7 +10,14 @@
   - [undefined & null](#undefined--null)
   - [never](#never)
   - [object](#object)
+  - [function](#function)
 - [Type Assertion (Type Casting)](#type-assertion-type-casting)
+- [Functions](#functions)
+  - [Function Type](#function-type)
+  - [Optional Parameters](#optional-parameters)
+  - [Default Parameters](#default-parameters)
+  - [Rest Parameters (spread)](#rest-parameters-spread)
+  - [Overloading](#overloading)
 - [Interfaces](#interfaces)
   - [Optional Properties](#optional-properties)
   - [Readonly Properties](#readonly-properties)
@@ -24,6 +31,16 @@
   - [Inheritance](#inheritance)
   - [Access Modifiers](#access-modifiers)
   - [Readonly Modifier](#readonly-modifier)
+  - [Parameter Properties](#parameter-properties)
+  - [Getter & Setter](#getter--setter)
+  - [Static Properties](#static-properties)
+  - [Abstract](#abstract)
+- [Generics](#generics)
+  - [Generic Types](#generic-types)
+    - [Generic Function Type](#generic-function-type)
+    - [Generic Interface](#generic-interface)
+    - [Generic Class](#generic-class)
+    - [Generic Constraint](#generic-constraint)
 
 
 # Typescript
@@ -35,8 +52,11 @@
 tsc filename.ts
 ```
 
+* Links:
+  * [Playground](https://www.typescriptlang.org/play/index.html)
+
   
-# Type Annotations
+# Types
 ## string
 * single quoto
 * double quoto
@@ -135,6 +155,23 @@ let myObj: object = {
 };
 ```
 
+## function
+* return type must be always defined even if it is **void**
+
+```ts
+let cb: (value: string, index: number) => boolean;
+
+cb = function (v: string, i: number): boolean {
+    return (v.length > 0);
+}
+
+let strArr: string[] = ['Yigit', '', 'Yuce', ''];
+console.log('Before filter:', strArr.length); // prints 4
+
+strArr = strArr.filter(cb);
+console.log('After filter:', strArr.length); // prints 2
+```
+
 
 
 # Type Assertion (Type Casting)
@@ -147,6 +184,84 @@ let myvar: any = 'this is a string';
 let len: number = (<string>myvar).length;
 let len2: number = (myvar as string).length;
 ```
+
+
+
+# Functions
+* The number of arguments given to a function has to match the number of parameters the function expects, unless the parameter is optional.
+
+```ts
+// named function
+function add (x: number, y: number): number {
+    return x + y;
+}
+
+// anonymous function
+let add = function (x: number, y: number): number { return x + y; };
+```
+
+## Function Type
+* See: [function](#function)
+
+## Optional Parameters
+* Parameters can be optional.
+* This can be done with question mark(?).
+* Required parameters must be placed before the optional parameters within parameter list.
+
+```ts
+function buildName (firstName: string, lastName?: string) {
+    return ${firstname} + (lastname ? `${lastname}` : ``);
+}
+
+buildName('Yigit'); // OK
+buildName('Yigit', 'Yuce'); // OK
+buildName('Mr.', 'Yigit', 'Yuce'); // ERROR
+```
+
+## Default Parameters
+* Same as plain javascript.
+
+```ts
+function buildName (firstName: string, lastName = 'SURNAME') {
+    return `${firstname} ${lastname}`;
+}
+
+buildName('Yigit'); // OK, prints: 'Yigit SURNAME'
+buildName('Yigit', 'Yuce'); // OK, prints: 'Yigit Yuce'
+buildName('Mr.', 'Yigit', 'Yuce'); // ERROR
+```
+
+## Rest Parameters (spread)
+```ts
+function buildRPC (methodName: string, ...params: any[]) {
+    return `${methodName}(${params.join(', ')})`;
+}
+
+let addRPC: string = buildRPC ('add', 1, 2, 3);
+// prints: add(1, 2, 3)
+```
+
+## Overloading
+* If the function has a different return type according to parameter type you can handle this with function overloading.
+* If function call is not matched with any of the overloaded function definitions, this will cause an error.
+
+```ts
+let arr: string[] = ['yigit', 'yuce', 'software', 'developer'];
+function pick (item: string): number;
+function pick (item: number): string;
+function pick (item: any): any {
+    if (typeof item === 'string') {
+        return arr.findIndex((el) => (el === item));
+    }
+    else if (typeof item === 'number') {
+        return (arr.length > item) ? '' : arr[item];
+    }
+}
+
+pick(1);
+pick('yuce');
+```
+
 
 
 # Interfaces
@@ -433,8 +548,229 @@ let r2: Animal = new Rhino();
 * Class constructor can be protected.
   * In this method base class cannot be instantiated from outside of the derived class.
 
+```ts
+class Person {
+    protected name: string;
+    protected constructor (theName: string) { this.name = theName; }
+}
+
+class Employee extends Person {
+    private department: string;
+
+    constructor (name: string, department: string) {
+        super(name);
+        this.department = department;
+    }
+
+    public print () {
+        return `My name is ${this.name} and I work in ${this.department}.`;
+    }
+}
+
+let yigitE = new Employee('Yigit', 'R&D');
+let yigitP = new Person('Yigit'); // Error: The 'Person' constructor is protected
+```
+
+
 ## Readonly Modifier
 * Class properties can be marked as readonly.
 * Readonly properties must be set:
   * when defining property
   * or at the constructor.
+
+```ts
+class Dog {
+    readonly name: string;
+    readonly numberOfLegs: number = 4;
+    constructor (theName: string) {
+        this.name = theName;
+    }
+}
+let bambam = new Dog('Bambam');
+bambam.name = 'Bambam Jr.'; // error! name is readonly.
+```
+
+## Parameter Properties
+* Used to initialize class variable at constructor's parameter definition stage.
+* If constructor parameter is defined with access and/or readonly modifier, the class variable will be declared and initialized with the variable name and value.
+* Previous example can be written like below:
+
+```ts
+class Dog {
+    readonly numberOfLegs: number = 4;
+    constructor (public readonly name: string) {}
+}
+let bambam = new Dog('Bambam');
+bambam.name = 'Bambam Jr.'; // error! name is readonly.
+```
+
+## Getter & Setter
+* No additional specificaton to Javascript ES6 getter & setter syntax.
+* See also: 
+  * [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get)
+  * [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set)
+
+## Static Properties
+* Javascript ES6 specification does not have a static variable declaration.
+* It only has how to define static methods.
+* Typescript allows to define variable with static keyword.
+
+## Abstract
+* Abstract classes can be a base class only.
+* Abstract classes can not be instantiated directly.
+* Abstract classes can have:
+  *  methods that have a function body or
+  *  abstract methods
+* Abstract methods have to be implemented in derived class.
+* Access modifiers have to be written before abstact keyword at method definition.
+
+```ts 
+abstract class Person {
+    constructor (protected name: string) {}
+    public printName (): string {
+        return `My name is ${this.name}`;
+    }
+    public abstract print (): string;
+}
+
+class Employee extends Person {
+    constructor (name: string, private department: string) {
+        super(name);
+    }
+
+    public printDepartment (): string {
+        return `I work in ${this.department}`;
+    }
+
+    public print () {
+        return `${this.printName()} and ${this.printDepartment()}.`;
+    }
+}
+
+let emp1:Employee = new Employee('Yigit', 'R&D'); // OK
+let emp2:Person = new Employee('Yigit', 'R&D'); // OK
+let emp3 = new Person('Yigit'); // Error: The 'Person' is abstract
+
+
+emp1.print(); // OK
+emp1.printName(); // OK
+emp1.printDepartment(); // OK
+
+emp2.print(); // OK
+emp2.printName(); // OK
+emp2.printDepartment(); // Error: Property 'printDepartment' does not exist on type 'Person'.
+
+```
+
+
+# Generics
+* It is like the template functions at C++;
+
+```ts
+function add<T> (first: T, second: T): T {
+    return first + second;
+}
+
+// explicitly define type
+add<string>('yigit', 'yuce');
+
+// compiler detects type
+add(1, 2);
+```
+
+## Generic Types
+
+### Generic Function Type
+```ts
+function add<T> (first: T, second: T): T {
+    return first + second;
+}
+
+let addFn: <U>(first:U, second:U) => U = add;
+
+addFn('yigit', 'yuce');
+addFn(1, 2);
+```
+
+### Generic Interface
+```ts
+function add<T> (first: T, second: T): T {
+    return first + second;
+}
+
+// applied to all interface
+interface addFnInterface<T> {
+    (first: T, second: T): T;
+}
+
+let addFnStr: addFnInterface<string> = add;
+let addFnNumber: addFnInterface<number> = add;
+
+addFnStr('yigit', 'yuce');
+addFnNumber(1, 2);
+```
+
+```ts
+function add<T> (first: T, second: T): T {
+    return first + second;
+}
+
+interface addFnInterface {
+    // just applied to function
+    <T>(first: T, second: T): T;
+}
+
+let addFn: addFnInterface = add;
+
+addFn('yigit', 'yuce');
+addFn(1, 2);
+```
+
+
+
+### Generic Class
+* Type can not be used for static properties.
+
+```ts
+class GenericAccumulate<T> {
+    result: T;
+    add: (value:T) => T;
+}
+
+let obj: GenericAccumulate<number> = new GenericAccumulate<number>();
+obj.result = 0;
+obj.add =  function <T>(value: T) {
+    return this.result += value;
+};
+obj.add(1);
+obj.add(2);
+obj.add(3);
+```
+
+### Generic Constraint
+* If the known property of the generic parameter will be used, it can be done with special type that extend the interface.
+* Otherwise this will be compiler error.
+
+```ts
+interface Lengthwise {
+    length: number;
+}
+
+function sizeof<T extends Lengthwise> (element: T) {
+    return element.length; 
+}
+
+sizeof('Yigit Yuce'); // OK
+sizeof(41); // Error, number doesn't have a .length property
+```
+
+
+
+
+
+
+
+
+
+
+
