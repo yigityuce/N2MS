@@ -47,6 +47,9 @@
   - [Union Enums](#union-enums)
   - [Reverse Mapping](#reverse-mapping)
   - [Const Enums](#const-enums)
+- [Advanced Types](#advanced-types)
+  - [Intersection Types](#intersection-types)
+  - [Union Types](#union-types)
 
 
 # Typescript
@@ -873,3 +876,88 @@ console.log(Color[Color.GREEN]); // prints 'GREEN'
 * For performance improvement.
 * Removed after compilation. They will become inline.
 
+
+
+# Advanced Types
+
+## Intersection Types
+* Combines multiple types into one.
+* Mostly used for mixins.
+
+
+```ts
+class Person {
+    constructor (public name: string) {}
+}
+
+interface Loggable {
+    log (msg: string): void;
+}
+
+class PersonLogger implements Loggable {
+    log (msg: string): void {
+        console.log(`My name is ${msg}`);
+    }
+}
+
+function <First, Second>extend (f: First, s: Second): First & Second {
+    let result: Partial<First & Second> = {};
+
+    for (const prop in first) {
+        if (first.hasOwnProperty(prop)) {
+            (<First>result)[prop] = first[prop];
+        }
+    }
+    for (const prop in second) {
+        if (second.hasOwnProperty(prop)) {
+            (<Second>result)[prop] = second[prop];
+        }
+    }
+    return <First & Second>result;
+}
+
+const yigit = extend(new Person('Yigit'), PersonLogger.prototype);
+yigit.log(yigit.name);
+```
+
+
+## Union Types
+* A union type describes a value that can be one of several types.
+* Vertical bar (|) to separate each type.
+
+```ts
+function bool (x: string | number | boolean): boolean {
+    if (typeof x === 'string') {
+        return (x.toLowerCase() === 'true');
+    }
+    else if (typeof x === 'number') {
+        return (x !== 0);
+    }
+    else if (typeof x === 'boolean') {
+        return x;
+    }
+    throw new Error(`Unknown.`);
+}
+```
+
+* Only the common properties at the union types can be accessible.
+```ts
+class Person {
+    go (): void {}
+    think (): void {}
+}
+
+class Vehicle {
+    go (): void {}
+    park (): void {}
+}
+
+function getRandomItem (): Person | Vehicle {
+    // do something
+}
+
+let item = getRandomItem();
+item.go(); // OK
+item.think(); // Error
+
+```
