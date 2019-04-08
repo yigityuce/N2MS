@@ -41,6 +41,12 @@
     - [Generic Interface](#generic-interface)
     - [Generic Class](#generic-class)
     - [Generic Constraint](#generic-constraint)
+- [Enum](#enum)
+  - [Computed and Constant Members](#computed-and-constant-members)
+  - [Enum Member Types](#enum-member-types)
+  - [Union Enums](#union-enums)
+  - [Reverse Mapping](#reverse-mapping)
+  - [Const Enums](#const-enums)
 
 
 # Typescript
@@ -766,11 +772,104 @@ sizeof(41); // Error, number doesn't have a .length property
 
 
 
+# Enum
+* Can be 
+  * numeric
+  * string
 
+```ts
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
 
+enum TimeRef {
+    Before = 1,
+    After
+}
 
+enum UIFramework {
+    Vue = 'Vue',
+    React = 'React',
+    Angular = 'Angular'
+}
+```
 
+## Computed and Constant Members
+* Enum member will be constant when the enum expression can be fully evaulated at compile time.
+* Enum member is considered as constant if:
+  * no initialized first member
+  * a literal enum expr (string or number literal)
+  * reference to previously defined constant enum
+  * unary operation applied constant enum expr
+    * +, -, ~
+  * binary operation applied constant enum expr
+    * +, -, *, /, %, <<, >>, >>>, &, |, ^
 
+```ts
+enum FileAccess {
+    // constant members
+    None,
+    Read = 1 << 1,
+    Write = 1 << 2,
+    ReadWrite = Read | Write,
+    // computed member
+    G = '123'.length
+}
+```
 
+## Enum Member Types
+* When all enum members have constant literal enum values, enum members also become types.
 
+```ts
+enum ShapeKind {
+    Circle,
+    Square,
+}
+
+interface Circle {
+    kind: ShapeKind.Circle;
+    radius: number;
+}
+
+interface Square {
+    kind: ShapeKind.Square;
+    sideLength: number;
+}
+
+let c: Circle = {
+    kind: ShapeKind.Square, //    Error!
+    radius: 100,
+}
+```
+
+## Union Enums
+* When all enum members have constant literal enum values, enum also become union.
+* This means the enum type variable can only be one of the enum members.
+
+```ts
+enum Color { RED, GREEN, BLUE }
+
+function paint (c: Color) {
+    if ((c === Color.RED) || (c === Color.GREEN)) {
+        // error, c can only be one type
+    }
+}
+```
+
+## Reverse Mapping
+* Only applicable to number enum members.
+
+```ts
+enum Color { RED, GREEN, BLUE }
+
+console.log(Color.GREEN); // prints 1
+console.log(Color[Color.GREEN]); // prints 'GREEN'
+```
+
+## Const Enums
+* For performance improvement.
+* Removed after compilation. They will become inline.
 
