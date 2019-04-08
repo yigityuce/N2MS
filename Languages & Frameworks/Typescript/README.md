@@ -50,9 +50,20 @@
 - [Advanced Types](#advanced-types)
   - [Intersection Types](#intersection-types)
   - [Union Types](#union-types)
+    - [Discriminated Unions](#discriminated-unions)
+    - [Type Guards](#type-guards)
+      - [Type Assertion Guard](#type-assertion-guard)
+      - [**typeof** Guards](#typeof-guards)
+      - [**instance** Guards](#instance-guards)
+  - [Nullable Types](#nullable-types)
+  - [Type Alias](#type-alias)
+  - [Literal Types](#literal-types)
+    - [String Literal Types](#string-literal-types)
+    - [Numeric Literal Types](#numeric-literal-types)
 
 
 # Typescript
+* Notes for v3.4
 * File extension is **.ts**
 * Plain javascript code can be used in ts file.
 * Compile with:
@@ -942,7 +953,7 @@ function bool (x: string | number | boolean): boolean {
 
 * Only the common properties at the union types can be accessible.
 ```ts
-class Person {
+class Human {
     go (): void {}
     think (): void {}
 }
@@ -952,12 +963,182 @@ class Vehicle {
     park (): void {}
 }
 
-function getRandomItem (): Person | Vehicle {
+function getRandomItem (): Human | Vehicle {
     // do something
 }
 
 let item = getRandomItem();
 item.go(); // OK
 item.think(); // Error
-
 ```
+
+### Discriminated Unions
+* Typescript needs to these to discriminate unions for you:
+  * Types that have a common, singleton type property — the discriminant.
+  * A type alias that takes the union of those types — the union.
+  * Type guards on the common property.
+
+```ts
+interface Square {
+    type: 'square'; // string literal type
+    size: number;
+}
+interface Rectangle {
+    type: 'rectangle';
+    width: number;
+    height: number;
+}
+interface Circle {
+    type: 'circle';
+    radius: number;
+}
+
+type Shape = Square | Rectangle | Circle;
+
+function area (s: Shape) {
+    switch (s.kind) {
+        case 'square': return s.size * s.size;
+        case 'rectangle': return s.height * s.width;
+        case 'circle': return Math.PI * s.radius ** 2;
+    }
+}
+```
+
+
+### Type Guards
+* The problem will be appeared when you need to know the type of the variable.
+* For example:
+
+```ts
+// Each of these property access will cause an error
+if (item.think) {
+    item.think();
+}
+else if (item.park) {
+    item.park();
+}
+```
+
+#### Type Assertion Guard
+* One of the solution is type assertion:
+
+```ts
+// Each of these property access will cause an error
+if ((<Human>item).think) {
+    item.think();
+}
+else if ((<Vehicle>item).park) {
+    item.park();
+}
+```
+
+#### **typeof** Guards
+* Useful for primitive types.
+
+```ts
+function bool (x: string | number | boolean): boolean {
+    if (typeof x === 'string') {
+        return (x.toLowerCase() === 'true');
+    }
+    else if (typeof x === 'number') {
+        return (x !== 0);
+    }
+    else if (typeof x === 'boolean') {
+        return x;
+    }
+    throw new Error(`Unknown.`);
+}
+```
+
+#### **instance** Guards
+* Useful for object types.
+
+```ts
+if (item instanceof Human) {
+    item.think();
+}
+else if (item instanceof Vehicle) {
+    item.park();
+}
+```
+
+
+## Nullable Types
+* *Null* and *undefined* have a special meanings in typescript.
+* These are not the same.
+* These are valid for every type unless **--strictNullChecks** flag is set.
+
+```ts
+let s = 'foo';
+s = null; // error if flag is set
+
+let sn: string | null = 'bar';
+sn = null; // ok
+
+sn = undefined; // error if flag is set
+```
+* *Undefined* type is **always** a member of union for **optional parameters**.
+
+```ts
+class C {
+    a: number;
+    b?: number;
+}
+let c = new C();
+c.a = 12;
+c.a = undefined; // error, 'undefined' is not assignable to 'number'
+c.b = 13;
+c.b = undefined; // ok
+c.b = null; // error, 'null' is not assignable to 'number | undefined'
+```
+
+
+## Type Alias
+* Like interface
+* Differents from interface:
+  * can't be implemented
+  * can't extend other type
+
+```ts
+type Name = string;
+type NameResolver = () => string;
+type NameOrResolver = Name | NameResolver;
+```
+
+* Can be generic:
+  
+```ts
+type Container<T> = { value: T };
+```
+
+* Can be used at property of itself.
+
+```ts
+type List<T> = {
+    value: T;
+    next: List<T>;
+    previous: List<T>;
+};
+```
+
+
+## Literal Types
+
+### String Literal Types
+```ts
+type keybinding = 'ctrl+s' | 'ctrl+c' | 'ctrl+v';
+function keypressed (key: keybinding) {
+    if (key === 'ctrl+s') {}
+    else if (key === 'ctrl+c') {}
+    else if (key === 'ctrl+v') {}
+    else {
+        // error: should not pass null or undefined
+    }
+}
+
+keypressed('ctrl+s');
+keypressed('ctrl+f'); // error
+```
+
+### Numeric Literal Types
+* Same as string literal types.
