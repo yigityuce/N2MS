@@ -60,6 +60,10 @@
   - [Literal Types](#literal-types)
     - [String Literal Types](#string-literal-types)
     - [Numeric Literal Types](#numeric-literal-types)
+  - [Index Types](#index-types)
+    - [Index Type Query Operator](#index-type-query-operator)
+    - [Indexed Access Operator](#indexed-access-operator)
+  - [Mapped Types](#mapped-types)
 
 
 # Typescript
@@ -1140,5 +1144,87 @@ keypressed('ctrl+s');
 keypressed('ctrl+f'); // error
 ```
 
+* Another use case:
+
+```ts
+interface Square {
+    kind: 'square'; // string literal type
+    size: number;
+}
+interface Rectangle {
+    kind: 'rectangle'; // string literal type
+    width: number;
+    height: number;
+}
+interface Circle {
+    kind: 'circle'; // string literal type
+    radius: number;
+}
+
+type Shape = Square | Rectangle | Circle;
+
+function area (s: Shape): number {
+    if (s.kind === 'square') return s.size * s.size;
+    if (s.kind === 'rectangle') return s.width * s.height;
+    if (s.kind === 'circle') return 2 * Math.PI * s.radius;
+}
+```
+
 ### Numeric Literal Types
 * Same as string literal types.
+
+
+
+## Index Types
+
+```ts
+function set<T, K extends keyof T> (obj: T, key: keyof T, value: T[K]): void {
+    obj[key] = value;
+}
+
+interface Person {
+    name: string;
+    age: number;
+    height: number;
+}
+
+let p: Person = <Person>{
+    name: 'Yigit',
+    age: 27,
+    height: 179,
+};
+
+set (p, 'name', 'Yigit Yuce'); // ok
+set (p, 'weight', 80); // error
+```
+
+### Index Type Query Operator
+* **keyof** operator returns **union type** with comibanation of object property keys.
+
+
+### Indexed Access Operator
+* **T[K]** operator returns the T typed object's K named property's type.
+
+
+
+## Mapped Types
+* Create type based on the exist type.
+* For ex. create a readonly version of some type.
+
+```ts
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+}
+type Optional<T> = {
+    [P in keyof T]?: T[P];
+}
+
+interface Person {
+    name: string;
+    age: number;
+    height: number;
+}
+
+type RoPerson = Readonly<Person>;
+type OptPerson = Optional<Person>;
+```
