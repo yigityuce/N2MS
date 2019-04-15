@@ -1,4 +1,6 @@
 - [Typescript](#typescript)
+  - [Working with Other JavaScript Libraries](#working-with-other-javascript-libraries)
+  - [Links:](#links)
 - [Types](#types)
   - [string](#string)
   - [number](#number)
@@ -54,7 +56,7 @@
     - [Type Guards](#type-guards)
       - [Type Assertion Guard](#type-assertion-guard)
       - [**typeof** Guards](#typeof-guards)
-      - [**instance** Guards](#instance-guards)
+      - [**instanceof** Guards](#instanceof-guards)
   - [Nullable Types](#nullable-types)
   - [Type Alias](#type-alias)
   - [Literal Types](#literal-types)
@@ -64,6 +66,13 @@
     - [Index Type Query Operator](#index-type-query-operator)
     - [Indexed Access Operator](#indexed-access-operator)
   - [Mapped Types](#mapped-types)
+  - [Conditional Types](#conditional-types)
+    - [Predefined Conditional Types](#predefined-conditional-types)
+- [Namespace](#namespace)
+  - [Multifile Namespaces](#multifile-namespaces)
+  - [Ambient Namespaces](#ambient-namespaces)
+- [Modules](#modules)
+  - [Ambient Modules](#ambient-modules)
 
 
 # Typescript
@@ -76,7 +85,14 @@
 tsc filename.ts
 ```
 
-* Links:
+## Working with Other JavaScript Libraries
+* To describe the shape of libraries not written in TypeScript, we need to declare the API that the library exposes. 
+* Most JavaScript libraries expose only a few top-level objects.
+* We call declarations that don’t define an implementation “ambient”. 
+* Typically these are defined in .d.ts files. 
+* You can think of these as .h files.
+
+## Links:
   * [Playground](https://www.typescriptlang.org/play/index.html)
 
   
@@ -166,7 +182,14 @@ let myvar2: null = null;
 
 
 ## never
-* ???
+* represents the type of values that never occur
+* For ex. function expression that always throws an exception or one that never returns
+
+```ts
+function error (message: string): never {
+    throw new Error(message);
+}
+```
 
 
 ## object
@@ -451,7 +474,7 @@ interface StringArray {
     [index: number]: string; // number index signature
 }
 
-let myArray: StringArray = ["Bob", "Fred"];
+let myArray: StringArray = ['Yigit', 'Yuce'];
 ```
 
 ```ts
@@ -1054,7 +1077,7 @@ function bool (x: string | number | boolean): boolean {
 }
 ```
 
-#### **instance** Guards
+#### **instanceof** Guards
 * Useful for object types.
 
 ```ts
@@ -1228,3 +1251,279 @@ interface Person {
 type RoPerson = Readonly<Person>;
 type OptPerson = Optional<Person>;
 ```
+
+
+## Conditional Types
+* Selects one of two possible types that pass the **type relationship** test.
+
+```ts
+type TypeName<T> =
+    T extends string ? 'string' :
+    T extends number ? 'number' :
+    T extends boolean ? 'boolean' :
+    T extends undefined ? 'undefined' :
+    T extends Function ? 'function' :
+    'object';
+
+type T0 = TypeName<string>;  // 'string'
+type T1 = TypeName<'yigit'>;  // 'string'
+type T2 = TypeName<true>;  // 'boolean'
+type T3 = TypeName<() => void>;  // 'function'
+type T4 = TypeName<string[]>;  // 'object'
+```
+
+### Predefined Conditional Types
+
+* Defined in **lib.d.ts**
+
+* ```Exclude<T, U>```
+  * Exclude from T those types that are assignable to U.
+* ```Extract<T, U>```
+  * Extract from T those types that are assignable to U.
+* ```NonNullable<T>```
+  * Exclude null and undefined from T.
+* ```ReturnType<T>```
+  * Obtain the return type of a function type.
+* ```InstanceType<T>```
+  * Obtain the instance type of a constructor function type.
+
+```ts
+type T00 = Exclude<'a'|'b'|'c'|'d', 'a'|'c'|'f'>;  // 'b' | 'd'
+type T01 = Extract<'a'|'b'|'c'|'d', 'a'|'c'|'f'>;  // 'a' | 'c'
+
+type T02 = Exclude<string|number|(() => void), Function>;  // string | number
+type T03 = Extract<string|number|(() => void), Function>;  // () => void
+
+type T04 = NonNullable<string|number|undefined>;  // string | number
+type T05 = NonNullable<(() => string)|string[]|null|undefined>;  // (() => string) | string[]
+
+function f1 (s: string) {
+    return { a:1, b:s };
+}
+
+class C {
+    x = 0;
+    y = 0;
+}
+
+type T10 = ReturnType<() => string>;  // string
+type T11 = ReturnType<(s: string) => void>;  // void
+type T12 = ReturnType<(<T>() => T)>;  // {}
+type T13 = ReturnType<(<T extends U, U extends number[]>() => T)>;  // number[]
+type T14 = ReturnType<typeof f1>;  // { a: number, b: string }
+type T15 = ReturnType<any>;  // any
+type T16 = ReturnType<never>;  // never
+type T17 = ReturnType<string>;  // Error
+type T18 = ReturnType<Function>;  // Error
+
+type T20 = InstanceType<typeof C>;  // C
+type T21 = InstanceType<any>;  // any
+type T22 = InstanceType<never>;  // never
+type T23 = InstanceType<string>;  // Error
+type T24 = InstanceType<Function>;  // Error
+
+```
+
+
+
+# Namespace
+* Used for grouping.
+
+```ts
+namespace Input {
+
+    function uniqueId (len: number = 8, chars: string = '0123456789'): string {
+        function getRandomInt (min: number, max: number): number {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        let availableChars: string[] = [ ...Array.from(new Set(chars.split(''))) ]; // unique
+
+        let result: string[] = [];
+        while (result.length < len) result.push(availableChars[getRandomInt(0, availableChars.length)]);
+        return result.join('');
+    };
+
+    export enum Types {
+        TEXT = 'text',
+        CHECKBOX = 'checkbox'
+    }
+
+    export interface InputElement {
+        type: string;
+        id: string;
+        getValue (): any;
+    }
+
+    export class Text implements InputElement {
+        type = Types.TEXT;
+        id: string = uniqueId();
+        value: string = '';
+        getValue (): any {
+            return this.value;
+        }
+    }
+
+    export class Checkbox implements InputElement {
+        type = Types.CHECKBOX;
+        id: string = uniqueId();
+        value: boolean = false;
+        getValue (): any {
+            return this.value;
+        }
+    }
+
+    export function generate (t: Types) : InputElement {
+        if (t === Types.TEXT) return new Text();
+        if (t === Types.CHECKBOX) return new Checkbox();
+    }
+}
+
+let inp: Input.InputElement = Input.generate(Input.Types.TEXT);
+```
+
+## Multifile Namespaces
+* Namespace can be splitted into files.
+
+```ts
+// FILE: input.ts
+namespace Input {
+    function uniqueId (len: number = 8, chars: string = '0123456789'): string {
+        function getRandomInt (min: number, max: number): number {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        let availableChars: string[] = [ ...Array.from(new Set(chars.split(''))) ]; // unique
+
+        let result: string[] = [];
+        while (result.length < len) result.push(availableChars[getRandomInt(0, availableChars.length)]);
+        return result.join('');
+    };
+
+    export enum Types {
+        TEXT = 'text',
+        CHECKBOX = 'checkbox'
+    }
+
+    export interface InputElement {
+        type: string;
+        id: string;
+        getValue (): any;
+    }
+
+    export function generate (t: Types) : InputElement {
+        if (t === Types.TEXT) return new Text();
+        if (t === Types.CHECKBOX) return new Checkbox();
+    }
+}
+```
+
+```ts
+// FILE: input-text.ts
+
+/// <reference path="input.ts" />
+namespace Input {
+    export class Text implements InputElement {
+        type = Types.TEXT;
+        id: string = uniqueId();
+        value: string = '';
+        getValue (): any {
+            return this.value;
+        }
+    }
+}
+```
+
+```ts
+// FILE: input-checkbox.ts
+
+/// <reference path="input.ts" />
+namespace Input {
+    export class Checkbox implements InputElement {
+        type = Types.CHECKBOX;
+        id: string = uniqueId();
+        value: boolean = false;
+        getValue (): any {
+            return this.value;
+        }
+    }
+}
+```
+
+```ts
+// FILE: main.ts
+
+/// <reference path="input.ts" />
+/// <reference path="input-text.ts" />
+/// <reference path="input-checkbox.ts" />
+
+let inp: Input.InputElement = Input.generate(Input.Types.TEXT);
+```
+
+## Ambient Namespaces
+* The javascript library that does not have type declarations can be declared with **ambient** namespace.
+
+```ts
+// FILE: mylib.d.ts
+
+declare namespace MyLib {
+    export function myFunc () {
+        // ...
+    }
+
+    export class MyLib {
+        // ...
+    }
+}
+
+// defines itself to global object
+declare var mylib = MyLib.MyLib;
+```
+
+
+# Modules
+
+* Every module system is valid like:
+  * UMD
+  * AMD
+  * CommonJS
+
+
+## Ambient Modules
+* The javascript modules that does not have type declarations can be declared with **ambient** module.
+* Every declaration file can be written into seperate files.
+* But common practice is using a large declaration file.
+* Module names must be placed into quotes to do import operation.
+
+```ts
+// FILE: node.d.ts
+declare module 'url' {
+    export interface Url {
+        protocol?: string;
+        hostname?: string;
+        pathname?: string;
+    }
+
+    export function parse(urlStr: string, parseQueryString?, slashesDenoteHost?): Url;
+}
+
+declare module 'path' {
+    export function normalize(p: string): string;
+    export function join(...paths: any[]): string;
+    export var sep: string;
+}
+```
+
+```ts
+// FILE: main.ts
+
+/// <reference path="node.d.ts"/>
+import * as URL from 'url';
+let myUrl = URL.parse('http://www.yigityuce.com');
+```
+
+
