@@ -1,6 +1,6 @@
 - [Typescript](#typescript)
   - [Working with Other JavaScript Libraries](#working-with-other-javascript-libraries)
-  - [Links:](#links)
+  - [Links](#links)
 - [Types](#types)
   - [string](#string)
   - [number](#number)
@@ -37,6 +37,7 @@
   - [Getter & Setter](#getter--setter)
   - [Static Properties](#static-properties)
   - [Abstract](#abstract)
+  - [Constructor Signature](#constructor-signature)
 - [Generics](#generics)
   - [Generic Types](#generic-types)
     - [Generic Function Type](#generic-function-type)
@@ -73,6 +74,9 @@
   - [Ambient Namespaces](#ambient-namespaces)
 - [Modules](#modules)
   - [Ambient Modules](#ambient-modules)
+- [Decorators](#decorators)
+  - [Decorator Factories](#decorator-factories)
+  - [Class Decorators](#class-decorators)
 
 
 # Typescript
@@ -92,7 +96,7 @@ tsc filename.ts
 * Typically these are defined in .d.ts files. 
 * You can think of these as .h files.
 
-## Links:
+## Links
   * [Playground](https://www.typescriptlang.org/play/index.html)
 
   
@@ -709,6 +713,22 @@ emp2.printDepartment(); // Error: Property 'printDepartment' does not exist on t
 
 ```
 
+## Constructor Signature
+  
+```ts
+interface A {}
+
+class A1 implements A {}
+class A2 implements A {}
+
+function factory(ctor: { new(...args: any[]): {} }): {} {
+    return new ctor();
+}
+
+let a1 = factory(A1); // type of a1 is A
+let a2 = factory(A2); // type of a2 is A
+```
+
 
 # Generics
 * It is like the template functions at C++;
@@ -1276,16 +1296,23 @@ type T4 = TypeName<string[]>;  // 'object'
 
 * Defined in **lib.d.ts**
 
-* ```Exclude<T, U>```
-  * Exclude from T those types that are assignable to U.
-* ```Extract<T, U>```
-  * Extract from T those types that are assignable to U.
-* ```NonNullable<T>```
-  * Exclude null and undefined from T.
-* ```ReturnType<T>```
-  * Obtain the return type of a function type.
-* ```InstanceType<T>```
-  * Obtain the instance type of a constructor function type.
+
+```ts
+//Exclude from T those types that are assignable to U.
+Exclude<T, U>
+
+//Extract from T those types that are assignable to U.
+Extract<T, U>
+
+//Exclude null and undefined from T.
+NonNullable<T>
+
+// Obtain the return type of a function type.
+ReturnType<T>
+
+// Obtain the instance type of a constructor function type.
+InstanceType<T>
+```
 
 ```ts
 type T00 = Exclude<'a'|'b'|'c'|'d', 'a'|'c'|'f'>;  // 'b' | 'd'
@@ -1386,6 +1413,7 @@ let inp: Input.InputElement = Input.generate(Input.Types.TEXT);
 
 ## Multifile Namespaces
 * Namespace can be splitted into files.
+* It is simply named Javascript object that defined in global scope.
 
 ```ts
 // FILE: input.ts
@@ -1466,17 +1494,16 @@ let inp: Input.InputElement = Input.generate(Input.Types.TEXT);
 
 ## Ambient Namespaces
 * The javascript library that does not have type declarations can be declared with **ambient** namespace.
+* Bacause of the declaration file, it should include just type declarations.
 
 ```ts
 // FILE: mylib.d.ts
 
 declare namespace MyLib {
-    export function myFunc () {
-        // ...
-    }
+    export function myFunc (v: any): void;
 
     export class MyLib {
-        // ...
+        function f (s: string): boolean;
     }
 }
 
@@ -1487,16 +1514,17 @@ declare var mylib = MyLib.MyLib;
 
 # Modules
 
-* Every module system is valid like:
+* All module systems are valid.
   * UMD
   * AMD
   * CommonJS
+* Contains both declaration and code.
 
 
 ## Ambient Modules
 * The javascript modules that does not have type declarations can be declared with **ambient** module.
-* Every declaration file can be written into seperate files.
-* But common practice is using a large declaration file.
+* Each module declarations can be written into seperate files.
+* But common practice is using a single large declaration file.
 * Module names must be placed into quotes to do import operation.
 
 ```ts
@@ -1527,3 +1555,27 @@ let myUrl = URL.parse('http://www.yigityuce.com');
 ```
 
 
+# Decorators
+* Decorators are functions that called at runtime with some specific arguments.
+* Can be attached to:
+  * class declaration
+  * method
+  * accessor (getter & setter)
+  * property
+  * parameter
+* Multiple decorator can be attached.
+* Decorators use the form @**expression**, 
+* Expression must evaluate to a function that will be called at runtime with information about the decorated declaration.
+* It is experimental tool for now.
+* **experimentalDecorators** compiler option must be enabled.
+
+
+## Decorator Factories
+
+## Class Decorators
+* Will be applied to the constructor.
+* Can not be used in a declaration file or any ambient context.
+* Decorator args:
+  * Class constructor
+* Decorator return value:
+  * If it exists it will be used as class declaration else does nothing.
