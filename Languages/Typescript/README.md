@@ -1,4 +1,4 @@
-- [Typescript](#typescript)
+- [General](#general)
   - [Working with Other JavaScript Libraries](#working-with-other-javascript-libraries)
   - [Links](#links)
 - [Types](#types)
@@ -77,9 +77,10 @@
 - [Decorators](#decorators)
   - [Decorator Factories](#decorator-factories)
   - [Class Decorators](#class-decorators)
+  - [Method Decorators](#method-decorators)
 
 
-# Typescript
+# General
 * Notes for v3.4
 * File extension is **.ts**
 * Plain javascript code can be used in ts file.
@@ -1573,9 +1574,107 @@ let myUrl = URL.parse('http://www.yigityuce.com');
 ## Decorator Factories
 
 ## Class Decorators
-* Will be applied to the constructor.
-* Can not be used in a declaration file or any ambient context.
+* Will be applied to the **constructor**.
+* Can not be used in 
+  * declaration file 
+  * any ambient context (such as on a **declare** class)
 * Decorator args:
   * Class constructor
 * Decorator return value:
-  * If it exists it will be used as class declaration else does nothing.
+  * If it exists it will be used as class declaration.
+
+```ts
+function Sealed (constructor: Function) {
+    Object.seal(constructor);
+    Object.seal(constructor.prototype);
+}
+
+@Sealed
+class User {
+    name: string;
+    constructor (name: string) {
+        this.name = name;
+    }
+    greet () {
+        return `Hello ${this.name}`;
+    }
+}
+```
+
+```ts
+function LibraryNamed<T extends { new(...args: any[]): {}}> (ctor: T) {
+    return class extends ctor {
+        get [Symbol.toStringTag] () {
+            return 'MySuperLib';
+        }
+    };
+}
+
+@LibraryNamed
+class User {
+    name: string;
+    constructor (name: string) {
+        this.name = name;
+    }
+    greet () {
+        return `Hello ${this.name}`;
+    }
+}
+
+console.log(Object.prototype.toString.call(new User()));
+// expected output: "[object MySuperLib]"
+```
+
+
+## Method Decorators
+
+* Will be applied to the **Property Descriptor** for the method.
+* Can not be used in 
+  * declaration file 
+  * any ambient context (such as in a **declare** class)
+  * any overload
+  * any function that is not exist in class definiton
+* Decorator args:
+  * Source of the function
+    * Class instance (prototype) for member function
+    * Class constructor function for static function
+  * Function name
+  * Member property descriptor
+* Decorator return value:
+  * If it exists it will be used as function property descriptor.
+
+```ts
+function Trace(src: any, fname: string, descriptor: PropertyDescriptor) {
+    const isStatic = (typeof src === 'function');
+    const srcName = isStatic ? src.name : src.constructor.name;
+    const msg = `${srcName}.${fname} [${isStatic ? 'static' : 'member'} function] is called.`;
+
+    const originalFunc = descriptor.value;
+    descriptor.value = function (...args: any[]) {
+        const retValue: any = originalFunc.call(this, ...args);
+        console.log(msg);
+        console.log(`Result: ${retValue}`);
+    };
+    return descriptor;
+}
+
+class Foo {
+    constructor() {
+    }
+
+    @Trace
+    func1() {
+        return 'Ctx of func1';
+    }
+
+    @Trace
+    static func2() {
+        return 'Ctx of func2';
+    }
+}
+
+
+let obj: Foo = new Foo();
+obj.func1();
+Foo.func2();
+```

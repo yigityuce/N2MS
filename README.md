@@ -5,7 +5,7 @@ Notes to myself about technology stack.
 
 ---
 
-* Languages & Frameworks
+* Languages
   * C++
     * Libraries & Frameworks
       * STL
