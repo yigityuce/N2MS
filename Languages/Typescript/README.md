@@ -75,10 +75,13 @@
 - [Modules](#modules)
   - [Ambient Modules](#ambient-modules)
 - [Decorators](#decorators)
-  - [Decorator Factories](#decorator-factories)
   - [Class Decorators](#class-decorators)
   - [Method Decorators](#method-decorators)
   - [Accessor Decorators](#accessor-decorators)
+  - [Property Decorators](#property-decorators)
+  - [Parameter Decorators](#parameter-decorators)
+  - [Decorator Factories](#decorator-factories)
+  - [Overall Factory](#overall-factory)
 
 
 # General
@@ -1572,9 +1575,14 @@ let myUrl = URL.parse('http://www.yigityuce.com');
 * **experimentalDecorators** compiler option must be enabled.
 
 
-## Decorator Factories
-
 ## Class Decorators
+
+```ts
+// decorator function signature
+
+decorator (src: any) => any;
+```
+
 * Will be applied to the **constructor**.
 * Can not be used in 
   * declaration file 
@@ -1628,6 +1636,12 @@ console.log(Object.prototype.toString.call(new User()));
 
 
 ## Method Decorators
+
+```ts
+// decorator function signature
+
+decorator (src: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) => PropertyDescriptor | void;
+```
 
 * Will be applied to the **Property Descriptor** for the method.
 * Can not be used in 
@@ -1683,6 +1697,13 @@ Foo.func2();
 
 
 ## Accessor Decorators 
+
+```ts
+// decorator function signature
+
+decorator (src: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) => PropertyDescriptor | void;
+```
+
 * Will be applied to the **Property Descriptor** for the accessor.
 * Decorator must be applied just one of the accessor (**get** or **set**)
 * Can not be used in 
@@ -1747,4 +1768,263 @@ class Foo {
 let obj: Foo = new Foo();
 let temp = obj.var1;
 obj.var1 = 'yigit';
+```
+
+
+## Property Decorators 
+
+```ts
+// decorator function signature
+
+decorator (src: any, propertyKey: string | symbol) => void;
+```
+* Can not be used in 
+  * declaration file 
+  * any ambient context (such as in a **declare** class)
+* Decorator args:
+  * Source of the accessor
+    * Class instance (prototype) for member function
+    * Class constructor function for static function
+  * Member name
+* Usage: 
+  * primary use is to create and attach metadata
+
+```ts
+function Trace(target: any, key: string) {
+    let value = target[key];
+ 
+    const getter = () =>  {
+        console.log("Getting value: ", value);
+        return value;
+    };
+    const setter = (val) => {
+        console.log("Setting value: ", val);
+        value = val;
+    }
+    Reflect.deleteProperty[key];
+    Reflect.defineProperty(target, key, {
+        get: getter,
+        set: setter,
+        enumerable: true,
+        configurable: true,
+    });
+}
+
+class Foo {
+    @Trace
+    var1: string = 'Yigit' 
+
+    constructor() {
+    }
+}
+
+
+let obj: Foo = new Foo();
+
+console.log(obj.var1);
+obj.var1 = 'Yuce';
+```
+
+
+## Parameter Decorators
+
+```ts
+// decorator function signature
+
+decorator (src: any, propertyKey: string | symbol) => void;
+```
+* Will be applied to the **function** for
+  * a constructor
+  * method declaration
+* Can not be used in 
+  * declaration file 
+  * any ambient context (such as in a **declare** class)
+  * any overload
+* Decorator args:
+  * Source of the accessor
+    * Class instance (prototype) for member function
+    * Class constructor function for static function
+  * Member name
+  * Parameter index
+
+```ts
+const META_KEY: string = '_meta_';
+
+function getMetaData(obj: any, key: string): any {
+    if (obj && (META_KEY in obj) && obj[META_KEY] && (key in obj[META_KEY])) {
+        return obj[META_KEY][key];
+    }
+}
+function setMetaData(obj: any, key: string, value: any): void {
+    if (!obj) return;
+    if (!(META_KEY in obj)) {
+        obj[META_KEY] = { [key]:value };
+    }
+    else {
+        if (typeof obj[META_KEY] === 'object') {
+            obj[META_KEY][key] = value;
+        }
+        else {
+            obj[META_KEY] = { [key]:value };
+        }
+    }
+}
+
+function Trace(src: any, key: string, desc: PropertyDescriptor | number) {
+    const TRACING_ARG_INDEXES = 'tracingArgIndexes';
+    if (typeof desc === 'number') {
+        // from parameter decorator
+        let tracingArgIndexes = getMetaData(src[key], TRACING_ARG_INDEXES);
+        if (tracingArgIndexes) {
+            setMetaData(src[key], TRACING_ARG_INDEXES, [desc, ...tracingArgIndexes]);
+        }
+        else {
+            setMetaData(src[key], TRACING_ARG_INDEXES, [ desc ]);
+        }
+    }
+    else {
+        // from method decorator
+        const isStatic = (typeof src === 'function');
+        const srcName = isStatic ? src.name : src.constructor.name;
+        const msg = `${srcName}.${key} [${isStatic ? 'static' : 'member'} function] is called.`;
+    
+        let tracingArgIndexes = getMetaData(src[key], TRACING_ARG_INDEXES);
+        const originalFunc = src[key];
+        desc.value = (...args: any[]): any => {
+            const retValue: any = originalFunc.call(this, ...args);
+
+            console.log(msg);
+            let argArray = Array.from(args);
+            if (tracingArgIndexes) {
+                tracingArgIndexes.forEach((i) => {
+                    let argVal = (argArray.length > i) ? argArray[i] : undefined;
+                    console.log(`${i + 1}. argument: ${argVal}`);
+                });
+            }
+            console.log(`Result: ${retValue}`);
+
+            return retValue;
+        }
+
+        return desc;
+    }
+}
+
+class Foo {
+    var1: string = 'Yigit';
+    var2: object = {};
+    var3: number = 1;
+
+    constructor() {
+    }
+
+    @Trace
+    setVars (@Trace v1: string, v2?: object, @Trace v3?: number) {
+        this.var1 = v1;
+        this.var2 = v2;
+        this.var3 = v3;
+    }
+}
+
+
+let obj: Foo = new Foo();
+
+obj.setVars('Yuce');
+obj.setVars('Yigit', { key:'value' });
+obj.setVars('Yuce', { key:'value' }, 2);
+```
+
+
+## Decorator Factories
+* Parameterized decorator functions.
+* Decorator behaviour can be changed with this.
+* Must return function.
+
+```ts
+function LibraryNamed (name: string) {
+    return function <T extends { new(...args: any[]): {}}> (ctor: T) {
+        return class extends ctor {
+            get [Symbol.toStringTag] () {
+                return name;
+            }
+        };
+    }
+}
+
+@LibraryNamed('User')
+class User {
+    name: string;
+    constructor (name: string) {
+        this.name = name;
+    }
+    greet () {
+        return `Hello ${this.name}`;
+    }
+}
+
+console.log(Object.prototype.toString.call(new User('Yigit')));
+// expected output: "[object User]"
+```
+
+
+## Overall Factory
+* Applied decorator context can be determined with decorator function's argument types.
+
+```ts
+
+function traceClass (src: any): any {
+    // ...
+}
+
+function traceMethod (src: any, propertyKey: string | symbol, descriptor: PropertyDescriptor): PropertyDescriptor | void {
+    // ...
+}
+
+function traceAccessor (src: any, propertyKey: string | symbol, descriptor: PropertyDescriptor): PropertyDescriptor | void {
+    // ...
+}
+
+function traceProperty (src: any, propertyKey: string | symbol): void {
+    // ...
+}
+
+function traceParameter (src: any, propertyKey: string | symbol, index: number): void {
+    // ...
+}
+
+
+function trace(...args) {
+    switch (args.length) {
+        case 3: {
+            // can be method or parameter decorator
+            if (typeof args[2] === 'number') { 
+                // if 3rd argument is number then its index so its parameter decorator
+                return traceParameter.call(this, ...args);
+            }
+            else {
+                if ('value' in args[2]) {
+                    // if 3rd argument has a member with value key then its method decorator
+                    return traceMethod.call(this, ...args);
+                }
+                else {
+                    // if 3rd argument has a member with get/set key then its accessor decorator
+                    return traceAccessor.call(this, ...args);
+                }
+            }
+        }
+        case 2: {
+            // property decorator
+            return traceProperty.call(this, ...args);
+        }
+        case 1: {
+            // class decorator
+            return traceClass.call(this, ...args);
+        }
+        default: {
+            // invalid size of arguments 
+            throw new Error('Not a valid decorator');
+        }
+    }
+}
+
 ```
