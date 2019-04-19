@@ -78,6 +78,7 @@
   - [Decorator Factories](#decorator-factories)
   - [Class Decorators](#class-decorators)
   - [Method Decorators](#method-decorators)
+  - [Accessor Decorators](#accessor-decorators)
 
 
 # General
@@ -1654,6 +1655,7 @@ function Trace(src: any, fname: string, descriptor: PropertyDescriptor) {
         const retValue: any = originalFunc.call(this, ...args);
         console.log(msg);
         console.log(`Result: ${retValue}`);
+        return retValue;
     };
     return descriptor;
 }
@@ -1677,4 +1679,72 @@ class Foo {
 let obj: Foo = new Foo();
 obj.func1();
 Foo.func2();
+```
+
+
+## Accessor Decorators 
+* Will be applied to the **Property Descriptor** for the accessor.
+* Decorator must be applied just one of the accessor (**get** or **set**)
+* Can not be used in 
+  * declaration file 
+  * any ambient context (such as in a **declare** class)
+* Decorator args:
+  * Source of the accessor
+    * Class instance (prototype) for member function
+    * Class constructor function for static function
+  * Member name
+  * Member property descriptor
+* Decorator return value:
+  * If it exists it will be used as member's property descriptor.
+
+```ts
+function Trace(src: any, name: string, descriptor: PropertyDescriptor) {
+    const isStatic = (typeof src === 'function');
+    const srcName = isStatic ? src.name : src.constructor.name;
+    const msg = `${srcName}.${name} [${isStatic ? 'static ' : ''}member]`;
+
+    const originalGetter = descriptor.get;
+    const originalSetter = descriptor.set;
+    descriptor.get = function () {
+        const retValue: any = originalGetter.call(this);
+        console.log(`${msg} value is fetched.`);
+        console.log(`Result: ${retValue}`);
+        return retValue;
+    };
+    descriptor.set = function (arg: any) {
+        console.log(`${msg} value is changed to ${arg}`);
+        return originalSetter.call(this, arg);
+    };
+    return descriptor;
+}
+
+class Foo {
+    _var1: any = 1;
+    static _var2: any = 2;
+    constructor() {
+    }
+
+    @Trace
+    get var1() {
+      return this._var1;
+    }
+    
+    set var1(v:any) {
+      this._var1 = v;
+  }
+    
+    @Trace
+    get var2() {
+      return this._var1;
+    }
+    
+    set var2(v:any) {
+      this._var1 = v;
+    }
+}
+
+
+let obj: Foo = new Foo();
+let temp = obj.var1;
+obj.var1 = 'yigit';
 ```
