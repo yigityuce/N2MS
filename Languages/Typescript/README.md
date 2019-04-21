@@ -82,6 +82,34 @@
   - [Parameter Decorators](#parameter-decorators)
   - [Decorator Factories](#decorator-factories)
   - [Overall Factory](#overall-factory)
+- [Triple Slash Directives](#triple-slash-directives)
+  - [<reference path="..." ... />](#reference-path--)
+  - [<reference types="..." ... />](#reference-types--)
+  - [<reference lib="..." ... />](#reference-lib--)
+  - [<reference no-dafault-lib="true" ... />](#reference-no-dafault-libtrue--)
+- [Declaration Files](#declaration-files)
+  - [Library Structures](#library-structures)
+    - [Global Libraries](#global-libraries)
+    - [Modular Libraries](#modular-libraries)
+    - [UMD](#umd)
+    - [Global Plugin](#global-plugin)
+    - [Global-modifying Modules](#global-modifying-modules)
+  - [Dependencies](#dependencies)
+    - [Dependencies on Global Libraries](#dependencies-on-global-libraries)
+    - [Dependencies on Modules](#dependencies-on-modules)
+    - [Dependencies on UMD Libraries](#dependencies-on-umd-libraries)
+  - [Directory Structure](#directory-structure)
+  - [Examples](#examples)
+    - [Global Variable:](#global-variable)
+    - [Global Function](#global-function)
+    - [Object with Properties](#object-with-properties)
+    - [Overloaded Function](#overloaded-function)
+    - [Interfaces](#interfaces-1)
+    - [Type Aliases](#type-aliases)
+    - [Classes](#classes-1)
+  - [Templates:](#templates)
+  - [Publishing](#publishing)
+  - [Downloading Declarations](#downloading-declarations)
 
 
 # General
@@ -2027,4 +2055,239 @@ function trace(...args) {
     }
 }
 
+```
+
+
+# Triple Slash Directives
+* Used as compiler directives.
+* **Only** valid at the top of file.
+* Single or multi line is valid.
+* Triple-slash references instruct the compiler to include additional files in the compilation process.
+
+## <reference path="..." ... />
+* A triple-slash reference path is resolved relative to the containing file, if unrooted.
+* If the compiler flag **--noResolve** is specified, triple-slash references are ignored.
+
+
+## <reference types="..." ... />
+* This directive declares **dependency** on a package.
+* Can be considered as an import for declaration packages.
+* For example, including below in a declaration file declares that this file uses names declared in **@types/node/index.d.ts**
+  
+```ts
+/// <reference types="node" />
+```
+
+
+## <reference lib="..." ... />
+* This directive allows a file to explicitly include an existing built-in lib file.
+* Built-in lib files are referenced in the same fashion as the "**lib**" compiler option in tsconfig.json
+
+
+
+## <reference no-dafault-lib="true" ... />
+* This directive instructs the compiler to not include the default library (i.e. lib.d.ts) in the compilation. 
+* The impact here is similar to passing **--noLib** on the command line.
+
+
+
+
+# Declaration Files
+* Use the **--declaration** flag to generate declaration files.
+
+## Library Structures
+* There are many ways writing a library in Javascript, and you’ll need to write your declaration file to match it.
+* Identifying the structure of a library is the first step to write declaration file.
+
+### Global Libraries
+* It is the one that can be accessed from the global scope (without using any form of import).
+* For example, if you were using jQuery, the $ variable can be used by simply referring to it.
+* Its code can includes one of these:
+  * Global var statements or function declarations
+  * One or more assignments to window.someName
+  * Assumptions that DOM primitives like **document** or **window** exist
+* Template:
+  * **global.d.ts**
+
+
+### Modular Libraries
+* Some libraries only work in a module loader environment. 
+* For example, **express** only works in **Node.js** and must be loaded using the CommonJS **require** function.
+* Its code can includes one of these:
+    * Assignments to **exports** or **module.exports**
+    * Unconditional calls to **require** or **define**
+    * Declarations like
+        ``` ts 
+        import * as a from 'b'; 
+        //or 
+        export c;
+        ```
+
+### UMD
+* A UMD module is one that can either be used as module (through an import), or as a global.
+* UMD modules check for the existence of a module loader environment. 
+* If you see tests for typeof define, typeof window, or typeof module in the code of a library, especially at the top of the file, it’s almost always a UMD library.
+* Templates:
+  * **module.d.ts**
+  * **module-class.d.ts**
+  * **module-function.d.ts**
+  
+
+### Global Plugin
+* A global plugin is global code that changes the shape of some global.
+* For example, some libraries add new functions to Array.prototype or String.prototype
+* Template:
+  * **global-plugin.d.ts**
+
+
+### Global-modifying Modules
+* A global-modifying module alters existing values in the global scope when they are imported.
+* For example, there might exist a library which adds new members to String.prototype when imported.
+* They’re similar to global plugins, but need a require call to activate their effects.
+* Template:
+  * **global-modifying-module.d.ts**
+
+
+## Dependencies
+
+### Dependencies on Global Libraries
+* If your library depends on a global library, use **triple slash type** directive.
+  
+```ts
+/// <reference types="someLib" />
+
+function getThing(): someLib.thing;
+```
+
+### Dependencies on Modules
+* If your library depends on a module, use an **import** statement.
+
+```ts
+import * as moment from 'moment';
+
+function getThing(): moment;
+```
+
+### Dependencies on UMD Libraries
+
+* From global library:
+  * use **triple slash type** directive
+* From module or another UMD library:
+  * use **import** statemnet
+
+
+## Directory Structure
+* The directory structure of your declaration files should mirror of the library directory structure.
+
+```
+myLib
+  +---- index.js
+  +---- foo.js
+  +---- bar
+         +---- index.js
+         +---- baz.js
+
+```
+
+```
+@types/myLib
+  +---- index.d.ts
+  +---- foo.d.ts
+  +---- bar
+         +---- index.d.ts
+         +---- baz.d.ts
+```
+
+## Examples
+
+### Global Variable:
+```ts
+declare var x: number;
+declare let y: boolean;
+declare const z: string;
+```
+
+### Global Function
+```ts
+declare function func1 (x: string): void;
+```
+
+### Object with Properties
+* For dotted notation.
+
+```ts
+declare namespace MyLib {
+    let x: number;
+    function func1 (x: string): void;
+}
+```
+
+### Overloaded Function
+```ts
+declare function func1 (x: number): bolean;
+declare function func1 (x: string): number;
+```
+
+### Interfaces
+```ts
+interface Options {
+    x: number;
+    y?: string;
+    z!: boolean;
+}
+
+declare function func1 (o: Options): void;
+```
+
+### Type Aliases
+```ts
+type Value = string | (() => string) | string[];
+
+declare function func1 (v: Value): void;
+```
+
+### Classes
+```ts
+declare class MyClass {
+    constructor (x:number, y:string);
+
+    x: number;
+    func1 (s: string): void;
+}
+```
+
+## Templates:
+* Templates that are exist at the link below are documented with comments, read carefully.
+* See: 
+  * [https://www.typescriptlang.org/docs/handbook/declaration-files/templates.html](https://www.typescriptlang.org/docs/handbook/declaration-files/templates.html)
+
+
+## Publishing
+
+* Can be done with:
+  * With NPM Package
+  * [@types](https://www.npmjs.com/~types) Organization
+  
+* If your code is written with Typescript:
+  * first method is favored.
+  * Use the **--declaration** flag to generate declaration files.
+  * Declaration type file must be pointed in package.json with **"types"** keyword.
+
+```json
+{
+    "name": "Y",
+    "author": "Yigit Yuce",
+    "version": "1.0.0",
+    "main": "./dist/main.js",
+    "types": "./dist/main.d.ts"
+}
+```
+
+## Downloading Declarations
+* Getting type declarations in TypeScript 2.0 and above requires nothing except npm.
+* If the module has a **"types"** field in its **package.json** file like mentioned at [publishing](#publishing), there is no need to download type package.
+* Types can be search with [http://microsoft.github.io/TypeSearch/](http://microsoft.github.io/TypeSearch/)
+
+```sh
+npm install --save @types/lodash
 ```
