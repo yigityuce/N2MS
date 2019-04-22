@@ -8,11 +8,22 @@
   - [Injector](#injector)
   - [Provider](#provider)
 - [Templating](#templating)
+  - [Template References](#template-references)
   - [Data Binding](#data-binding)
+    - [Attribute Binding](#attribute-binding)
+    - [Class Binding](#class-binding)
+    - [Style Binding](#style-binding)
+    - [Event Binding](#event-binding)
+    - [Two-way Binding](#two-way-binding)
   - [Pipes](#pipes)
   - [Directives](#directives)
     - [ngFor](#ngfor)
     - [ngIf](#ngif)
+    - [ngSwitch](#ngswitch)
+    - [ngClass](#ngclass)
+    - [ngStyle](#ngstyle)
+    - [ngModel](#ngmodel)
+- [Custom Events](#custom-events)
 
 
 # General
@@ -93,6 +104,8 @@ export class AppModule { }
       * HTML tag that the component is inserted into.
     * **templateUrl**
       * address of this component's HTML template.
+    * **styleUrls**
+      * address of this component's styles.
     * **template**
       * inline HTML template of this component.
     * **providers**
@@ -104,7 +117,8 @@ export class AppModule { }
 @Component({
     selector: 'app-hero-list',
     templateUrl: './hero-list.component.html',
-    providers:  [ HeroService ]
+    styleUrls: [ './hero-list.component.css'],
+    providers: [ HeroService ]
 })
 export class HeroListComponent implements OnInit {
 /* ... */
@@ -199,13 +213,60 @@ export class HeroService {
   * *pipes* to transform data before it is displayed
   * *directives* to apply app logic to what gets displayed
 
+## Template References
+* It is like a **:ref="referenceName"** directive at the Vue.JS (**$refs**)
+* A template reference variable is often a reference to a DOM element within a template. 
+* It can also be a reference to:
+  * Angular component
+  * directive
+  * web component.
+* The scope of a reference variable is the entire template.
+
+```html
+<!-- @FILE: src/app/app.component.html -->
+
+<input #phone placeholder="phone number">
+<!-- OR -->
+<input ref-email placeholder="email address">
+
+<button (click)="callPhone(phone.value)">Call</button>
+```
+
+
+
 ## Data Binding
+
+![](./ng-databinding.png)
+
 * Binding can be 
-  * interpolation ( mustache syntax {{ }} )
+  * interpolation
+    ```html
+    <div>{{ statement }}</div>
+    ```
   * property binding
+    ```html
+    <div [target]="statement"> ... </div>
+    <!-- OR -->
+    <div bind-target="statement"> ... </div>
+    ```
   * event binding
+    ```html
+    <div (target)="statement"> ... </div>
+    <!-- OR -->
+    <div on-target="statement"> ... </div>
+    ```
   * two-way data binding with **model**
+    ```html
+    <div [(target)]="statement"> ... </div>
+    <!-- OR -->
+    <div bindon-target="statement"> ... </div>
+    ```
 * Angular processes all data bindings once for each JavaScript event cycle, from the root of the application component tree through all child components.
+* Valid javascript statements can be used inside the interpolation syntax. (**template expressions**)
+  * operators
+  * function calls
+  * ternary operator
+  * etc.
 
 ```html
 <li>{{hero.name}}</li>
@@ -214,7 +275,110 @@ export class HeroService {
 <input [(ngModel)]="hero.name">
 ```
 
-![](./ng-databinding.png)
+### Attribute Binding
+* Some of html attributes are not considered as html properties like:
+  * colspan
+  * aria
+  * svg
+* These kind of attributes can be bound to the element with using "**attr**" namespace.
+
+```html
+<button [attr.aria-label]="actionName">{{actionName}} with Aria</button>
+
+<table border=1>
+  <tr><td [attr.colspan]="1 + 1">One-Two</td></tr>
+</table>
+```
+
+### Class Binding
+* Overrides standart class property.
+```html
+<div class="bad curly special" [class]="badCurly"> ... </div>
+```
+
+* Specific class can be bound with "**class**" name space. Its statement must be truthy/falsy value.
+```html
+<div [class.special]="!isNormal"> ... </div>
+```
+
+* See Also: [ngClass](#ngclass)
+
+
+### Style Binding
+* You can set inline styles with a style binding
+* All style bindings must be bound with namespace dot(.) notation.
+* Style properties can be written in:
+  * camelCase (ex: fontSize)
+  * dash-case (ex: font-size)
+
+```html
+<button [style.color]="isSpecial ? 'red': 'green'">Red</button>
+```
+
+* See Also: [ngStyle](#ngstyle)
+
+
+### Event Binding
+```html
+<a (click)="linkClicked()">Click Me!</a>
+```
+
+* Event binding statement can include data values such as an event object, string, or number with name special **$event** variable.
+* The target event determines the shape of the $event object. 
+* If the target event is a native DOM element event, then $event is a DOM event object.
+  
+```html
+<a (click)="linkClicked($event)">Click Me!</a>
+
+<input [value]="currentItem.name" (input)="currentItem.name=$event.target.value" />
+```
+
+
+### Two-way Binding
+* Angular offers a special two-way data binding syntax for this purpose, **[(prop)]**
+* The **[(prop)]** syntax combines the brackets of property binding, **[prop]**, with the parentheses of event binding, **(prop)**.
+* The **[(prop)]** syntax means
+  * the element has a settable property called **prop**
+  * a corresponding event named **propChange**
+
+```ts
+// @FILE: src/app/size/sizer.component.ts
+
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+
+@Component({
+    selector: 'app-sizer',
+    template: `
+    <div>
+        <button (click)="dec()" title="smaller">-</button>
+        <button (click)="inc()" title="bigger">+</button>
+        <label [style.font-size.px]="size">FontSize: {{size}}px</label>
+    </div>`
+})
+export class SizerComponent {
+    @Input() size: number | string;
+    @Output() sizeChange = new EventEmitter<number>();
+    
+    dec() { this.resize(-1); }
+    inc() { this.resize(+1); }
+    
+    resize(delta: number) {
+        this.size = Math.min(40, Math.max(8, +this.size + delta));
+        this.sizeChange.emit(this.size);
+    }
+}
+```
+
+```html
+<!-- @FILE: src/app/app.component.html -->
+
+<app-sizer [(size)]="fontSizePx"></app-sizer>
+<div [style.font-size.px]="fontSizePx">Resizable Text</div>
+```
+
+* See Also: [ngModel](#ngmodel)
+
+
 
 
 ## Pipes
@@ -243,6 +407,7 @@ export class FileSizePipe implements PipeTransform {
 
 * Angular has various [pipes](https://angular.io/api?type=pipe).
 * You can chain pipes, sending the output of one pipe function to be transformed by another pipe function. 
+
 
 
 
@@ -278,12 +443,12 @@ export class FileSizePipe implements PipeTransform {
 * Accessing iteration number with special **index** keyword.
 
 ```html
-<li *ngFor="let item of items; index as i;">
+<li *ngFor="let item of items; let i = index;">
     <span> {{ i }}. {{ item.name }}</span>
 </li>
 ```
 
-* Some additioanl special keywords that can be used with *as* operator:
+* Some additioanl special keywords that can be used with *assignment* operator:
   * **even**: boolean
   * **odd**: boolean
   * **first**: boolean
@@ -299,4 +464,125 @@ export class FileSizePipe implements PipeTransform {
         <span> {{ item.name }}</span>
     </li>
 </div>
+```
+
+
+### ngSwitch
+* NgSwitch is like the JavaScript switch statement. 
+* It can display one element from among several possible elements, based on a switch condition.
+* Works with these:
+  * **ngSwitchCase**
+  * **ngSwitchDefault**
+
+```html
+<div [ngSwitch]="emotion">
+  <p *ngSwitchCase="'happy'">I am happy :) </p>
+  <p *ngSwitchCase="'sad'">I am sad :( </p>
+  <p *ngSwitchCase="'confused'">I am confused :| </p>
+  <p *ngSwitchDefault>I fell nothing </p>
+</div>
+```
+
+
+
+### ngClass
+* You can bind to the ngClass to add or remove several classes simultaneously.
+* Each key of the object is a CSS class name; its value is true if the class should be added, false if it should be removed.
+
+```ts
+// @FILE: src/app/app.component.ts
+...
+currentClasses: {};
+setCurrentClasses () {
+    this.currentClasses = {
+        saveable: this.canSave,
+        modified: !this.isUnchanged,
+        special: this.isSpecial
+    };
+}
+...
+```
+
+```html
+<!-- @FILE: src/app/app.component.html -->
+<div [ngClass]="currentClasses"></div>
+```
+
+
+### ngStyle
+* You can set inline styles dynamically, based on the state of the component.
+* Each key of the object is a style name; its value is whatever is appropriate for that style.
+
+```ts
+// @FILE: src/app/app.component.ts
+...
+currentStyles: {};
+setCurrentStyles () {
+    this.currentStyles = {
+        'font-style': this.canSave ? 'italic' : 'normal',
+        'font-weight': !this.isUnchanged ? 'bold' : 'normal',
+        'font-size': this.isSpecial ? '24px' : '12px'
+    };
+}
+...
+```
+
+```html
+<!-- @FILE: src/app/app.component.html -->
+<div [ngStyle]="currentStyles"></div>
+```
+
+
+### ngModel
+* Easy way of the two-way data binding.
+* FormsModule is required to use ngModel.
+* You must **import** the FormsModule and add it to the NgModule's **imports list**.
+* NgModel directive only works for an element supported by a **ControlValueAccessor** that adapts an element to this protocol.
+
+```ts
+// @FILE: src/app/app.module.ts
+
+import { FormsModule } from '@angular/forms';
+
+@NgModule({
+    imports: [ FormsModule ],
+})
+export class AppModule {}
+```
+
+```html
+<!-- @FILE: src/app/app.module.html -->
+<input [(ngModel)]="inputDataHolder">
+```
+
+
+
+
+
+
+# Custom Events
+* Can be done with EventEmitter.
+
+```html
+<!-- @FILE: src/app/subcomponent/subcomponent.component.html -->
+<button (click)="delete()">Delete</button>
+```
+
+```ts
+// @FILE: src/app/subcomponent/subcomponent.component.ts
+
+...
+
+@Output() deleteRequest = new EventEmitter<Item>();
+
+delete() {
+  this.deleteRequest.emit(this.item.name);
+}
+
+...
+```
+
+```html
+<!-- @FILE: src/app/app.component.html -->
+<subcomponent (deleteRequest)="deleteRequested($event)"></subcomponent>
 ```
