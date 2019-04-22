@@ -93,23 +93,24 @@
     - [Modular Libraries](#modular-libraries)
     - [UMD](#umd)
     - [Global Plugin](#global-plugin)
-    - [Global-modifying Modules](#global-modifying-modules)
+    - [Global Modifying Modules](#global-modifying-modules)
   - [Dependencies](#dependencies)
     - [Dependencies on Global Libraries](#dependencies-on-global-libraries)
     - [Dependencies on Modules](#dependencies-on-modules)
     - [Dependencies on UMD Libraries](#dependencies-on-umd-libraries)
   - [Directory Structure](#directory-structure)
   - [Examples](#examples)
-    - [Global Variable:](#global-variable)
+    - [Global Variable](#global-variable)
     - [Global Function](#global-function)
     - [Object with Properties](#object-with-properties)
     - [Overloaded Function](#overloaded-function)
     - [Interfaces](#interfaces-1)
     - [Type Aliases](#type-aliases)
     - [Classes](#classes-1)
-  - [Templates:](#templates)
+  - [Templates](#templates)
   - [Publishing](#publishing)
-  - [Downloading Declarations](#downloading-declarations)
+  - [Downloading](#downloading)
+- [tsconfig.json](#tsconfigjson)
 
 
 # General
@@ -2140,8 +2141,8 @@ function trace(...args) {
   * **global-plugin.d.ts**
 
 
-### Global-modifying Modules
-* A global-modifying module alters existing values in the global scope when they are imported.
+### Global Modifying Modules
+* A global modifying module alters existing values in the global scope when they are imported.
 * For example, there might exist a library which adds new members to String.prototype when imported.
 * They’re similar to global plugins, but need a require call to activate their effects.
 * Template:
@@ -2200,7 +2201,7 @@ myLib
 
 ## Examples
 
-### Global Variable:
+### Global Variable
 ```ts
 declare var x: number;
 declare let y: boolean;
@@ -2256,7 +2257,7 @@ declare class MyClass {
 }
 ```
 
-## Templates:
+## Templates
 * Templates that are exist at the link below are documented with comments, read carefully.
 * See: 
   * [https://www.typescriptlang.org/docs/handbook/declaration-files/templates.html](https://www.typescriptlang.org/docs/handbook/declaration-files/templates.html)
@@ -2283,7 +2284,7 @@ declare class MyClass {
 }
 ```
 
-## Downloading Declarations
+## Downloading
 * Getting type declarations in TypeScript 2.0 and above requires nothing except npm.
 * If the module has a **"types"** field in its **package.json** file like mentioned at [publishing](#publishing), there is no need to download type package.
 * Types can be search with [http://microsoft.github.io/TypeSearch/](http://microsoft.github.io/TypeSearch/)
@@ -2291,3 +2292,13 @@ declare class MyClass {
 ```sh
 npm install --save @types/lodash
 ```
+
+
+# tsconfig.json
+* The **tsconfig.json** file specifies the root files and the compiler options required to compile the project.
+* When input files are specified on the command line, tsconfig.json files are **ignored**.
+* No input files are specified:
+  * compiler searches for the tsconfig.json file starting in the current directory and continuing up the parent directory chain.
+  * point out the tsconfig.json file with **--project** (or **-p**) option.
+* Compiler options specified on the command line **override** those specified in the tsconfig.json file.
+* [Compiler options](https://www.typescriptlang.org/docs/handbook/compiler-options.html)
