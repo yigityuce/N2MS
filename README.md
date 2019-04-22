@@ -17,6 +17,7 @@ Notes to myself about technology stack.
     * Libraries & Frameworks
       * Vue.js
       * React
+      * [Angular](Languages/Javascript/Libraries%20&%20Frameworks/Angular/README.md)
       * [Pug.js](Languages/Javascript/Libraries%20&%20Frameworks/Pug.js/README.md)
       * Electron
       * Storybook
