@@ -16,6 +16,8 @@
     - [Event Binding](#event-binding)
     - [Two-way Binding](#two-way-binding)
   - [Pipes](#pipes)
+  - [Safe Navigation Operator](#safe-navigation-operator)
+  - [Non-Null Assertion Operator](#non-null-assertion-operator)
   - [Directives](#directives)
     - [ngFor](#ngfor)
     - [ngIf](#ngif)
@@ -24,6 +26,26 @@
     - [ngStyle](#ngstyle)
     - [ngModel](#ngmodel)
 - [Custom Events](#custom-events)
+  - [EventEmitter](#eventemitter)
+- [Input/Output](#inputoutput)
+  - [Input](#input)
+  - [Output](#output)
+- [Lifecycle Hooks](#lifecycle-hooks)
+  - [OnChanges](#onchanges)
+  - [OnInit](#oninit)
+  - [DoCheck](#docheck)
+  - [AfterContentInit](#aftercontentinit)
+  - [AfterContentChecked](#aftercontentchecked)
+  - [AfterViewInit](#afterviewinit)
+  - [AfterViewChecked](#afterviewchecked)
+  - [OnDestroy](#ondestroy)
+- [Styling](#styling)
+  - [Component Styles Metadata](#component-styles-metadata)
+  - [Component StyleUrls Metadata](#component-styleurls-metadata)
+  - [Template Inline Styles](#template-inline-styles)
+  - [Special Selectors](#special-selectors)
+    - [:host](#host)
+    - [:host-context](#host-context)
 
 
 # General
@@ -50,10 +72,7 @@
 * NgModules can import functionality from other NgModules.
 * NgModules allows their own functionality to be exported and used by other NgModules.
 * The components that belong to an NgModule **share a compilation context**.
-
-
-* Metadate is the options object that defines the module behaviour.
-* Some of these options like below:
+* Metadata is the options object that defines the module behaviour. Some of these options like below:
   * **declarations**
     * Components, pipes and directives that belong to this module.
   * **exports**
@@ -96,20 +115,17 @@ export class AppModule { }
 * Each component
   * defines a class that contains application data and logic.
   * is associated with an HTML template that defines a view.
-
-
-* Metadate is the options object that defines the component behaviour.
-* Some of these options like below:
-    * **selector**
-      * HTML tag that the component is inserted into.
-    * **templateUrl**
-      * address of this component's HTML template.
-    * **styleUrls**
-      * address of this component's styles.
-    * **template**
-      * inline HTML template of this component.
-    * **providers**
-      * An array of providers for services that the component requires.
+* Metadata is the options object that defines the component behaviour. Some of these options like below:
+  * **selector**
+    * HTML tag that the component is inserted into.
+  * **templateUrl**
+    * address of this component's HTML template.
+  * **styleUrls**
+    * address of this component's styles.
+  * **template**
+    * inline HTML template of this component.
+  * **providers**
+    * An array of providers for services that the component requires.
 
 ```ts
 // @FILE: src/app/hero-list.component.ts
@@ -267,6 +283,7 @@ export class HeroService {
   * function calls
   * ternary operator
   * etc.
+* All data bound properties must be TypeScript **public** properties. Angular never binds to a TypeScript **private** property.
 
 ```html
 <li>{{hero.name}}</li>
@@ -332,7 +349,7 @@ export class HeroService {
 
 <input [value]="currentItem.name" (input)="currentItem.name=$event.target.value" />
 ```
-
+* See also: [Custom Events](#custom-events)
 
 ### Two-way Binding
 * Angular offers a special two-way data binding syntax for this purpose, **[(prop)]**
@@ -409,6 +426,22 @@ export class FileSizePipe implements PipeTransform {
 * You can chain pipes, sending the output of one pipe function to be transformed by another pipe function. 
 
 
+## Safe Navigation Operator
+* Safe navigation operator (?.) is a fluent and convenient way to guard against null and undefined values in property paths. 
+
+```html
+<p> Value is: {{ a?.b?.c?.d }} </p>
+```
+
+## Non-Null Assertion Operator
+* The non-null assertion operator does not guard against null or undefined.
+* It tells the TypeScript type checker to suspend strict null checks for a specific property expression.
+
+```html
+<div *ngIf="a">
+    <p> Value is: {{ a!.b }} </p>
+</div>
+```
 
 
 ## Directives
@@ -418,6 +451,7 @@ export class FileSizePipe implements PipeTransform {
 * In templates, directives typically appear within an element tag as attributes.
 * There is two kind of directives:
   * **Structural directives** alter layout by adding, removing, and replacing elements in the DOM. 
+  * Used with asteriks. (*)
   
     ```html
     <li *ngFor="let hero of heroes"></li>
@@ -425,6 +459,7 @@ export class FileSizePipe implements PipeTransform {
     ```
 
   * **Attribute directives**  alter the appearance or behavior of an existing element. 
+  * Used inside brackets.
   
     ```html
     <input [(ngModel)]="hero.name">
@@ -585,4 +620,206 @@ delete() {
 ```html
 <!-- @FILE: src/app/app.component.html -->
 <subcomponent (deleteRequest)="deleteRequested($event)"></subcomponent>
+```
+
+## EventEmitter
+// TODO: write down
+
+
+
+
+
+# Input/Output
+* You can always bind to a public property of a component in its own template. 
+* It doesn't have to be an Input or Output property.
+* The Angular compiler won't bind to properties of a different component unless they are Input or Output properties.
+
+## Input
+```ts
+@Input(alias) propertyName: type;
+```
+
+* An Input property is a settable property annotated with an **@Input** decorator.
+* It is used to descibe component properties.
+
+## Output
+```ts
+@Output(alias) propertyName = new EventEmitter<type>();
+```
+
+* An Output property is an observable property annotated with an **@Output** decorator. 
+* The property almost always returns an Angular EventEmitter.
+* It is used to descibe component events.
+
+
+```ts
+// FILE: src/app/some-component/some-component.component.ts
+@Input() item: any;
+@Output('accessed') itemAccessed = new EventEmitter<any>();
+```
+
+```ts
+// FILE: src/app/some-component/some-component.component.ts
+@Component({
+    selector: 'some-component',
+    inputs: ['item'],
+    outputs: ['accessed:itemAccessed'],
+})
+export class SomeComponent {
+
+}
+```
+
+
+# Lifecycle Hooks
+* Directive and component instances have a lifecycle as Angular creates, updates, and destroys them.
+* Lifecycles are defined with lifecycle hook **interfaces**.
+* Components and directives must **implement** these interfaces to use hooks.
+* Other Angular sub-systems may have their own lifecycle hooks apart from these component hooks.
+* Each interface has a single hook method whose name is the interface name prefixed with ng.
+  * Ex.: the **OnInit** interface has a hook method named **ngOnInit()**
+
+```ts
+export class Example implements OnInit {
+    constructor () { }
+
+    ngOnInit () { 
+        console.log('onInit called.'); 
+    }
+}
+```
+
+## OnChanges
+* A lifecycle hook that is called when any data-bound property of a directive changes.
+* Receives a **SimpleChanges** object of current and previous property values. 
+* Called before *OnInit* and data-bound input properties change.
+
+## OnInit
+* A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive.
+* Called once, after the first OnChanges.
+
+## DoCheck
+* A lifecycle hook that invokes a custom change-detection function for a directive, in addition to the check performed by the default change-detector.
+* Called during every change detection run, immediately after OnChanges and OnInit.
+
+## AfterContentInit
+* A lifecycle hook that is called after Angular has fully initialized all content of a directive.
+* Called once after the first DoCheck.
+
+## AfterContentChecked
+* A lifecycle hook that is called after the default change detector has completed checking all content of a directive.
+* Called after the AfterContentInit and every subsequent DoCheck.
+
+## AfterViewInit
+* A lifecycle hook that is called after Angular has fully initialized a component's view.
+* Called once after the first AfterContentChecked.
+
+## AfterViewChecked
+* A lifecycle hook that is called after the default change detector has completed checking a component's view for changes.
+* Called after the AfterViewInit and every subsequent AfterContentChecked.
+
+## OnDestroy
+* A lifecycle hook that is called when a directive, pipe, or service is destroyed. 
+* Use for any custom cleanup that needs to occur when the instance is destroyed.
+* Unsubscribe Observables and detach event handlers to avoid memory leaks. 
+* Called just before Angular destroys the directive/component.
+
+
+
+# Styling
+
+## Component Styles Metadata
+* Used with **@Component** decorator's **style** metadata array.
+* The styles specified in this method apply only within the template of that component.
+* They are **not inherited** by any components nested within the template nor by any content projected into the component.
+* They must be written in plain CSS.
+
+```ts
+/* @FILE: src/app/custom-element.component.ts */
+
+@Component({
+    selector: 'app-root',
+    template: `
+        <h1>Header Text</h1>
+        <custom-element></custom-element>
+    `,
+    styles: [ 'h1 { font-weight: normal; }' ]
+})
+export class CustomElementComponent {
+}
+```
+
+## Component StyleUrls Metadata
+* Used with **@Component** decorator's **style** metadata array.
+* The styles specified in this method apply only within the template of that component.
+* They are **not inherited** by any components nested within the template nor by any content projected into the component.
+* Non-CSS style files are valid also like:
+  * sass/scss
+  * less
+  * stylus
+
+```ts
+/* @FILE: src/app/custom-element.component.ts */
+
+@Component({
+    selector: 'app-root',
+    template: `
+        <h1>Header Text</h1>
+        <custom-element></custom-element>
+    `,
+    styleUrls: [ './custom-element.component.css' ]
+})
+export class CustomElementComponent {
+}
+```
+
+## Template Inline Styles
+* You can embed CSS styles directly into the HTML template by putting them inside **style** tags.
+
+```ts
+/* @FILE: src/app/custom-element.component.ts */
+
+@Component({
+    selector: 'app-root',
+    template: `
+        <style>
+            h1 { font-weight: normal; }
+        </style>
+        <h1>Header Text</h1>
+        <custom-element></custom-element>
+    `,
+})
+export class CustomElementComponent {
+}
+```
+
+## Special Selectors
+* Component styles have a few special selectors
+
+### :host
+* Use the :host pseudo-class selector to target styles in the element that hosts the component (as opposed to targeting elements inside the component's template).
+* It is the only way to target the host element.
+* It has two forms:
+  * pseudo-class
+  * function
+* Use the function form to apply host styles conditionally by including another selector inside parentheses.
+
+```css
+/* @FILE: src/app/custom-element.component.css */
+
+:host(.active) {
+    border-width: 3px;
+}
+```
+
+### :host-context
+* The :host-context() selector looks for a CSS class in any ancestor of the component host element, up to the document root. 
+* The following example applies a background-color style to all <h2> elements inside the component, only if some ancestor element has the CSS class theme-light.
+
+```ts
+/* @FILE: src/app/custom-element.component.css */
+
+:host-context(.theme-light) h2 {
+    background-color: #eef;
+}
 ```
