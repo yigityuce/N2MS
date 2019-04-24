@@ -46,6 +46,12 @@
   - [Special Selectors](#special-selectors)
     - [:host](#host)
     - [:host-context](#host-context)
+- [Observables](#observables)
+  - [Basic usage and terms](#basic-usage-and-terms)
+  - [Defining Observers](#defining-observers)
+  - [Creating Observables](#creating-observables)
+  - [Subscribing](#subscribing)
+  - [Multicasting](#multicasting)
 
 
 # General
@@ -823,3 +829,135 @@ export class CustomElementComponent {
     background-color: #eef;
 }
 ```
+
+
+
+
+# Observables
+* Provides support for passing messages between publishers and subscribers in your application.
+* An observable can deliver multiple values of any type like:
+  * literals
+  * messages
+  * events
+  * etc...
+* Your application code only needs to worry about subscribing to consume values, and when done, unsubscribing.
+* See also
+  * [RxJS](https://www.learnrxjs.io/): It has a tons of predefined observables.
+
+## Basic usage and terms
+
+* As a **publisher**, you create an **Observable** instance that defines a *subscriber function*.
+  * This is the function that is executed when a consumer calls the **subscribe()** method.
+  * The *subscriber function* defines how to obtain or generate values or messages to be published.
+* To execute the observable:
+  * you have created and begin receiving notifications
+  * you call its **subscribe()** method, passing an **observer**
+  * This is a JavaScript object that defines the handlers for the notifications you receive. 
+  * The **subscribe()** call returns a **Subscription** object that has an **unsubscribe()** method, which you call to stop receiving notifications.
+
+
+
+## Defining Observers
+* A handler for receiving observable notifications implements the Observer interface.
+* **Observer interface** type is used
+  * when creating Observable instance at its callback argument type
+  * at **Observable.subscribe()** method's argument type
+
+```ts
+let observer: Observer = {
+    next: function(val) {},
+    error: function(msg) {}, // optional
+    complete?: function() {} // optional
+}
+```
+
+
+## Creating Observables
+* Use the Observable constructor to create an observable stream of any type. 
+* The constructor takes as its argument the subscriber function to run when the observable’s subscribe() method executes. 
+* A subscriber function receives an [Observer](#defining-observers) object, and can **publish** values to the observer's **next()** method.
+
+```ts
+const _observable = new Observable((observer: Observer) => {
+    // synchronously deliver 1, 2, and 3, then complete
+    observer.next(1);
+    observer.next(2);
+    observer.next(3);
+    observer.complete();
+    
+    return {
+        unsubscribe() {
+            // unsubscribe function doesn't need to do anything in this
+            // because values are delivered synchronously
+        }
+    };
+});
+```
+
+* Another example:
+
+```ts
+function eventStream (target, eventName) {
+    return new Observable((observer: Observer) => {
+        const handler = (e) => {
+            observer.next(e);
+        };
+
+        target.addEventListener(eventName, handler);
+
+        return {
+            unsubscribe() {
+                target.removeEventListener(eventName, handler);
+            }
+        };
+    });
+}
+
+// Some Other File:
+const btnElement = document.getElementById('btn') as HTMLInputElement;
+const buttonSubscription = eventStream(btnElement, 'focus').subscribe((ev) => {
+    btnElement.blur();
+});
+```
+
+
+## Subscribing
+* An Observable instance begins publishing values only when someone subscribes to it. 
+* You subscribe by calling the 
+  * **Observable.subscribe(observerObj)**
+  * **Observable.subscribe(nectHandler, errorHandler, completeHandler)**
+
+```ts
+const _observable = new Observable((observer: Observer) => {
+    // ...
+    // do something and then call 
+    // * observer.next() or
+    // * observer.error() or
+    // * observer.complete()
+});
+
+// subscribe(observer: Observer): any;
+_observable.subscribe({
+    next (val) {},
+    error (msg) {}, // optional
+    complete () {}, // optional
+});
+
+// OR
+_observable.subscribe(
+    (val) => {
+        // next handler
+    },
+    (msg) => {
+        // error handler / optional
+    },
+    () => {
+        // complete handler / optional
+    }
+});
+```
+
+## Multicasting
+* A typical observable creates a new, independent execution for each subscribed observer.
+* Sometimes, instead of starting an independent execution for each subscriber, you want each subscription to get the same values.
+* With a multicasting observable, you don't register multiple listeners, but instead re-use the first listener and send values out to each subscriber.
