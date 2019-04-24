@@ -2,6 +2,7 @@
 - [General](#general)
 - [Architecture](#architecture)
   - [Modules](#modules)
+    - [Frequently Used Modules](#frequently-used-modules)
   - [Components](#components)
   - [Services](#services)
 - [Dependency Injection (DI)](#dependency-injection-di)
@@ -47,11 +48,21 @@
     - [:host](#host)
     - [:host-context](#host-context)
 - [Observables](#observables)
-  - [Basic usage and terms](#basic-usage-and-terms)
+  - [Basic Usage and Terms](#basic-usage-and-terms)
+  - [Naming Conventions for Observables](#naming-conventions-for-observables)
   - [Defining Observers](#defining-observers)
   - [Creating Observables](#creating-observables)
   - [Subscribing](#subscribing)
-  - [Multicasting](#multicasting)
+  - [RxJS](#rxjs)
+    - [RxJS Observable Creation Functions](#rxjs-observable-creation-functions)
+    - [RxJS Operators](#rxjs-operators)
+      - [Error Handling with catchError](#error-handling-with-catcherror)
+      - [Retry on Error](#retry-on-error)
+    - [RxJS Subjects (Multicast)](#rxjs-subjects-multicast)
+    - [Subject](#subject)
+    - [ReplaySubject](#replaysubject)
+    - [BehaviorSubject](#behaviorsubject)
+    - [BehaviorSubject](#behaviorsubject-1)
 
 
 # General
@@ -71,25 +82,44 @@
 @NgModule(metadata)
 ```
 
-* **NgModules**
+* **NgModule**
 * Provides compilation context for components.
 * Every angular app always has at least one **root module** that enables bootstrapping, and typically has many more feature modules.
-* Can contain **components** and **services**.
+* Can contain **components**, **services**, **directives** and **pipes**.
 * NgModules can import functionality from other NgModules.
 * NgModules allows their own functionality to be exported and used by other NgModules.
 * The components that belong to an NgModule **share a compilation context**.
 * Metadata is the options object that defines the module behaviour. Some of these options like below:
   * **declarations**
     * Components, pipes and directives that belong to this module.
+    * You must declare every component in exactly one NgModule class.
+    * You only need to declare them **once** in your app because you share them by importing the necessary **modules**.
   * **exports**
-    * Subset of declarations that visible and usable in the *component templates* of the other modules.
+    * Makes some declarations of those components, directives, and pipes public so that other module's component templates can use them.
   * **imports**
-    * Other modules that are needed by this module.
+    * Other **modules** that are needed by this module.
+    * A component template **can reference** another component, directive, or pipe when the referenced item is declared in **this module** or another **imported module**
   * **providers**
     * An array of providers for services that the module requires.
+    * Provides services that the other application components can use.
   * **bootstrap**
     * The main application view (**root component**)
     * Only the root NgModule should set the bootstrap property
+    * Can be array
+* NgModules brings **components**, **directives**, and **pipes** together into cohesive blocks of functionality, each focused on a feature area, application business domain, workflow, or common collection of utilities.
+* Modules can be loaded when the application starts or lazy loaded asynchronously by the router.
+
+### Frequently Used Modules
+
+| NgModule | Import it from | Why you use it |
+| --- | --- | --- |
+| BrowserModule | @angular/platform-browser | When you want to run your app in a browser
+| CommonModule | @angular/common | When you want to use NgIf, NgFor
+| FormsModule | @angular/forms | When you want to build template driven forms (includes NgModel)
+| ReactiveFormsModule | @angular/forms | When you want to build reactive forms
+| RouterModule | @angular/router | When you want to use RouterLink, .forRoot(), and .forChild()
+| HttpClientModule | @angular/common/http | When you want to talk to a server
+
 
 ```ts
 // @FILE: src/app/app.module.ts
@@ -97,7 +127,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 @NgModule({
-    imports: [ BrowserModule ],
+    imports: [ BrowserModule ], // includes common things
     providers: [ Logger ],
     declarations: [ AppComponent ],
     exports: [ AppComponent ],
@@ -844,7 +874,7 @@ export class CustomElementComponent {
 * See also
   * [RxJS](https://www.learnrxjs.io/): It has a tons of predefined observables.
 
-## Basic usage and terms
+## Basic Usage and Terms
 
 * As a **publisher**, you create an **Observable** instance that defines a *subscriber function*.
   * This is the function that is executed when a consumer calls the **subscribe()** method.
@@ -855,6 +885,30 @@ export class CustomElementComponent {
   * This is a JavaScript object that defines the handlers for the notifications you receive. 
   * The **subscribe()** call returns a **Subscription** object that has an **unsubscribe()** method, which you call to stop receiving notifications.
 
+
+## Naming Conventions for Observables
+* You will often see observables named with a trailing “$” sign.
+* This can be useful when scanning through code and looking for observable values. 
+* Also, if you want a property to store the most recent value from an observable, it can be convenient to simply use the same name with or without the “$”.
+
+```ts
+import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
+    
+@Component({
+    // ...
+})
+export class StopwatchComponent {
+    stopwatchValue: number;
+    stopwatchValue$: Observable<number>;
+    
+    start() {
+        this.stopwatchValue$.subscribe((num) =>
+            this.stopwatchValue = num;
+        );
+    }
+}
+```
 
 
 ## Defining Observers
@@ -878,7 +932,7 @@ let observer: Observer = {
 * A subscriber function receives an [Observer](#defining-observers) object, and can **publish** values to the observer's **next()** method.
 
 ```ts
-const _observable = new Observable((observer: Observer) => {
+const _observable$ = new Observable((observer: Observer) => {
     // synchronously deliver 1, 2, and 3, then complete
     observer.next(1);
     observer.next(2);
@@ -928,7 +982,7 @@ const buttonSubscription = eventStream(btnElement, 'focus').subscribe((ev) => {
   * **Observable.subscribe(nectHandler, errorHandler, completeHandler)**
 
 ```ts
-const _observable = new Observable((observer: Observer) => {
+const _observable$ = new Observable((observer: Observer) => {
     // ...
     // do something and then call 
     // * observer.next() or
@@ -937,14 +991,14 @@ const _observable = new Observable((observer: Observer) => {
 });
 
 // subscribe(observer: Observer): any;
-_observable.subscribe({
+_observable$.subscribe({
     next (val) {},
     error (msg) {}, // optional
     complete () {}, // optional
 });
 
 // OR
-_observable.subscribe(
+_observable$.subscribe(
     (val) => {
         // next handler
     },
@@ -957,7 +1011,255 @@ _observable.subscribe(
 });
 ```
 
-## Multicasting
-* A typical observable creates a new, independent execution for each subscribed observer.
-* Sometimes, instead of starting an independent execution for each subscriber, you want each subscription to get the same values.
-* With a multicasting observable, you don't register multiple listeners, but instead re-use the first listener and send values out to each subscriber.
+
+## RxJS
+* RxJS (Reactive Extensions for JavaScript) is a library for **reactive programming** using **observables** that makes it easier to compose asynchronous or callback-based code
+* RxJS provides an implementation of the Observable type
+* The library also provides utility functions for creating and working with observables. 
+* These utility functions can be used for:
+  * Converting existing code for async operations into observables
+  * Iterating through the values in a stream
+  * Mapping values to different types
+  * Filtering streams
+  * Composing multiple streams
+* Must see also:
+  * [https://rxjs-dev.firebaseapp.com/api](https://rxjs-dev.firebaseapp.com/api)
+  * [https://www.learnrxjs.io/](https://www.learnrxjs.io/)
+
+### RxJS Observable Creation Functions
+* RxJS offers a number of functions that can be used to create new observables
+* These functions can simplify the process of creating observables from things such as events, timers, promises, and so on.
+
+```ts
+// Create an observable from a promise
+
+import { from } from 'rxjs';
+
+// Create an Observable out of a promise
+const data$ = from(fetch('/api/endpoint'));
+
+data$.subscribe({
+    next(response) { console.log(response); },
+    error(err) { console.error('Error: ' + err); },
+    complete() { console.log('Completed'); }
+});
+```
+
+```ts
+// Create an observable from an event
+import { fromEvent } from 'rxjs';
+    
+const el = document.getElementById('my-element');
+const mouseMoves$ = fromEvent(el, 'mousemove');
+const subscription = mouseMoves$.subscribe((evt: MouseEvent) => {
+    // Log coords of mouse movements
+    console.log(`Coords: ${evt.clientX} X ${evt.clientY}`);
+    
+    if (evt.clientX < 40 && evt.clientY < 40) {
+        subscription.unsubscribe();
+    }
+});
+```
+
+* Some of these functions like below:
+  * [ajax](https://www.learnrxjs.io/operators/creation/ajax.html)
+    * Create an observable for an Ajax request with either a request object with url, headers, etc or a string for a URL.
+  * [create](https://www.learnrxjs.io/operators/creation/create.html)
+    * Create an observable with given subscription function.
+  * [from](https://www.learnrxjs.io/operators/creation/from.html)
+    * Turn an array, promise, or iterable into an observable.
+  * [fromEvent](https://www.learnrxjs.io/operators/creation/fromevent.html)
+    * Turn event into observable sequence.
+  * [interval](https://www.learnrxjs.io/operators/creation/interval.html)
+    * Emit numbers in sequence based on provided timeframe.
+  * [of](https://www.learnrxjs.io/operators/creation/of.html)
+    * Emit variable amount of values in a sequence.
+  * [range](https://www.learnrxjs.io/operators/creation/range.html)
+    * Emit numbers in provided range in sequence.
+  * [throw](https://www.learnrxjs.io/operators/creation/throw.html)
+    * Emit error on subscription.
+  * [timer](https://www.learnrxjs.io/operators/creation/timer.html)
+    * After given duration, emit numbers in sequence every specified duration.
+* See also: [https://www.learnrxjs.io/operators/creation/](https://www.learnrxjs.io/operators/creation/)
+
+
+### RxJS Operators
+* Operators are functions that build on the observables to enable sophisticated manipulation of collections.
+* You can use pipes to link operators together. 
+* Pipes let you combine multiple functions into a single function.
+* Pipe has two version:
+  * Generic function
+    * takes as its arguments the functions you want to combine, and returns a new function 
+    * when executed, runs the composed functions in sequence
+        ```ts
+        import { filter, map } from 'rxjs/operators';
+        const nums$ = of(1, 2, 3, 4, 5);
+
+        // Creates a function that accepts an Observable.
+        const squareOddVals = pipe(
+            filter((n: number) => n % 2 !== 0),
+            map(n => n * n)
+        );
+        
+        // Create an Observable that will run the filter and map functions
+        const squareOdd$ = squareOddVals(nums$);
+        squareOdd$.subscribe(x => console.log(x));
+        ```
+  * Observable instance function
+    ```ts
+    import { filter, map } from 'rxjs/operators';
+
+    const squareOdd$ = of(1, 2, 3, 4, 5).pipe(
+        filter(n => n % 2 !== 0),
+        map(n => n * n)
+    );
+
+    // Subscribe to get values
+    squareOdd$.subscribe(x => console.log(x));
+    ```
+
+* See also: [https://www.learnrxjs.io/operators/](https://www.learnrxjs.io/operators/)
+
+
+
+#### Error Handling with catchError
+* In addition to the error() handler that you provide on subscription, RxJS provides the **catchError** operator that lets you handle known errors in the observable recipe.
+* If you catch error and supply a default value, your stream continues to process values rather than erroring out.
+
+```ts
+import { ajax } from 'rxjs/ajax';
+import { map, catchError } from 'rxjs/operators';
+const apiData$ = ajax('/api/data').pipe(
+    map((res) => {
+        if (!res.response) throw new Error('Value expected!');
+        return res.response;
+    }),
+    catchError((err) => of([]))
+);
+
+apiData$.subscribe({
+    next(x) { console.log('data: ', x); },
+    error(err) { console.log('errors already caught... will not run'); }
+});
+```
+
+#### Retry on Error
+* Where the catchError operator provides a simple path of recovery, the retry operator lets you retry a failed request.
+* Use the retry operator before the catchError operator. 
+* It resubscribes to the original source observable, which can then re-run the full sequence of actions that resulted in the error. 
+
+
+```ts
+import { ajax } from 'rxjs/ajax';
+import { map, catchError, retry } from 'rxjs/operators';
+const apiData$ = ajax('/api/data').pipe(
+    retry(3),
+    map((res) => {
+        if (!res.response) throw new Error('Value expected!');
+        return res.response;
+    }),
+    catchError((err) => of([]))
+);
+
+apiData$.subscribe({
+    next(x) { console.log('data: ', x); },
+    error(err) { console.log('errors already caught... will not run'); }
+});
+```
+
+### RxJS Subjects (Multicast)
+* A Subject is a special type of **Observable** which shares a single execution path among **observers**. (multicast)
+* Typical observables are 1 to 1.
+* There are 4 variants of subjects:
+  * Subject
+    * No intial value or replay behavior.
+  * ReplaySubject
+    * Emits specified number of last emitted values (a replay) to new subscribers.
+  * AsyncSubject
+    * Emits latest value to observers upon completion.
+  * BehaviorSubject
+    * Requires an initial value and emits its current value (last emitted item) to new subscribers.
+
+
+### Subject
+* A special type of Observable which shares a single execution path among observers.
+* Basic multicast. (No history, no initial)
+
+```ts
+import { Subject } from 'rxjs';
+
+const sub = new Subject();
+
+sub.next(1);
+sub.subscribe(console.log);
+
+sub.next(2); // OUTPUT => 2
+sub.subscribe(console.log);
+
+sub.next(3); // OUTPUT => 3,3 (logged from both subscribers)
+```
+
+
+### ReplaySubject
+* It is an extended version of the standar Subject.
+* It buffers a set number of values and will emit those values immediately to any new subscribers.
+
+```ts
+import { ReplaySubject } from 'rxjs';
+const sub = new ReplaySubject(3);
+
+sub.next(1);
+sub.next(2);
+sub.subscribe(console.log); 
+// OUTPUT => 1,2
+
+sub.next(3); // OUTPUT => 3
+sub.next(4); // OUTPUT => 4
+sub.subscribe(console.log); 
+// OUTPUT => 2,3,4 (log of last 3 values from new subscriber)
+
+sub.next(5); // OUTPUT => 5,5 (log from both subscribers)
+```
+
+
+### BehaviorSubject
+* A variant of Subject that requires an initial value and emits its current value whenever it is subscribed to.
+* It emits:
+  * **initial value** to new subscribers if it has no history yet (never called next)
+  * Else **last value** to new subscribers
+
+```ts
+import { BehaviorSubject } from 'rxjs';
+const subject = new BehaviorSubject(123);
+
+//two new subscribers will get initial value => output: 123, 123
+subject.subscribe(console.log);
+subject.subscribe(console.log);
+
+//two subscribers will get new value => output: 456, 456
+subject.next(456);
+
+//new subscriber will get latest value (456) => output: 456
+subject.subscribe(console.log);
+
+//all three subscribers will get new value => output: 789, 789, 789
+subject.next(789);
+
+```
+
+
+### BehaviorSubject
+* It only emits the **last value** to all subscriber when **completed**.
+
+```ts
+import { AsyncSubject } from 'rxjs';
+const sub = new AsyncSubject();
+
+sub.subscribe(console.log);
+sub.next(123); //nothing logged
+
+sub.subscribe(console.log);
+sub.next(456); //nothing logged
+
+sub.complete(); //456, 456 logged by both subscribers
+```
