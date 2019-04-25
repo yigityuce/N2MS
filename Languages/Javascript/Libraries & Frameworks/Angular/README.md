@@ -4,6 +4,7 @@
   - [Modules](#modules)
     - [Frequently Used Modules](#frequently-used-modules)
   - [Components](#components)
+    - [Entry Components](#entry-components)
   - [Services](#services)
 - [Dependency Injection (DI)](#dependency-injection-di)
   - [Injector](#injector)
@@ -63,6 +64,9 @@
     - [ReplaySubject](#replaysubject)
     - [BehaviorSubject](#behaviorsubject)
     - [BehaviorSubject](#behaviorsubject-1)
+- [Best Practices](#best-practices)
+  - [Feature Modules](#feature-modules)
+    - [Example](#example)
 
 
 # General
@@ -106,6 +110,12 @@
     * The main application view (**root component**)
     * Only the root NgModule should set the bootstrap property
     * Can be array
+  * **entryComponents**
+    * Components that are bootstrapped and dynamically loaded (like routed) components
+    * Most of the time you won't have to explicitly set any entry components.
+    * Because Angular adds components listed in
+      * @NgModule.bootstrap
+      * Router definitions components
 * NgModules brings **components**, **directives**, and **pipes** together into cohesive blocks of functionality, each focused on a feature area, application business domain, workflow, or common collection of utilities.
 * Modules can be loaded when the application starts or lazy loaded asynchronously by the router.
 
@@ -119,6 +129,13 @@
 | ReactiveFormsModule | @angular/forms | When you want to build reactive forms
 | RouterModule | @angular/router | When you want to use RouterLink, .forRoot(), and .forChild()
 | HttpClientModule | @angular/common/http | When you want to talk to a server
+
+
+* **BrowserModule** imports **CommonModule**.
+* Additionally, BrowserModule **re-exports** CommonModule making all of its directives available to any module that imports BrowserModule.
+* For apps that **run in the browser**, import BrowserModule in the **root AppModule** because it provides services that are essential to launch and run a browser app. 
+* BrowserModule’s providers are **for the whole app** so it should only be in the root module, not in feature modules. 
+* Feature modules only need the common directives in CommonModule; they don’t need to re-install app-wide providers.
 
 
 ```ts
@@ -179,6 +196,16 @@ export class HeroListComponent implements OnInit {
 
 * See also:
   * [Templating](#templating)
+  
+
+### Entry Components
+* An entry component is any component that Angular loads imperatively.
+* There are two main kinds of entry components:
+  * The bootstrapped root component.
+    * It is an entry component that Angular loads into the DOM during the bootstrap process (application launch)
+  * Other entry components are loaded dynamically by other means, such as with the router (lazy-loading)
+
+
 
 
 ## Services
@@ -193,6 +220,7 @@ export class HeroListComponent implements OnInit {
 * A component can delegate certain tasks to services, such as fetching data from the server, validating user input, or logging directly to the console.
 * By defining such processing tasks in an injectable service class, you make those tasks available to any component. 
 * You can also make your app more adaptable by injecting different providers of the same kind of service.
+* @Injectable decorator makes class singleton.
 
 ```ts
 // @FILE: src/app/logger.service.ts
@@ -1262,4 +1290,136 @@ sub.subscribe(console.log);
 sub.next(456); //nothing logged
 
 sub.complete(); //456, 456 logged by both subscribers
+```
+
+
+# Best Practices
+
+## Feature Modules
+* Feature modules are NgModules for the purpose of organizing code.
+* As your app grows, you can organize code relevant for a specific feature.
+* With feature modules, you can keep code related to a specific functionality or feature separate from other code. 
+* A feature module is an organizational best practice.
+* There are five types of feature modules:
+  * Domain feature modules.
+  * Routed feature modules.
+  * Routing modules.
+  * Service feature modules.
+  * Widget feature modules.
+
+
+### Example
+```
+// directory structure
+
+project
+|-- src
+    |-- app
+        |-- app.module.ts
+        |-- app.component.ts
+        |-- app.component.html
+        |-- app.component.scss
+        |-- featureOne
+            |-- featureOne.module.ts
+            |-- featureOne.component.ts
+            |-- featureOne.component.html
+            |-- featureOne.component.scss
+
+```
+
+```ts
+// FILE: /src/app/app.module.ts
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+
+import { AppComponent } from './app.component';
+import { FeatureOneModule } from './featureOne/featureOne.module';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    HttpClientModule,
+    FeatureOneModule
+  ],
+  providers: [],
+  bootstrap: [ AppComponent ]
+})
+export class AppModule { }
+```
+
+```ts
+// FILE: /src/app/app.component.ts
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: [ './app.component.scss' ]
+  providers: [],
+})
+export class AppComponent { 
+    constructor() {}
+}
+```
+
+```html
+<!-- FILE: /src/app/app.component.html -->
+<h1> Welcome </p>
+<feature-one [message]="This is my greeting message"></feature-one>
+```
+
+
+```ts
+// FILE: /src/app/featureOne/featureOne.module.ts
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+
+import { FeatureOneComponent } from './featureOne.component';
+
+@NgModule({
+  declarations: [
+    FeatureOneComponent
+  ],
+  imports: [
+    CommonModule,
+  ],
+  exports: [
+    FeatureOneComponent, // IMPORTANT!
+  ],
+  providers: [],
+})
+export class FeatureOneModule { }
+```
+
+```ts
+// FILE: /src/app/featureOne/featureOne.component.ts
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+
+
+@Component({
+  selector: 'feature-one',
+  templateUrl: './featureOne.component.html',
+  styleUrls: [ './featureOne.component.scss' ]
+  providers: [],
+})
+export class FeatureOneComponent { 
+    @Input() message: string = '';
+    
+    constructor() {}
+}
+```
+
+```html
+<!-- FILE: /src/app/featureOne/featureOne.component.html -->
+<p>
+  {{ message }}
+</p>
 ```
