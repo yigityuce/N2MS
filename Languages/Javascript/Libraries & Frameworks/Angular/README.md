@@ -5,10 +5,8 @@
     - [Frequently Used Modules](#frequently-used-modules)
   - [Components](#components)
     - [Entry Components](#entry-components)
+    - [Dynamic Components](#dynamic-components)
   - [Services](#services)
-- [Dependency Injection (DI)](#dependency-injection-di)
-  - [Injector](#injector)
-  - [Provider](#provider)
 - [Templating](#templating)
   - [Template References](#template-references)
   - [Data Binding](#data-binding)
@@ -27,6 +25,9 @@
     - [ngClass](#ngclass)
     - [ngStyle](#ngstyle)
     - [ngModel](#ngmodel)
+  - [Predefined Template Tags](#predefined-template-tags)
+    - [\<ng-template\>](#ng-template)
+    - [\<ng-container\>](#ng-container)
 - [Custom Events](#custom-events)
   - [EventEmitter](#eventemitter)
 - [Input/Output](#inputoutput)
@@ -48,6 +49,16 @@
   - [Special Selectors](#special-selectors)
     - [:host](#host)
     - [:host-context](#host-context)
+- [Dependency Injection (DI)](#dependency-injection-di)
+  - [Injector](#injector)
+  - [Provider](#provider)
+- [Custom Directives](#custom-directives)
+  - [Custom Attribute Directive](#custom-attribute-directive)
+  - [Custom Structural Directive](#custom-structural-directive)
+    - [The Asterisk (*) Prefix](#the-asterisk--prefix)
+    - [Microsyntax](#microsyntax)
+    - [Example](#example)
+  - [Directive Selectors](#directive-selectors)
 - [Observables](#observables)
   - [Basic Usage and Terms](#basic-usage-and-terms)
   - [Naming Conventions for Observables](#naming-conventions-for-observables)
@@ -66,7 +77,7 @@
     - [BehaviorSubject](#behaviorsubject-1)
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
-    - [Example](#example)
+    - [Example](#example-1)
 
 
 # General
@@ -164,7 +175,7 @@ export class AppModule { }
 * Uses **services** which provide specific functionality not directly related to views.
 * The class interacts with the view through *properties* and *methods*.
 * Service providers can be **injected** into components as *dependencies*.
-* Every angular app always has at least one **root module**.
+* Every angular app always has at least one **root component**.
 * Each component
   * defines a class that contains application data and logic.
   * is associated with an HTML template that defines a view.
@@ -206,6 +217,13 @@ export class HeroListComponent implements OnInit {
   * Other entry components are loaded dynamically by other means, such as with the router (lazy-loading)
 
 
+### Dynamic Components
+* Component templates are not always fixed. 
+* An application may need to load new components at runtime.
+* Angular comes with its own API for loading components dynamically.
+
+// TODO: this will be completed
+
 
 
 ## Services
@@ -216,11 +234,9 @@ export class HeroListComponent implements OnInit {
 
 * For data or logic that isn't associated with a specific view, and that you want to share across components.
 * A service is typically a class with a narrow, well-defined purpose. 
-* It should do something specific and do it well.
 * A component can delegate certain tasks to services, such as fetching data from the server, validating user input, or logging directly to the console.
 * By defining such processing tasks in an injectable service class, you make those tasks available to any component. 
-* You can also make your app more adaptable by injecting different providers of the same kind of service.
-* @Injectable decorator makes class singleton.
+* @Injectable decorator makes class **singleton**.
 
 ```ts
 // @FILE: src/app/logger.service.ts
@@ -257,29 +273,6 @@ export class HeroService {
 
 * See also:
   * [Dependency Injection (DI)](#dependency-injection-di)
-
-
-
-
-
-# Dependency Injection (DI)
-* It is used everywhere to provide new components with the services or other things they need.
-* To define a class as a service in Angular, use the **@Injectable()** decorator to allow Angular to inject it into a component as a dependency.
-* A dependency doesn't have to be a service—it could be a function, for example, or a value.
-* When Angular creates a new instance of a component class, it determines which services or other dependencies that component needs by looking at the **constructor parameter types**.
-
-## Injector
-* The **injector** is the main mechanism.
-* An injector creates dependencies, and maintains a container of dependency instances that it reuses if possible. 
-* A **provider** is an object that tells an injector how to obtain or create a dependency.
-
-## Provider
-* You must register at least one provider of any service you are going to use.
-* The provider can be part of the service's own metadata, making that service available everywhere or you can register providers with specific modules or components. 
-* You can register providers:
-  * in the service metadata (with @Injectable() decorator)
-  * in the module metadata (with @NgModule() decorator)
-  * in the component metadata (with @Component() decorator)
 
 
 
@@ -511,7 +504,7 @@ export class FileSizePipe implements PipeTransform {
 ## Directives
 * Angular transforms the DOM according to the instructions given by directives.
 * Angular defines a number of directives.
-* You can define your own using the @Directive() decorator.
+* You can define your own directives. See also: [Custom Directives](#custom-directives)
 * In templates, directives typically appear within an element tag as attributes.
 * There is two kind of directives:
   * **Structural directives** alter layout by adding, removing, and replacing elements in the DOM. 
@@ -526,7 +519,7 @@ export class FileSizePipe implements PipeTransform {
   * Used inside brackets.
   
     ```html
-    <input [(ngModel)]="hero.name">
+    <div [ngClass]="currentClasses"></div>
     ```
 
 
@@ -654,6 +647,29 @@ export class AppModule {}
 <input [(ngModel)]="inputDataHolder">
 ```
 
+## Predefined Template Tags
+
+### \<ng-template\>
+* The \<ng-template\> is an Angular element for rendering HTML. 
+* It is never displayed directly. 
+* Before rendering the view, Angular replaces the \<ng-template\> and its contents with a comment.
+* If there is no structural directive and you wrap some elements in a \<ng-template\>, those elements **disappear**. 
+
+```html
+<p>Hello</p>
+<ng-template>
+    <p>Angular</p>
+</ng-template>
+<p>World!</p>
+
+<!-- Expected output: -->
+Hello
+World!
+```
+
+### \<ng-container\>
+* The Angular \<ng-container\> is a grouping element that doesn't interfere with styles or layout because Angular doesn't put it in the DOM.
+
 
 
 
@@ -705,6 +721,26 @@ delete() {
 
 * An Input property is a settable property annotated with an **@Input** decorator.
 * It is used to descibe component properties.
+* Can do some additional operations with using setter. For ex.:
+
+```ts
+@Input() 
+set size(sz: number) {
+  this._filesize = sz;
+  if (sz < 100) {
+    this.type = 'sm';
+  }
+  else if (sz < 250) {
+    this.type = 'md';
+  }
+  else if (sz < 500) {
+    this.type = 'lg';
+  }
+  else {
+    this.type = 'xl';
+  }
+}
+```
 
 ## Output
 ```ts
@@ -730,9 +766,9 @@ delete() {
     outputs: ['accessed:itemAccessed'],
 })
 export class SomeComponent {
-
 }
 ```
+
 
 
 # Lifecycle Hooks
@@ -887,6 +923,191 @@ export class CustomElementComponent {
     background-color: #eef;
 }
 ```
+
+
+
+
+
+# Dependency Injection (DI)
+* It is used everywhere to provide new components with the services or other things they need.
+* To define a class as a service in Angular, use the **@Injectable()** decorator to allow Angular to inject it into a component as a dependency.
+* A dependency doesn't have to be a service—it could be a function, for example, or a value.
+* When Angular creates a new instance of a component class, it determines which services or other dependencies that component needs by looking at the **constructor parameter types**.
+
+## Injector
+* The **injector** is the main mechanism.
+* An injector creates dependencies, and maintains a container of dependency instances that it reuses if possible. 
+* A **provider** is an object that tells an injector how to obtain or create a dependency.
+
+## Provider
+* You must register at least one provider of any service you are going to use.
+* The provider can be part of the service's own metadata, making that service available everywhere or you can register providers with specific modules or components. 
+* You can register providers:
+  * in the service metadata (with @Injectable() decorator)
+  * in the module metadata (with @NgModule() decorator)
+  * in the component metadata (with @Component() decorator)
+
+
+
+
+# Custom Directives
+* There are three kinds of directives in Angular:
+  * Components
+    * directives with a template.
+  * Structural directives
+    * change the DOM layout by adding and removing DOM elements.
+    * used with asteriks(*) in template
+  * Attribute directives
+    * change the appearance or behavior of an element, component, or another directive.
+    * used with square brackets([]) in template
+
+## Custom Attribute Directive
+* An attribute directive minimally requires building a controller class annotated with **@Directive()**
+* The controller class implements the desired directive behavior.
+* Directive selector and input variable name must be the same to bind directive argument at html template or input alias can be used.
+* You can apply **many** attribute directives to one host element.
+
+```ts
+// @FILE: src/app/highlight.directive.ts
+
+import { Directive, ElementRef, HostListener, Input } from '@angular/core';
+
+@Directive({
+    selector: '[highlight]'
+})
+export class HighlightDirective {
+    // BOTH VALID BELOW
+    @Input('highlight') color: string|null = null; 
+    // @Input() highlight: string = null; 
+
+    @HostListener('mouseenter') 
+    onMouseEnter() {
+        this.highlight(this.color);
+    }
+
+    @HostListener('mouseleave') 
+    onMouseLeave() {
+        this.highlight(null);
+    }
+
+    highlight(clr: string|null): void {
+        this.el.nativeElement.style.backgroundColor = clr;
+    }
+
+    constructor(private el: ElementRef) {
+        this.highlight(this.color);
+    }
+}
+```
+
+```html
+<p [highlight]="'yellow'">Highlight me!</p>
+```
+
+* See also: 
+  * [ElementRef](https://angular.io/api/core/ElementRef)
+  * [HostListener](https://angular.io/api/core/HostListener)
+
+
+
+## Custom Structural Directive
+* The string is a microsyntax rather than the usual template expression
+* Angular desugars this notation into a marked-up \<ng-template\> that surrounds the host element and its descendents.
+* A **directive class** is spelled in UpperCamelCase (NgIf). 
+* A directive's **attribute name** is spelled in lowerCamelCase (ngIf).
+* You can **only apply one** structural directive to a host element.
+  * For ex. if you try to put both *ngFor and *ngIf on the same host element, Angular won't let you.
+
+
+### The Asterisk (*) Prefix
+* The asterisk is "syntactic sugar" for something a bit more complicated.
+* Internally, Angular translates the ***ngIf** attribute into a **\<ng-template\>** element, wrapped around the host element.
+
+```html
+<div *ngIf="hero" class="name">{{ hero.name }}</div>
+
+<!-- SAME AS ABOVE -->
+<ng-template [ngIf]="hero">
+    <div class="name">{{ hero.name }}</div>
+</ng-template>
+```
+
+* The *ngIf directive moved to the \<ng-template\> element where it became a **property binding**, [ngIf].
+* The rest of the \<div\>, including its class attribute, **moved inside** the \<ng-template\> element.
+
+
+### Microsyntax
+```html
+<div *ngFor="let item of items; let i=index; let odd=odd; trackBy: trackById">
+    {{ hero.name }}
+</div>
+
+<!-- SAME AS ABOVE -->
+<ng-template ngFor let-item [ngForOf]="items" let-i="index" let-odd="odd" [ngForTrackBy]="trackById">
+    <div>{{ hero.name }}</div>
+</ng-template>
+```
+
+* ngFor directive string is microsyntax.
+* The microsyntax parser translates that string into attributes on the \<ng-template\>:
+  * The **let** keyword declares a **template input variable** that you reference within the template.
+  * Parser takes **of** and **trackBy** then prefixes them with the directive's attribute name (ngFor). Those are the names of two NgFor input properties (**ngForOf** and **ngForTrackBy**).
+
+
+### Example
+* Creating a directive is similar to creating a component.
+  * Import the Directive decorator
+  * Import the Input, TemplateRef, and ViewContainerRef symbols; you'll need them for any structural directive.
+  * Apply the decorator to the directive class.
+  * Set the CSS attribute selector that identifies the directive when applied to an element in a template.
+
+```ts
+import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
+  
+/**
+  * - `<div *appUnless="condition">...</div>`
+  */
+@Directive({ selector: '[appUnless]'})
+export class UnlessDirective {
+    private hasView = false;
+  
+    constructor(
+        private templateRef: TemplateRef<any>,
+        private viewContainer: ViewContainerRef) {
+    }
+  
+    @Input() 
+    set appUnless(condition: boolean) {
+        if (!condition && !this.hasView) {
+            this.viewContainer.createEmbeddedView(this.templateRef);
+            this.hasView = true;
+        } else if (condition && this.hasView) {
+            this.viewContainer.clear();
+            this.hasView = false;
+        }
+    }
+}
+```
+
+```html
+<div *appUnless="condition">...</div>
+```
+
+* See also: 
+  * [TemplateRef](https://angular.io/api/core/TemplateRef)
+  * [ViewContainerRef](https://angular.io/api/core/ViewContainerRef)
+
+
+![CustomStructuralDirectives](./CustomStructuralDirectives.jpg)
+
+## Directive Selectors
+* Declare as one of the following:
+  * **element-name**: Select by element name.
+  * **.class**: Select by class name.
+  * **[attribute]**: Select by attribute name.
+  * **[attribute=value]**: Select by attribute name and value.
+  * **:not(sub_selector)**: Select only if the element does not match the sub_selector.
+  * **selector1, selector2**: Select if either selector1 or selector2 matches.
 
 
 
