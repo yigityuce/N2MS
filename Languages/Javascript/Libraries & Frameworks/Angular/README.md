@@ -50,7 +50,10 @@
     - [:host](#host)
     - [:host-context](#host-context)
 - [Dependency Injection (DI)](#dependency-injection-di)
+  - [Creating an Injectable Service Class](#creating-an-injectable-service-class)
   - [Injector](#injector)
+  - [Injecting Dependency](#injecting-dependency)
+    - [Optional Dependency](#optional-dependency)
   - [Provider](#provider)
 - [Custom Directives](#custom-directives)
   - [Custom Attribute Directive](#custom-attribute-directive)
@@ -929,15 +932,140 @@ export class CustomElementComponent {
 
 
 # Dependency Injection (DI)
-* It is used everywhere to provide new components with the services or other things they need.
-* To define a class as a service in Angular, use the **@Injectable()** decorator to allow Angular to inject it into a component as a dependency.
-* A dependency doesn't have to be a service—it could be a function, for example, or a value.
-* When Angular creates a new instance of a component class, it determines which services or other dependencies that component needs by looking at the **constructor parameter types**.
+* Dependencies are services or objects that a class needs to perform its function.
+* DI is a coding pattern which a class asks for dependencies from external sources rather than creating them itself.
+* In Angular, the DI framework **provides** declared **dependencies** to a class when that class is **instantiated**.
+* The DI framework lets you supply data to a component from an **injectable service class**, defined in its own file.
+
+
+## Creating an Injectable Service Class
+* To define a class as a **service** in Angular, use the **@Injectable()** decorator to allow Angular to inject it into a component as a dependency.
+
+```ts
+import { Injectable } from '@angular/core';
+
+@Injectable({
+    // we declare that this service should be created
+    // by the root application injector.
+    providedIn: 'root',
+})
+export class DataService {
+    private _data: any[] = [];
+    
+    get (i: number) { return _data[i]; }
+}
+```
+
+* The class we have created provides a service. 
+* The **@Injectable()** decorator marks it as a service that can be injected, but Angular can't actually inject it anywhere until you configure a **dependency injector** with a **provider** of that service.
+
 
 ## Injector
-* The **injector** is the main mechanism.
-* An injector creates dependencies, and maintains a container of dependency instances that it reuses if possible. 
-* A **provider** is an object that tells an injector how to obtain or create a dependency.
+* The **injector** is responsible for creating service instances and injecting them into classes.
+* A provider tells an injector **how to create the service**.
+* Injectors are **inherited**, which means that if a given injector can't resolve a dependency, it asks the **parent injector** to resolve it.
+* A component can get services from 
+  * its **own injector** 
+  * or its **parent NgModule injector** 
+  * or from the **root injector**
+* You can **configure injectors** with **providers** at different levels of your app, by **setting a metadata** value with:
+  * **@Injectable()** decorator at the service
+    * It has the **providedIn** metadata option
+    * You can specify the provider of the service with the:
+       * root injector
+       * specific NgModule
+  * **@NgModule()** decorator at the module
+    * It has the **provider** metadata option
+  * **@Directive()** decorator at the directive
+    * It has the **provider** metadata option.
+  * **@Component()** decorator at the component
+    * Components are a special type of directive, and the **providers** property of @Component() is **inherited from @Directive()**.
+    * Each new instance of the component gets its own instance of the service. 
+* There is **only one** root injector for an app.
+* Child modules and component injectors are independent of each other, and create their own separate injector instances of the provided services.
+* An internal **platform-level injector** is shared by all running apps. 
+* The **root module injector** is the root of an app-wide injector hierarchy
+* **NgModule, directive-level injectors** follow the structure of the component hierarchy.
+* NgModule-level providers can be specified with 
+  * @NgModule() **providers** metadata option
+    * Use the @NgModule() providers option if a module is **lazy loaded**.
+  * in the @Injectable() **providedIn** option
+
+
+
+
+## Injecting Dependency
+* You can tell Angular to inject a dependency in a component by specifying a **constructor parameter with the dependency type**.
+* Dependency still needs to be provided in somewhere like parent module or root module.
+
+```ts
+// @ FILE: app/src/commons/services/DataService.service.ts
+import { Injectable } from '@angular/core';
+
+@Injectable({
+    providedIn: 'root',
+})
+export class DataService {
+    private _data: any[] = [];
+    
+    get (i: number) { return _data[i]; }
+}
+```
+
+```ts
+// @ FILE: app/src/app.component.ts
+import { Component }   from '@angular/core';
+import { DataService } from './commons/services/DataService.service';
+     
+@Component({
+    selector: 'app',
+    template: `...`
+})
+export class Item {
+    data: any;
+    
+    constructor (dataService: DataService) {
+        this.data = dataService.get(0);
+    }
+}
+```
+
+
+* Services also follow same method to inject dependency to itself. For ex:
+
+```ts
+// @ FILE: app/src/commons/services/DataService.service.ts
+import { Injectable } from '@angular/core';
+import { Logger } from './Logger.service';
+
+@Injectable({
+    providedIn: 'root',
+})
+export class DataService {
+    private _data: any[] = [];
+    
+    constructor (private _logger: Logger) {}
+
+    get (i: number) {
+        this._logger.log(`Date get from index ${i}`);
+        return _data[i]; 
+    }
+}
+```
+
+### Optional Dependency
+```ts
+// constructor function parameter decorator
+@Optional()
+```
+
+* Dependencies can be optional.
+* A parameter decorator to be used on constructor parameters
+* Marks the parameter as being an optional dependency. 
+* The DI framework provides null if the dependency is not found.
+
+
+
 
 ## Provider
 * You must register at least one provider of any service you are going to use.
