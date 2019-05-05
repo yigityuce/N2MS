@@ -54,7 +54,14 @@
   - [Injector](#injector)
   - [Injecting Dependency](#injecting-dependency)
     - [Optional Dependency](#optional-dependency)
+    - [Control Dependency Searching with @Self](#control-dependency-searching-with-self)
+    - [Control Dependency Searching with @SkipSelf](#control-dependency-searching-with-skipself)
+    - [Control Dependency Searching with @Host](#control-dependency-searching-with-host)
   - [Provider](#provider)
+    - [Provider Configuration](#provider-configuration)
+      - [Aliased Class Providers (useExisting)](#aliased-class-providers-useexisting)
+      - [Value Providers (useValue)](#value-providers-usevalue)
+      - [Factory Providers (useFactory)](#factory-providers-usefactory)
 - [Custom Directives](#custom-directives)
   - [Custom Attribute Directive](#custom-attribute-directive)
   - [Custom Structural Directive](#custom-structural-directive)
@@ -81,6 +88,7 @@
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
     - [Example](#example-1)
+  - [Accessing DOM Element](#accessing-dom-element)
 
 
 # General
@@ -932,6 +940,8 @@ export class CustomElementComponent {
 
 
 # Dependency Injection (DI)
+![DI Framework](./DIFramework.jpg)
+
 * Dependencies are services or objects that a class needs to perform its function.
 * DI is a coding pattern which a class asks for dependencies from external sources rather than creating them itself.
 * In Angular, the DI framework **provides** declared **dependencies** to a class when that class is **instantiated**.
@@ -990,13 +1000,13 @@ export class DataService {
   * @NgModule() **providers** metadata option
     * Use the @NgModule() providers option if a module is **lazy loaded**.
   * in the @Injectable() **providedIn** option
-
+* The injector relies on the **provider configuration** to create instances of the dependencies that it injects into components, directives, pipes, and other services.
 
 
 
 ## Injecting Dependency
 * You can tell Angular to inject a dependency in a component by specifying a **constructor parameter with the dependency type**.
-* Dependency still needs to be provided in somewhere like parent module or root module.
+* Dependency still needs to be provided in somewhere like parent module or root module or component's providers configuration.
 
 ```ts
 // @ FILE: app/src/commons/services/DataService.service.ts
@@ -1019,7 +1029,8 @@ import { DataService } from './commons/services/DataService.service';
      
 @Component({
     selector: 'app',
-    template: `...`
+    template: `...`,
+    providers: [ DataService ]
 })
 export class Item {
     data: any;
@@ -1034,7 +1045,7 @@ export class Item {
 * Services also follow same method to inject dependency to itself. For ex:
 
 ```ts
-// @ FILE: app/src/commons/services/DataService.service.ts
+// @ FILE: app/src/commons/services/DataService/DataService.service.ts
 import { Injectable } from '@angular/core';
 import { Logger } from './Logger.service';
 
@@ -1053,28 +1064,242 @@ export class DataService {
 }
 ```
 
-### Optional Dependency
-```ts
-// constructor function parameter decorator
-@Optional()
-```
 
+### Optional Dependency
 * Dependencies can be optional.
 * A parameter decorator to be used on constructor parameters
 * Marks the parameter as being an optional dependency. 
 * The DI framework provides null if the dependency is not found.
 
+```ts
+import { Component }   from '@angular/core';
+import { MyService } from './commons/MyService/MyService.service';
 
+@Component({
+    providers: []
+})
+export class MyComponent {
+    constructor (
+        @Optional() private myService: MyService
+    ) {
+    }
+}
+```
+
+
+### Control Dependency Searching with @Self
+* If we decorate the parameter with @Self(), it will be the only place allowed to find the injector is the component itself.
+* It disables the bubbling dependency search.
+
+```ts
+import { Component }   from '@angular/core';
+import { MyService } from './commons/MyService/MyService.service';
+
+@Component({
+    providers: [
+        MyService // if it is not provided, it throws error
+    ]
+})
+export class MyComponent {
+    constructor (
+        @Self() private myService: MyService
+    ) {
+    }
+}
+```
+
+### Control Dependency Searching with @SkipSelf
+* Start searching dependency from its parent at the hierarchy.
+* Parent's dependency instance will be used.
+* It won't be create new instance from dependency.
+
+```ts
+import { Component }   from '@angular/core';
+import { MyService } from './commons/MyService/MyService.service';
+
+@Component({
+    providers: [
+        MyService // this won't be used
+    ]
+})
+export class MyComponent {
+    constructor (
+        @SkipSelf() private myService: MyService
+    ) {
+    }
+}
+```
+
+
+### Control Dependency Searching with @Host
+* Just searchs dependency at self and parent providers.
+
+```ts
+import { Component }   from '@angular/core';
+import { MyService } from './commons/MyService/MyService.service';
+
+@Component({
+    providers: []
+})
+export class MyComponent {
+    constructor (
+        @Host() private myService: MyService
+    ) {
+    }
+}
+```
 
 
 ## Provider
-* You must register at least one provider of any service you are going to use.
-* The provider can be part of the service's own metadata, making that service available everywhere or you can register providers with specific modules or components. 
+
+* Provider configures an injector.
+* The injector relies on the **provider configuration** to create instances of the dependencies that it injects into components, directives, pipes, and other services.
+* You must **configure** an injector **with a provider**, or it won't know how to create the dependency.
 * You can register providers:
   * in the service metadata (with @Injectable() decorator)
   * in the module metadata (with @NgModule() decorator)
   * in the component metadata (with @Component() decorator)
 
+
+
+### Provider Configuration
+* The class-provider syntax is a shorthand expression that expands into a **provider configuration**. 
+* The following code snippets shows how a class that is given as the providers value is expanded into a full provider object.
+
+```ts
+// shorthand
+providers: [ Logger ]
+
+// expanded
+[ { provide:Logger, useClass:Logger } ]
+```
+
+* The expanded provider configuration is an object literal with two properties.
+* The **provide** property holds the token that serves as the **key** for both locating a dependency value and configuring the injector.
+* The second property is a **provider definition** object, which tells the injector how to create the dependency value. 
+* The provider-definition key can be:
+    * useClass
+    * useExisting
+    * useValue
+    * useFactory
+
+
+#### Aliased Class Providers (useExisting)
+* **useExisting** key can be useful when using an existing instance of the service.
+* It won't create new instance.
+```ts
+providers: [ 
+    NewLogger,
+    // Alias OldLogger w/ reference to NewLogger
+    { provide:OldLogger, useExisting:NewLogger }
+]
+```
+
+#### Value Providers (useValue)
+* Sometimes it's easier to provide a ready-made object rather than ask the injector to create it from a class. 
+* To inject an object you have already created, configure the injector with the **useValue** option.
+
+```ts
+// An object in the shape of the logger service
+const silentLogger = {
+  logs: [],
+  log: () => {}
+};
+
+providers: [ { provide:Logger, useValue:silentLogger } ]
+```
+
+* Not all dependencies are classes. Sometimes you want to inject a string, function, or object.
+* The types that are not exist at **runtime** like interface, can not be used in **provide property** of provider configuration.
+* These types of provide must be defined with creating **InjectionToken** **manually**.
+* Manually created injections must be used with **@Inject()** decorator at **class constructor**.
+
+
+```ts
+interface Config {
+    title: string;
+    url: string;
+}
+
+const CFG: Config = {
+    title: 'My Super Application',
+    url: 'http://mysuperapplication.com'
+}
+
+// NOT VALID
+// providers: [ { provide:Config, useValue:CFG } ]
+
+// VALID
+const ConfigProvider = new InjectionToken<Config>('My Config Description');
+@Component({
+    // ...
+    providers: [ { provide:ConfigProvider, useValue:CFG } ],
+    // ...
+})
+export class MyComponent {
+    constructor(@Inject(ConfigProvider) config: Config) {
+        console.log(config.title);
+    }
+}
+```
+
+#### Factory Providers (useFactory)
+* Sometimes you need to create a dependent value **dynamically**, based on information you won't have until runtime.
+* Factory providers can also be useful when creating an instance of a dependency from a **third-party library** that wasn't designed to work with DI.
+
+```ts
+// @FILE: app/src/commons/services/MySuperService/MySuperService.service.ts
+
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class MySuperService {
+    constructor (private arg: boolean) {}
+
+    func () {
+        if (this.arg) {
+            // do something
+        }
+        else {
+            // do another something
+        }
+    }
+}
+```
+
+```ts
+// @FILE: app/src/commons/services/MySuperService/MySuperService.service.provider.ts
+
+import { MySuperService } from './MySuperService.service';
+import { AnotherService } from '../AnotherService/AnotherService.service';
+
+function factoryFunction (anotherService: AnotherService) {
+    return new MySuperService(anotherService.isSomething);
+}
+
+export const MySuperServiceProvider = {
+    provide: MySuperService,
+    useFactory: factoryFunction,
+    deps: [ AnotherService ]
+}
+```
+
+```ts
+import { MySuperServiceProvider } from 'commons/services/MySuperService/MySuperService.service.provider';
+import { AnotherService } from 'commons/services/AnotherService/AnotherService.service';
+
+@Component({
+    // ...  
+    providers: [ 
+      AnotherService,
+      MySuperServiceProvider
+    ],
+    // ...
+})
+export class MyComponent {
+    constructor ()
+}
+```
 
 
 
@@ -1098,12 +1323,12 @@ export class DataService {
 ```ts
 // @FILE: src/app/highlight.directive.ts
 
-import { Directive, ElementRef, HostListener, Input } from '@angular/core';
+import { Directive, ElementRef, HostListener, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 @Directive({
     selector: '[highlight]'
 })
-export class HighlightDirective {
+export class HighlightDirective implements OnChanges{
     // BOTH VALID BELOW
     @Input('highlight') color: string|null = null; 
     // @Input() highlight: string = null; 
@@ -1116,6 +1341,11 @@ export class HighlightDirective {
     @HostListener('mouseleave') 
     onMouseLeave() {
         this.highlight(null);
+    }
+
+    ngOnChanges (changes: SimpleChanges) {
+        // implement to respond bound parameter changes 
+        // like input parameter, highlight
     }
 
     highlight(clr: string|null): void {
@@ -1771,4 +2001,24 @@ export class FeatureOneComponent {
 <p>
   {{ message }}
 </p>
+```
+
+## Accessing DOM Element
+* This is implemented at [Custom Attribute Directive](#custom-attribute-directive) topic's example.
+* Basically it can be done with injecting dependency of **ElementRef** service.
+
+
+```ts
+// @FILE: src/app/highlight.directive.ts
+
+import { Component, ElementRef } from '@angular/core';
+
+@Component({
+    // ...
+})
+export class HighlightDirective {
+    constructor(private el: ElementRef) {
+        this.el.nativeElement; // points native DOM element
+    }
+}
 ```
