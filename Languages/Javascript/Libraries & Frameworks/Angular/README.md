@@ -85,9 +85,18 @@
     - [ReplaySubject](#replaysubject)
     - [BehaviorSubject](#behaviorsubject)
     - [BehaviorSubject](#behaviorsubject-1)
+- [Forms](#forms)
+  - [Reactive Forms](#reactive-forms)
+    - [Reactice Form Data Flow (View to Model)](#reactice-form-data-flow-view-to-model)
+    - [Reactice Form Data Flow (Model to View)](#reactice-form-data-flow-model-to-view)
+    - [Grouping Form Controls](#grouping-form-controls)
+  - [Template-Driven Forms](#template-driven-forms)
+    - [Template-Driven Form Data Flow (View to Model)](#template-driven-form-data-flow-view-to-model)
+    - [Template-Driven Form Data Flow (Model to View)](#template-driven-form-data-flow-model-to-view)
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
     - [Example](#example-1)
+  - [Bootstrapping Angular Application](#bootstrapping-angular-application)
   - [Accessing DOM Element](#accessing-dom-element)
 
 
@@ -1872,6 +1881,204 @@ sub.complete(); //456, 456 logged by both subscribers
 ```
 
 
+
+# Forms
+* Angular provides two different approaches to handling user input through forms: 
+  * reactive 
+  * template-driven. 
+* Both:
+  * capture user input events from the view
+  * validate the user input
+  * create a form model and data model to update
+  * provide a way to track changes
+* **Reactive forms:**
+  * are more scalable, reusable, and testable. 
+  * If forms are a key part of your application, or you're already using reactive patterns for building your application, use reactive forms.
+* **Template-driven forms** 
+  * are useful for adding a simple form to an app, such as an email list signup form. 
+  * They're easy to add to an app, but they don't scale as well as reactive forms. 
+  * If you have very basic form requirements and logic that can be managed solely in the template, use template-driven forms.
+* Both reactive and template-driven forms share underlying building blocks:
+  * **FormControl** 
+    * tracks the value and validation status of an individual form control.
+  * **FormGroup** 
+    * tracks the same values and status for a collection of form controls.
+  * **FormArray** 
+    * tracks the same values and status for an array of form controls.
+  * **ControlValueAccessor** 
+    * creates a bridge between FormControl instances and native DOM elements.
+
+
+## Reactive Forms
+```ts
+// @FILE: src/app/app.module.ts
+import { ReactiveFormsModule } from '@angular/forms';
+
+@NgModule({
+    imports: [ ReactiveFormsModule ],
+})
+export class AppModule { }
+```
+
+```ts
+// @FILE: src/app/name-editor/name-editor.component.ts
+import { Component } from '@angular/core';
+import { FormControl } from '@angular/forms';
+    
+@Component({
+    selector: 'reactive-name-editor',
+    template: `
+        Name: <input type="text" [formControl]="name">
+        <span>Current: {{ name.value }}</span>
+        <button (click)="update()">Update</button>
+    `
+})
+export class NameEditorComponent {
+    name = new FormControl('initial value');
+    update() { this.name.setValue('yigit'); }
+}
+```
+* To use reactive forms, import **ReactiveFormsModule** and add it to your NgModule's imports array.
+* In reactive forms each form element in the view is directly linked to a form model (**FormControl** instance)
+* Updates from the view to the model and from the model to the view are **synchronous**.
+* Define custom **validators as functions** that receive a control to validate.
+
+
+### Reactice Form Data Flow (View to Model)
+![reactive-forms-dataflow-vtm.png](./reactive-forms-dataflow-vtm.png)
+* User types something into input element.
+* Input element emits an "**input**" event.
+* Control value accessor listens form input element events to transfer value from event to FormControl instance.
+* FormControl instance emits the new value through the **valueChanges observable**.
+
+
+### Reactice Form Data Flow (Model to View)
+![reactive-forms-dataflow-mtv.png](./reactive-forms-dataflow-mtv.png)
+* User invokes the favoriteColorControl.**setValue()** method
+* FormControl instance emits the new value through the **valueChanges** observable.
+* Control value accessor on the form input element updates the element with the new value.
+
+
+### Grouping Form Controls
+* Each control in a form group instance is tracked by name when creating the form group.
+* Inputs must be wrapped with **form element** that marked with **formGroup** directive.
+* Use **formControlName** directive instead of **formControl**.
+* The FormGroup directive listens submit event emitted by the form and emits an **ngSubmit event**. 
+* Nested form groups are valid.
+  * Nested form groups must be marked with its name with using **formGroupName** directive in the template.
+* Data updating can be done with
+  * **setValue(fullObj)**
+    * replaces the entire value for the control
+  * **patchValue(patchObj)**
+    * replace any properties defined in the object
+
+```ts
+// @FILE: src/app/app.module.ts
+import { ReactiveFormsModule } from '@angular/forms';
+
+@NgModule({
+    imports: [ ReactiveFormsModule ],
+})
+export class AppModule { }
+```
+
+```ts
+// @FILE: src/app/profile-editor/profile-editor.component.ts
+import { Component } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
+    
+@Component({
+    selector: 'reactive-profile-editor',
+    template: `
+        <form [formGroup]="profileForm" (ngSubmit)="submitted()">
+            Name: <input type="text" formControlName="name">
+            Email: <input type="text" formControlName="email">
+
+            <div formGroupName="physical">
+                Height: <input type="text" formControlName="height">
+                Weight: <input type="text" formControlName="weight">
+            </div>
+
+            <button type="submit" [disabled]="!profileForm.valid">Save</button>
+
+        </form>
+
+        <span>Current: {{ name.value }} / {{ email.value }}</span>
+        <button (click)="update()">Update</button>
+    `
+})
+export class ProfileEditorComponent {
+    profileForm = new FormGroup({
+        name: new FormControl('Yigit Yuce'),
+        email: new FormControl('example@example.com'),
+        physical: new FormGroup({
+            height: new FormControl('180'),
+            weight: new FormControl('80')
+        })
+    });
+
+    submitted() { }
+    update() { 
+        this.profileForm.patchValue({
+            name: 'Yuce Yigit'
+            physical  {
+                height: '179'
+            }
+        }); 
+    }
+}
+```
+
+
+
+
+
+## Template-Driven Forms
+```ts
+import { Component } from '@angular/core';
+
+@Component({
+    selector: 'template-favorite-color',
+    template: `
+        Favorite Color: <input type="text" [(ngModel)]="favoriteColor">
+    `
+})
+export class FavoriteColorComponent {
+    favoriteColor = '';
+}
+```
+* Updates from the view to the model and from the model to the view are **asynchronous** with nextTick.
+* Template-driven forms must provide **custom validator directives** that wrap validation functions.
+
+
+
+### Template-Driven Form Data Flow (View to Model)
+![td-forms-dataflow-vtm.png](./td-forms-dataflow-vtm.png)
+* User types something into input element.
+* Input element emits an "**input**" event.
+* Control value accessor attached to the input, **triggers the setValue()** method on the **FormControl instance**.
+* The FormControl instance emits the new value through the **valueChanges** observable.
+* Control value accessor also calls the **NgModel.viewToModelUpdate()** method which emits an **ngModelChange** event.
+  * component template uses two-way data binding for the property
+  * the property is updated to the value emitted by the ngModelChange event
+
+
+
+### Template-Driven Form Data Flow (Model to View)
+![td-forms-dataflow-mtv.png](./td-forms-dataflow-mtv.png)
+* Property value is updated in the component.
+* ngOnChanges lifecycle hook is called because the value of one of its inputs has changed.
+* The ngOnChanges() method **queues an async task** to set the value for the internal FormControl instance.
+  * On the next tick, the task to set the FormControl instance value is executed.
+* The FormControl instance emits the latest value through the **valueChanges** observable.
+* Control value accessor updates the form input element in the view with the value.
+
+
+
+
+
+
+
 # Best Practices
 
 ## Feature Modules
@@ -2002,6 +2209,26 @@ export class FeatureOneComponent {
   {{ message }}
 </p>
 ```
+
+## Bootstrapping Angular Application
+
+```ts
+// @FILE: src/main.ts
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
+
+if (environment.production) {
+    enableProdMode();
+}
+
+platformBrowserDynamic()
+.bootstrapModule(AppModule)
+.catch(err => console.log(err));
+```
+
 
 ## Accessing DOM Element
 * This is implemented at [Custom Attribute Directive](#custom-attribute-directive) topic's example.
