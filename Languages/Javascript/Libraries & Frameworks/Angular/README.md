@@ -89,13 +89,18 @@
   - [Reactive Forms](#reactive-forms)
     - [Reactice Form Data Flow (View to Model)](#reactice-form-data-flow-view-to-model)
     - [Reactice Form Data Flow (Model to View)](#reactice-form-data-flow-model-to-view)
-    - [Grouping Form Controls](#grouping-form-controls)
+    - [Grouping Form Controls with FormGroup](#grouping-form-controls-with-formgroup)
+    - [Grouping Form Controls with FormArray](#grouping-form-controls-with-formarray)
+    - [Form Builder](#form-builder)
+    - [Form Validation](#form-validation)
   - [Template-Driven Forms](#template-driven-forms)
     - [Template-Driven Form Data Flow (View to Model)](#template-driven-form-data-flow-view-to-model)
     - [Template-Driven Form Data Flow (Model to View)](#template-driven-form-data-flow-model-to-view)
+    - [Form Validation](#form-validation-1)
+    - [Example](#example-1)
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
-    - [Example](#example-1)
+    - [Example](#example-2)
   - [Bootstrapping Angular Application](#bootstrapping-angular-application)
   - [Accessing DOM Element](#accessing-dom-element)
 
@@ -1913,9 +1918,13 @@ sub.complete(); //456, 456 logged by both subscribers
 ```ts
 // @FILE: src/app/app.module.ts
 import { ReactiveFormsModule } from '@angular/forms';
+import { AppComponent } from './app.component';
+import { ProfileEditorComponent } from './profile-editor/profile-editor.component';
 
 @NgModule({
     imports: [ ReactiveFormsModule ],
+    declarations: [ AppComponent, ProfileEditorComponent ],
+    bootstrap: [ AppComponent ]
 })
 export class AppModule { }
 ```
@@ -1959,7 +1968,7 @@ export class NameEditorComponent {
 * Control value accessor on the form input element updates the element with the new value.
 
 
-### Grouping Form Controls
+### Grouping Form Controls with FormGroup
 * Each control in a form group instance is tracked by name when creating the form group.
 * Inputs must be wrapped with **form element** that marked with **formGroup** directive.
 * Use **formControlName** directive instead of **formControl**.
@@ -1971,16 +1980,6 @@ export class NameEditorComponent {
     * replaces the entire value for the control
   * **patchValue(patchObj)**
     * replace any properties defined in the object
-
-```ts
-// @FILE: src/app/app.module.ts
-import { ReactiveFormsModule } from '@angular/forms';
-
-@NgModule({
-    imports: [ ReactiveFormsModule ],
-})
-export class AppModule { }
-```
 
 ```ts
 // @FILE: src/app/profile-editor/profile-editor.component.ts
@@ -2000,10 +1999,8 @@ import { FormControl, FormGroup } from '@angular/forms';
             </div>
 
             <button type="submit" [disabled]="!profileForm.valid">Save</button>
-
         </form>
 
-        <span>Current: {{ name.value }} / {{ email.value }}</span>
         <button (click)="update()">Update</button>
     `
 })
@@ -2017,7 +2014,8 @@ export class ProfileEditorComponent {
         })
     });
 
-    submitted() { }
+    submitted() {}
+
     update() { 
         this.profileForm.patchValue({
             name: 'Yuce Yigit'
@@ -2027,6 +2025,231 @@ export class ProfileEditorComponent {
         }); 
     }
 }
+```
+
+### Grouping Form Controls with FormArray
+* Groups **unnamed** and **unknown length** FormControls together.
+* Inputs must be wrapped with **form element** that marked with **formGroup** directive.
+* Use **formControlName** directive instead of **formControl**.
+* Use **formArrayName** directive.
+
+
+```ts
+// @FILE: src/app/profile-editor/profile-editor.component.ts
+import { Component } from '@angular/core';
+import { FormControl, FormGroup, FormArray } from '@angular/forms';
+    
+@Component({
+    selector: 'reactive-profile-editor',
+    template: `
+        <form [formGroup]="profileForm" (ngSubmit)="submitted()">
+            Name: <input type="text" formControlName="name">
+            Email: <input type="text" formControlName="email">
+
+            <div formGroupName="physical">
+                Height: <input type="text" formControlName="height">
+                Weight: <input type="text" formControlName="weight">
+            </div>
+
+            <div formArrayName="notes">
+                <ng-template *ngFor="let note of noteFields.controls; let i = index">
+                    Note {{ i }}: <input type="text" formControlName="'note_' + i">
+                </ng-template>
+
+                <button (click)="addNote()">Add Note</button>
+            </div>
+
+            <button type="submit" [disabled]="!profileForm.valid">Save</button>
+        </form>
+
+        <button (click)="update()">Update</button>
+    `
+})
+export class ProfileEditorComponent {
+    profileForm = new FormGroup({
+        name: new FormControl('Yigit Yuce'),
+        email: new FormControl('example@example.com'),
+        physical: new FormGroup({
+            height: new FormControl('180'),
+            weight: new FormControl('80')
+        }),
+        notes: new FormArray([
+            new FormControl('')
+        ])
+    });
+
+    submitted() {}
+
+    update() { 
+        this.profileForm.patchValue({
+            name: 'Yuce Yigit'
+            physical  {
+                height: '179'
+            }
+        }); 
+    }
+
+    get noteFields () {
+        return this.profileForm.get('notes') as FormArray;
+    }
+
+    addNote() {
+        this.noteFields.push(new FormControl(''));
+    }
+}
+```
+
+
+
+
+### Form Builder
+* FormBuilder is a shorthand version of FormControl, FormGroup and FormArray.
+* FormBuilder is a service that must be injected at constructor.
+
+```ts
+// @FILE: src/app/profile-editor/profile-editor.component.ts
+import { Component } from '@angular/core';
+import { FormBuilder, FormArray } from '@angular/forms';
+    
+@Component({
+    selector: 'reactive-profile-editor',
+    template: `
+        <form [formGroup]="profileForm" (ngSubmit)="submitted()">
+            Name: <input type="text" formControlName="name">
+            Email: <input type="text" formControlName="email">
+
+            <div formGroupName="physical">
+                Height: <input type="text" formControlName="height">
+                Weight: <input type="text" formControlName="weight">
+            </div>
+
+            <div formArrayName="notes">
+                <ng-template *ngFor="let note of noteFields.controls; let i = index">
+                    Note {{ i }}: <input type="text" formControlName="'note_' + i">
+                </ng-template>
+
+                <button (click)="addNote()">Add Note</button>
+            </div>
+
+            <button type="submit" [disabled]="!profileForm.valid">Save</button>
+        </form>
+
+        <button (click)="update()">Update</button>
+    `
+})
+export class ProfileEditorComponent {
+    profileForm = this.fb.group({
+        name: ['Yigit Yuce'], // Form control argument list
+        email: ['example@example.com'],
+        physical: this.fb.group({
+            height: ['180'],
+            weight: ['80']
+        }),
+        notes: this.fb.array([
+            ['']
+        ])
+    });
+
+    constructor (
+        private fb: FormBuilder
+    ) {}
+
+    submitted() {}
+
+    update() { 
+        this.profileForm.patchValue({
+            name: 'Yuce Yigit'
+            physical  {
+                height: '179'
+            }
+        }); 
+    }
+
+    get noteFields () {
+        return this.profileForm.get('notes') as FormArray;
+    }
+
+    addNote() {
+        this.noteFields.push(this.fb.control(''));
+    }
+}
+```
+
+### Form Validation
+* Reactive forms include a set of validator functions for common use cases.
+* These functions receive a control to validate against and return an error object or a null value.
+* There are two types of validator functions:
+  * **Sync validators** 
+    * functions that take a control instance and immediately return either a set of validation errors or null. 
+    * You can pass these in as the **second argument** when you instantiate a **FormControl**.
+  * **Async validators** 
+    * functions that take a control instance and return a **Promise** or **Observable** that later emits a set of validation errors or null. 
+    * You can pass these in as the **third argument** when you instantiate a **FormControl**.
+
+
+
+```ts
+// @FILE: src/app/profile-editor/profile-editor.component.ts
+import { Component } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+    
+@Component({
+    selector: 'reactive-profile-editor',
+    template: `
+        <form [formGroup]="profileForm" (ngSubmit)="submitted()">
+            Name: <input type="text" formControlName="name" required>
+
+            Email: <input type="text" formControlName="email">
+
+            <div *ngIf="email.invalid && (email.dirty || email.touched)" class="alert alert-danger">
+
+                <div *ngIf="email.errors.required">
+                    Email is required.
+                </div>
+                <div *ngIf="email.errors.minlength">
+                    Email must be at least 4 characters long.
+                </div>
+            </div>
+
+            <div formGroupName="physical">
+                Height: <input type="text" formControlName="height">
+                Weight: <input type="text" formControlName="weight">
+            </div>
+
+            <button type="submit" [disabled]="!profileForm.valid">Save</button>
+
+        </form>
+
+        <span>Status: {{ profileForm.status }}</span>
+        <button (click)="update()">Update</button>
+    `
+})
+export class ProfileEditorComponent {
+    profileForm = this.fb.group({
+        name: ['Yigit Yuce', Validators.required], // Form control argument list
+        email: ['example@example.com', [Validators.required, Validators.minLength(4)]],
+        physical: this.fb.group({
+            height: ['180'],
+            weight: ['80']
+        })
+    });
+
+    constructor (
+        private fb: FormBuilder
+    ) {}
+
+    submitted() {}
+
+    update() { 
+        this.profileForm.patchValue({
+            name: 'Yuce Yigit'
+            physical  {
+                height: '179'
+            }
+        }); 
+    }
+}
+
 ```
 
 
@@ -2049,6 +2272,27 @@ export class FavoriteColorComponent {
 ```
 * Updates from the view to the model and from the model to the view are **asynchronous** with nextTick.
 * Template-driven forms must provide **custom validator directives** that wrap validation functions.
+* **FormModule** must be imported into module imports at NgModule in dependency hierarchy.
+* Must add form wrapper with template variable that its value is assigned to **ngForm**.
+  * The NgForm directive supplements the form element with additional features. 
+  * It holds the controls you created for the elements with an **ngModel** directive and **name attribute**, and monitors their properties, including their validity. 
+  * It also has its own valid property which is true only if every contained control is valid.
+  * Internally, Angular creates **FormControl** instances and registers them.
+  * Each FormControl is registered under the name you assigned to the **name attribute**.
+    ```html
+    <form #mySuperForm="ngForm">
+    ```
+  * [See example](#example-1) 
+* The **NgModel** directive doesn't just track state; it also updates the control with special Angular CSS classes that reflect the state. 
+
+| State | True | False |
+| --- | --- | --- |
+| visited | ng-touched | ng-untouched |
+| changed | ng-dirty | ng-pristine |
+| valid | ng-valid | ng-invalid |
+
+* You can then inspect the control's state (input state) by exporting **ngModel** to a local **template variable**. [See example](#example-1)
+
 
 
 
@@ -2074,6 +2318,85 @@ export class FavoriteColorComponent {
 * Control value accessor updates the form input element in the view with the value.
 
 
+### Form Validation
+* To add validation to a template-driven form, you add the same validation attributes as mentioned above at reactive form's [Form Validation](#form-validation) section.
+* Angular uses directives to match these attributes with validator functions in the framework.
+
+
+### Example
+
+```ts
+// @FILE: src/app/app.module.ts
+import { FormsModule } from '@angular/forms';
+import { AppComponent } from './app.component';
+import { ProfileEditorComponent } from './profile-editor/profile-editor.component';
+
+@NgModule({
+    imports: [ FormsModule ],
+    declarations: [ AppComponent, ProfileEditorComponent ],
+    bootstrap: [ AppComponent ]
+})
+export class AppModule { }
+```
+
+```ts
+// @FILE: src/app/profile-editor/profile.class.ts
+
+export class Profile {
+    constructor(
+        public name: string,
+        public email: string,
+        public gender?: string,
+    ) {}
+}
+```
+
+```ts
+// @FILE: src/app/profile-editor/profile-editor.component.ts
+import { Component } from '@angular/core';
+import { Profile } from './profile.class';
+
+import { FormControl, FormGroup, FormArray } from '@angular/forms';
+    
+@Component({
+    selector: 'template-profile-editor',
+    template: `
+        <form #profileForm="ngForm" (ngSubmit)="submitted()" >
+            Name: <input type="text" name="name" [(ngModel)]="model.name" required  #nameInput="ngModel">
+
+            <div *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)" class="alert alert-danger">
+                <div *ngIf="nameInput.errors.required">
+                    Name is required.
+                </div>
+                <div *ngIf="nameInput.errors.minlength">
+                    Name must be at least 4 characters long.
+                </div>
+                <div *ngIf="nameInput.errors.forbiddenName">
+                    Name cannot be Bob.
+                </div>
+            </div>
+
+
+            Email: <input type="text" name="email" [(ngModel)]="model.email" required>
+            Gender: 
+            <select name="gender" [(ngModel)]="model.gender">
+                <option *ngFor="let gender of genders" [value]="gender">
+                    {{ gender }}
+                </option>
+            </select>
+
+            <button type="submit">Save</button>
+        </form>
+
+    `
+})
+export class ProfileEditorComponent {
+    public genders: ['Male', 'Female', 'Not Important'];
+    public model: Profile = new Profile('Yigit Yuce', 'ygtyce@gmail.com', 'Male');
+
+    submitted() {}
+}
+```
 
 
 
