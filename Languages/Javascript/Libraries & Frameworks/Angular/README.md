@@ -98,6 +98,11 @@
     - [Template-Driven Form Data Flow (Model to View)](#template-driven-form-data-flow-model-to-view)
     - [Form Validation](#form-validation-1)
     - [Example](#example-1)
+  - [Form Validation](#form-validation-2)
+    - [Custom Validators for Reactive Forms](#custom-validators-for-reactive-forms)
+    - [Custom Validators for Template Driven Forms](#custom-validators-for-template-driven-forms)
+    - [Cross Field Validation for Reactive Forms](#cross-field-validation-for-reactive-forms)
+    - [Cross Field Validation for Template Driven Forms](#cross-field-validation-for-template-driven-forms)
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
     - [Example](#example-2)
@@ -2192,17 +2197,15 @@ export class ProfileEditorComponent {
 // @FILE: src/app/profile-editor/profile-editor.component.ts
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-    
+
 @Component({
     selector: 'reactive-profile-editor',
     template: `
         <form [formGroup]="profileForm" (ngSubmit)="submitted()">
             Name: <input type="text" formControlName="name" required>
-
             Email: <input type="text" formControlName="email">
 
-            <div *ngIf="email.invalid && (email.dirty || email.touched)" class="alert alert-danger">
-
+            <div *ngIf="email.invalid && (email.dirty || email.touched)">
                 <div *ngIf="email.errors.required">
                     Email is required.
                 </div>
@@ -2217,7 +2220,6 @@ import { FormBuilder, Validators } from '@angular/forms';
             </div>
 
             <button type="submit" [disabled]="!profileForm.valid">Save</button>
-
         </form>
 
         <span>Status: {{ profileForm.status }}</span>
@@ -2247,6 +2249,10 @@ export class ProfileEditorComponent {
                 height: '179'
             }
         }); 
+    }
+
+    get email () {
+        return this.profileFrom.get('email');
     }
 }
 
@@ -2291,7 +2297,7 @@ export class FavoriteColorComponent {
 | changed | ng-dirty | ng-pristine |
 | valid | ng-valid | ng-invalid |
 
-* You can then inspect the control's state (input state) by exporting **ngModel** to a local **template variable**. [See example](#example-1)
+* You can inspect the control's state (input state) by exporting **ngModel** to a local **template variable**. [See example](#example-1)
 
 
 
@@ -2364,7 +2370,7 @@ import { FormControl, FormGroup, FormArray } from '@angular/forms';
         <form #profileForm="ngForm" (ngSubmit)="submitted()" >
             Name: <input type="text" name="name" [(ngModel)]="model.name" required  #nameInput="ngModel">
 
-            <div *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)" class="alert alert-danger">
+            <div *ngIf="nameInput.invalid && (nameInput.dirty || nameInput.touched)">
                 <div *ngIf="nameInput.errors.required">
                     Name is required.
                 </div>
@@ -2375,7 +2381,6 @@ import { FormControl, FormGroup, FormArray } from '@angular/forms';
                     Name cannot be Bob.
                 </div>
             </div>
-
 
             Email: <input type="text" name="email" [(ngModel)]="model.email" required>
             Gender: 
@@ -2397,6 +2402,238 @@ export class ProfileEditorComponent {
     submitted() {}
 }
 ```
+
+* #nameInput="ngModel" exports NgModel into a local variable called nameInput.
+* NgModel mirrors many of the properties of its underlying **FormControl** instance.
+* So you can use this in the template to check for control states such as valid and dirty.
+
+
+## Form Validation
+
+### Custom Validators for Reactive Forms
+
+```ts
+// ...
+ngOnInit(): void {
+    this.userForm = new FormGroup({
+        name: new FormControl(this.user.name, [
+            Validators.required,
+            Validators.minLength(4),
+            startsWith('Y') // custom validator
+        ]),
+        email: new FormControl(this.user.email, Validators.required),
+        age: new FormControl(this.user.age),
+    });
+}
+// ...
+```
+```html
+<!-- ... -->
+<input id="name" formControlName="name">
+
+<div *ngIf="name.invalid && (name.dirty || name.touched)">
+    <div *ngIf="name.errors.required">
+        Name is required.
+    </div>
+    <div *ngIf="name.errors.minlength">
+        Name must be at least 4 characters long.
+    </div>
+    <div *ngIf="name.errors.startsWith">
+        Name must be started with Y.
+    </div>
+</div>
+<!-- ... -->
+```
+
+```ts
+// @FILE: app/commons/validators/startsWith.validator.ts
+
+export function startsWithValidator(str: string): ValidatorFn {
+    return (control: AbstractControl): {[key: string]: any} | null => {
+        return control.value.startsWith(str) 
+            ? { startsWith:{ value:control.value } } 
+            : null;
+    };
+}
+```
+
+* The function is actually a factory that returns a validator function.
+* That function takes an control object and returns 
+  * null if the control value is valid or
+  * a validation error object
+* The validation error object typically has a property whose name is the validation key.
+
+
+
+### Custom Validators for Template Driven Forms
+* Must be defined **directive** that 
+  * implements **Validator interface**
+  * provides itself to **NG_VALIDATORS** collection
+
+```html
+<!-- ... -->
+<input id="name" #name="ngModel" startsWith="Y">
+
+<div *ngIf="name.invalid && (name.dirty || name.touched)">
+    <div *ngIf="name.errors.required">
+        Name is required.
+    </div>
+    <div *ngIf="name.errors.minlength">
+        Name must be at least 4 characters long.
+    </div>
+    <div *ngIf="name.errors.startsWith">
+        Name must be started with Y.
+    </div>
+</div>
+<!-- ... -->
+```
+
+```ts
+// @FILE: app/commons/validators/startsWith.validator.ts
+
+export function startsWithValidator(str: string): ValidatorFn {
+    return (control: AbstractControl): {[key: string]: any} | null => {
+        return control.value.startsWith(str) 
+            ? { startsWith:{ value:control.value } } 
+            : null;
+    };
+}
+```
+
+```ts
+// @FILE: app/commons/directives/startsWith.directive.ts
+
+// ... some other imports ...
+import startsWithValidator from '../validators/startsWith.validator';
+
+@Directive({
+    selector: '[startsWith]',
+    provides: [
+        {provide:NG_VALIDATORS, useExisting: StartsWithDirective, multi:true}
+    ]
+})
+export class StartsWithDirective implements Validator {
+    @Input() startsWith: string;
+
+    validate(control: AbstractControl): {[key: string]: any} | null {
+        return startsWithValidator(this.startsWith)(control);
+    }
+}
+```
+
+
+
+### Cross Field Validation for Reactive Forms
+```ts
+//...
+this.registerForm = new FormGroup(
+    {
+        email: new FormControl(),
+        password: new FormControl(),
+        passwordRepeated: new FormControl()
+    },
+    {
+        validators: [ passwordValidator(8) ]
+    }
+);
+//...
+```
+```ts
+// @FILE: app/commons/validators/passwordValidator.validator.ts
+
+export function passwordValidator(minLength: number): ValidatorFn {
+    return (control: FormGroup): {[key: string]: any} | null => {
+        const p1 = control.get('password');
+        const p2 = control.get('passwordRepeated');
+        let err = true;
+        if (
+            p1 && 
+            p2 && 
+            (p1.value.length >= minLength) && 
+            (p2.value.length >= minLength) && 
+            (p1.value === p2.value)
+        ) {
+            err = false;
+        }
+        return err ? { password:false } : null;
+    };
+}
+```
+```html
+<!-- ... -->
+<form [formGroup]="registerForm">
+    <input formControlName="email">
+    <input formControlName="password">
+    <input formControlName="passwordRepeated">
+</form>
+
+<div *ngIf="registerForm.errors?.password && (registerForm.touched || registerForm.dirty)">
+    Passwords is not matched or length is less than 8.
+</div>
+<!-- ... -->
+```
+
+* Validator factory must return validator function that accepts **FormGroup** parameter.
+* Error will be set to the **FormGroup** instance.
+
+
+
+
+### Cross Field Validation for Template Driven Forms
+```ts
+// @FILE: app/commons/validators/passwordValidator.validator.ts
+export function passwordValidator(minLength: number): ValidatorFn {
+    return (control: FormGroup): {[key: string]: any} | null => {
+        const p1 = control.get('password');
+        const p2 = control.get('passwordRepeated');
+        let err = true;
+        if (
+            p1 && 
+            p2 && 
+            (p1.value.length >= minLength) && 
+            (p2.value.length >= minLength) && 
+            (p1.value === p2.value)
+        ) {
+            err = false;
+        }
+        return err ? { password:false } : null;
+    };
+}
+```
+```html
+<!-- ... -->
+<form #registerForm="ngForm" password="8">
+    <input formControlName="email">
+    <input formControlName="password">
+    <input formControlName="passwordRepeated">
+
+    <div *ngIf="registerForm.errors?.password && (registerForm.touched || registerForm.dirty)">
+        Passwords is not matched or length is less than 8.
+    </div>
+</form>
+<!-- ... -->
+```
+```ts
+// @FILE: app/commons/directives/passwordValidator.directive.ts
+
+// ... some other imports ...
+import passwordValidator from '../validators/passwordValidator.validator';
+
+@Directive({
+    selector: '[password]',
+    provides: [
+        {provide:NG_VALIDATORS, useExisting: PasswordValidatorDirective, multi:true}
+    ]
+})
+export class PasswordValidatorDirective implements Validator {
+    @Input() password: number;
+
+    validate(control: AbstractControl): ValidationErrors {
+        return passwordValidator(this.password)(control);
+    }
+}
+```
+
 
 
 
