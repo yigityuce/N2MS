@@ -103,6 +103,12 @@
     - [Custom Validators for Template Driven Forms](#custom-validators-for-template-driven-forms)
     - [Cross Field Validation for Reactive Forms](#cross-field-validation-for-reactive-forms)
     - [Cross Field Validation for Template Driven Forms](#cross-field-validation-for-template-driven-forms)
+- [Router and Navigation](#router-and-navigation)
+  - [base href](#base-href)
+  - [Router Import and Router Configuration](#router-import-and-router-configuration)
+  - [Router Outlet](#router-outlet)
+  - [Router Link](#router-link)
+  - [Activated (Current) Route](#activated-current-route)
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
     - [Example](#example-2)
@@ -1919,6 +1925,9 @@ sub.complete(); //456, 456 logged by both subscribers
     * creates a bridge between FormControl instances and native DOM elements.
 
 
+See Also:
+* [AbstractControl](https://angular.io/api/forms/AbstractControl)
+
 ## Reactive Forms
 ```ts
 // @FILE: src/app/app.module.ts
@@ -2636,7 +2645,144 @@ export class PasswordValidatorDirective implements Validator {
 
 
 
+# Router and Navigation
 
+## base href
+* Most routing applications should add a **\<base\>** element to the index.html as the first child in the **\<head\>** tag to tell the router how to compose navigation URLs.
+
+```html
+<!-- @FILE: src/index.html -->
+<head>
+    <base href="/">
+</head>
+```
+
+
+## Router Import and Router Configuration
+* **RouterModule** must be imported to use router and must be added to some module's NgModule **imports** metadata. (for ex. root module)
+* A routed application has one singleton instance of the **Router service**. 
+* A router has no routes until you configure it.
+* Configure the router via the **RouterModule.forRoot()** method, and add the result to the module's imports array.
+
+```ts
+// FILE: /src/app/app.routes.ts
+
+import { HelpComponent } from './help'; // just component
+import { PageNotFoundComponent } from './page-not-found'; // just component
+import { UserDetailComponent } from './user/user-detail/user-detail.component'; // user module
+import { UserListComponent } from './user/user-list/user-list.component'; // user module
+
+export const appRoutes: Routes = [
+    { 
+        path: 'help', 
+        component: HelpComponent 
+    },
+    { 
+        path: 'user/:id', // router parameter
+        component: UserDetailComponent 
+    },
+    {
+        path: 'users',
+        component: UserListComponent,
+        data: { title: 'Users List' } // static, read-only data
+    },
+    { 
+        path: '', // default route
+        redirectTo: '/users',
+        pathMatch: 'full'
+    },
+    { 
+        path: '**', // not match any of route before in configuration
+        component: PageNotFoundComponent 
+    }
+];
+```
+
+```ts
+// FILE: /src/app/app.module.ts
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+import { appRoutes } from './app.routes';
+import { AppComponent } from './app.component';
+
+@NgModule({
+  declarations: [
+      AppComponent
+  ],
+  imports: [
+      BrowserModule,
+      RouterModule.forRoot(
+          appRoutes,
+          { enableTracing: true } // for debugging
+    )
+  ],
+  providers: [],
+  bootstrap: [ AppComponent ]
+})
+export class AppModule { }
+```
+
+* Each route map has a **path** to component
+  * no leading slashes in the path. 
+  * router parses and builds the final URL
+  * path can be both relative and absolute paths
+* **:id** is a route parameter that can be accessible from target component
+* **data** property in the third route is a place to store arbitrary data associated with this specific route. The data property is 
+  * accessible within each activated route
+  * used to store items such as page titles, breadcrumb text, and other **read-only**, **static** data
+* The **empty path** in the fourth route represents the **default path** for the application.
+* The **\*\*** path in the last route is a **wildcard**. 
+  * The router will select this route if the requested URL doesn't match any paths for routes defined **earlier** in the configuration.
+* The order of the routes in the configuration **matters**
+  * The router uses a **first-match wins** strategy
+
+
+## Router Outlet
+* It is a placeholder that component defined at the router configuration renders into.
+
+```html
+<!-- FILE: /src/app/app.component.ts -->
+
+<router-outlet></router-outlet>
+```
+
+
+## Router Link
+* String:
+```html
+<!-- ... -->
+<a routerLink="/users" routerLinkActive="active-class">Users</a>
+<a routerLink="/help" routerLinkActive="active can-be multiple">Users</a>
+<!-- ... -->
+```
+* Array
+```html
+<!-- ... -->
+<a routerLink="['user', selectInput.value]">Users</a>
+<!-- ... -->
+```
+
+* RouterLinkActive property value contains a **space-delimited** string of CSS classes that the router will add when this **link is active** and remove when the link is inactive
+
+
+## Activated (Current) Route
+* The route path and parameters are available through an injected router service called the ActivatedRoute.
+* See also: [ActivatedRoute](https://angular.io/api/router/ActivatedRoute) 
+
+| Property | Description |
+| --- | --- |
+| url | Observable route path(s) |
+| data | Observable that contains the data object provided for the route. Also contains any resolved values from the resolve guard. |
+| paramMap | Observable that contains the route parameters. |
+| queryParamMap | Observable that contains the query parameters available to all routes. |
+| fragment | Observable of the URL fragment available to all routes. |
+| outlet | The name of the RouterOutlet used to render the route. For an unnamed outlet, the outlet name is primary. |
+| routeConfig | The route configuration used for the route that contains the origin path. |
+| parent | The route's parent **ActivatedRoute** |
+| firstChild | Contains the first **ActivatedRoute** in the list of this route's child routes. |
+| children | Contains all the child routes activated under the current route. |
 
 
 # Best Practices
