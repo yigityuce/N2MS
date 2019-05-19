@@ -109,6 +109,9 @@
   - [Router Outlet](#router-outlet)
   - [Router Link](#router-link)
   - [Activated (Current) Route](#activated-current-route)
+  - [Router events](#router-events)
+  - [Programatic Routing](#programatic-routing)
+  - [Route Guards](#route-guards)
 - [Best Practices](#best-practices)
   - [Feature Modules](#feature-modules)
     - [Example](#example-2)
@@ -2672,6 +2675,9 @@ import { PageNotFoundComponent } from './page-not-found'; // just component
 import { UserDetailComponent } from './user/user-detail/user-detail.component'; // user module
 import { UserListComponent } from './user/user-list/user-list.component'; // user module
 
+import { AdminComponent } from './admin/admin.component'; // admin module
+import { adminRoutes } from './admin/admin.routes'; // admin module
+
 export const appRoutes: Routes = [
     { 
         path: 'help', 
@@ -2686,6 +2692,11 @@ export const appRoutes: Routes = [
         component: UserListComponent,
         data: { title: 'Users List' } // static, read-only data
     },
+    {
+        path: 'admin',
+        component: AdminComponent,
+        children: adminRoutes // child routes
+    },
     { 
         path: '', // default route
         redirectTo: '/users',
@@ -2694,6 +2705,29 @@ export const appRoutes: Routes = [
     { 
         path: '**', // not match any of route before in configuration
         component: PageNotFoundComponent 
+    }
+];
+
+
+// FILE: /src/app/admin/admin.routes.ts
+export const adminRoutes: Routes = [
+    { 
+        path: 'dashboard', 
+        component: ...
+    },
+    { 
+        path: 'settings',
+        component: ...
+    },
+    { 
+        path: '',
+        redirectTo: '/dashboard',
+        pathMatch: 'full'
+    },
+    { 
+        path: '**',
+        redirectTo: '/dashboard',
+        pathMatch: 'full'
     }
 ];
 ```
@@ -2725,26 +2759,45 @@ export class AppModule { }
 ```
 
 * Each route map has a **path** to component
-  * no leading slashes in the path. 
   * router parses and builds the final URL
   * path can be both relative and absolute paths
-* **:id** is a route parameter that can be accessible from target component
+* **:id** is a route parameter that can be accessible from target component.
 * **data** property in the third route is a place to store arbitrary data associated with this specific route. The data property is 
   * accessible within each activated route
   * used to store items such as page titles, breadcrumb text, and other **read-only**, **static** data
-* The **empty path** in the fourth route represents the **default path** for the application.
+* **Child routes** extend the path of the parent route.
+* The **empty path** in the fifth route represents the **default path** for the application.
+  * **patchMatch** tells the router how to match a URL to the path of a route.
+    * **full**: navigation URL and route's path property must be matched exactly
+    * **prefix**: navigation URL can starts with route's path property
 * The **\*\*** path in the last route is a **wildcard**. 
   * The router will select this route if the requested URL doesn't match any paths for routes defined **earlier** in the configuration.
 * The order of the routes in the configuration **matters**
-  * The router uses a **first-match wins** strategy
+  * The router uses a **first-match wins** strategy.
+
+--- 
+* **Component's selectors** are not required for **routed components** 
+  * Beacause the components are dynamically inserted when the page is rendered.
+  * But they are useful for identifying and targeting them in your HTML element tree.
+* RouterModule.forRoot()
+  * Only call it in the 
+    * root AppRoutingModule 
+    * AppModule (root module)
+* RouterModule.forChild (
+  * Call in sub-modules.
 
 
 ## Router Outlet
 * It is a placeholder that component defined at the router configuration renders into.
+* The router only supports one primary **unnamed outlet** per template.
+* A template can also have any number of named outlets. 
+* Each named outlet has its own set of routes with their own components.
+* See Also [https://angular.io/guide/router#displaying-multiple-routes-in-named-outlets](https://angular.io/guide/router#displaying-multiple-routes-in-named-outlets) 
 
 ```html
 <!-- FILE: /src/app/app.component.ts -->
 
+<span>Hello</span>
 <router-outlet></router-outlet>
 ```
 
@@ -2760,7 +2813,7 @@ export class AppModule { }
 * Array
 ```html
 <!-- ... -->
-<a routerLink="['user', selectInput.value]">Users</a>
+<a routerLink="['/user', selectInput.value]">Users</a>
 <!-- ... -->
 ```
 
@@ -2783,6 +2836,186 @@ export class AppModule { }
 | parent | The route's parent **ActivatedRoute** |
 | firstChild | Contains the first **ActivatedRoute** in the list of this route's child routes. |
 | children | Contains all the child routes activated under the current route. |
+
+
+```ts
+import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+
+@Component({
+})
+export class MyComponent implements OnInit {
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+    ) {}
+
+    ngOnInit () {
+        this.route.paramMap.subscribe((params: ParamMap) => {
+            console.log(params);
+        })
+    }
+}
+```
+
+
+
+## Router events
+* During each navigation, router emits **navigation events** through the **Router.events** property.
+
+| Event | Description |
+| --- | --- |
+| NavigationStart | when navigation starts. |
+| RouteConfigLoadStart | before the Router lazy loads a route configuration. |
+| RouteConfigLoadEnd | after a route has been lazy loaded. |
+| RoutesRecognized | when the Router parses the URL and the routes are recognized. |
+| GuardsCheckStart | when the Router begins the Guards phase of routing. |
+| ChildActivationStart | when the Router begins activating a route's children. |
+| ActivationStart | when the Router begins activating a route. |
+| GuardsCheckEnd | when the Router finishes the Guards phase of routing successfully. |
+| ResolveStart | when the Router begins the Resolve phase of routing. |
+| ResolveEnd | when the Router finishes the Resolve phase of routing successfuly. |
+| ChildActivationEnd | when the Router finishes activating a route's children. |
+| ActivationEnd	| when the Router finishes activating a route. |
+| NavigationEnd	| when navigation ends successfully. |
+| NavigationCancel | when navigation is canceled. This is due to a Route Guard returning false during navigation. |
+| NavigationError | when navigation fails due to an unexpected error. |
+| Scroll | An event that represents a scrolling event. |
+
+
+* See Also:
+  * [https://angular.io/api/router/Router#events](https://angular.io/api/router/Router#events)
+  * [https://angular.io/api/router/Event](https://angular.io/api/router/Event)
+
+
+```ts
+@Component({
+    // ...
+})
+class MyComponent {
+    constructor(public router: Router) {
+        router.events.pipe(
+            filter(e => e instanceof ActivationEnd)
+        ).subscribe(e => {
+            console.log(e);
+        });
+    }
+}
+```
+
+## Programatic Routing
+* This can be done with Router.navigate() method.
+* This method also accepts **NavigationExtras** parameter as second argument.
+
+See also: [https://angular.io/api/router/NavigationExtras](https://angular.io/api/router/NavigationExtras)
+
+```ts
+import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+
+@Component({
+})
+export class MyComponent implements OnInit {
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+    ) {}
+
+    ngOnInit () {
+        this.route.paramMap.subscribe((params: ParamMap) => {
+            console.log(params);
+        })
+    }
+
+    onSomethingHappen (id: number) {
+        this.router.navigate(
+            ['../', { id: id, foo: 'foo' }], 
+            { relativeTo: this.route }
+        );
+    }
+}
+```
+
+## Route Guards
+* Used to determine the route that is wanted to navigate it is a valid according to something.
+* These scenarios can be like that:
+  * User is not authorized to navigate to the target component.
+  * User must login (authenticate) first.
+  * You should fetch some data before you display the target component.
+  * You might want to save pending changes before leaving a component.
+  * You might ask the user if it's OK to discard pending changes rather than save them.
+* A guard's **return value** controls the router's behavior:
+  * If it returns **true**, the navigation process **continues**.
+  * If it returns **false**, the navigation process stops and the user **stays put**.
+  * If it returns a **UrlTree**, the current navigation cancels and a new navigation is initiated.
+* A routing guard can return an **Observable\<boolean\>** or a **Promise\<boolean\>** and the router will wait for the observable to resolve to true or false.
+* The router supports multiple guard interfaces:
+  * [CanActivate](https://angular.io/api/router/CanActivate) to control navigation to a route.
+  * [CanActivateChild](https://angular.io/api/router/CanActivateChild) to control navigation to a child route.
+  * [CanDeactivate](https://angular.io/api/router/CanDeactivate) to control navigation away from the current route.
+  * [Resolve](https://angular.io/api/router/Resolve) to perform route data retrieval before route activation.
+  * [CanLoad](https://angular.io/api/router/CanLoad) to control navigation to a feature module loaded asynchronously.
+* Guard implementations must be **@Injectable()**
+
+* Every route can have multiple guards.
+* The router checks 
+  * the **CanDeactivate** and **CanActivateChild** guards first, from the *deepest child route to the top*
+  * Then the **CanActivate** guards from the *top down to the deepest child* route.
+
+* See also: [https://angular.io/api/router/UrlTree](https://angular.io/api/router/UrlTree)
+
+
+
+```ts
+// @FILE: src/app/admin/guards/auth.guard.ts
+import { Injectable } from '@angular/core';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+
+@Injectable({})
+export class AuthGuard implements CanActivate {
+    constructor(
+        // ... service dependency injections
+    ) {
+
+    }
+
+    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+        console.log('AuthGuard#canActivate called');
+        return true;
+    }
+}
+```
+
+```ts
+// @FILE: src/app/admin/admin.routes.ts
+
+export const adminRoutes: Routes = [
+    ...,
+    {
+        path: '',
+        component: ...
+    },
+    ...
+]
+```
+
+```ts
+// @FILE: src/app/app.routes.ts
+import { adminRoutes } from 'admin/admin.routes';
+import { AuthGuard } from 'admin/guards/auth.guard';
+
+export const adminRoutes: Routes = [
+    ...,
+    {
+        path: 'admin',
+        canActivate: [ AuthGuard ],
+        children: adminRoutes
+    },
+    ...
+]
+```
+
+
 
 
 # Best Practices
