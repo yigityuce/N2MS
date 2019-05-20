@@ -17,13 +17,13 @@ Notes to myself about technology stack.
     * Libraries & Frameworks
       * Vue.js
       * React
-      * [Angular](Languages/Javascript/Libraries%20&%20Frameworks/Angular/README.md)
-      * [Pug.js](Languages/Javascript/Libraries%20&%20Frameworks/Pug.js/README.md)
+      * [Angular](Languages/Javascript/Libraries%20&%20Frameworks/Angular)
+      * [Pug.js](Languages/Javascript/Libraries%20&%20Frameworks/Pug.js)
       * Electron
       * Storybook
       * JWT (JSON Web Token)
-  * [Typescript](Languages/Typescript/README.md)
-  * [Java](Languages/Java/README.md)
+  * [Typescript](Languages/Typescript)
+  * [Java](Languages/Java)
   * Python
   * Bash
   * CSS
@@ -34,7 +34,7 @@ Notes to myself about technology stack.
       * Materialize
 * Concepts
   * Version Controlling
-    * [Git](Concepts/Version%20Controlling/Git/README.md)
+    * [Git](Concepts/Version%20Controlling/Git)
   * Parallel Programming
     * Thread
     * Mutex
@@ -42,7 +42,7 @@ Notes to myself about technology stack.
   * DevOps
     * CI/CD
   * Containerization
-    * Docker
+    * [Docker](Concepts/Containerization/Docker)
     * Kubernates
 * Security
 * Communication Protocols
