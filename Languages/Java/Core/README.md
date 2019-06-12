@@ -1,9 +1,12 @@
 - [Source File Declaration Rules](#source-file-declaration-rules)
 - [Data Types](#data-types)
-  - [Primitive](#primitive)
-  - [Reference](#reference)
+  - [Primitive Types](#primitive-types)
+    - [Enum](#enum)
+  - [Non-Primitive (Reference) Types](#non-primitive-reference-types)
     - [String](#string)
     - [Array](#array)
+    - [Number Wrapper Classes](#number-wrapper-classes)
+    - [Character Wrapper Classes](#character-wrapper-classes)
 - [Variable Types](#variable-types)
 - [Modifiers](#modifiers)
   - [Access Modifiers](#access-modifiers)
@@ -29,9 +32,6 @@
     - [Virtuality](#virtuality)
   - [Polymorphism](#polymorphism)
   - [Encapsulation](#encapsulation)
-- [Wrapper Classes for Data Types](#wrapper-classes-for-data-types)
-  - [Number](#number)
-  - [Character](#character)
 - [Exception Handling](#exception-handling)
 - [File Operations](#file-operations)
 - [Parallel Programming](#parallel-programming)
@@ -63,7 +63,7 @@ Rules:
 
 # Data Types
 
-## Primitive
+## Primitive Types
 type | storing | min | max | default | example
 --- | --- | --- | --- | --- | ---
 byte | 8 bit signed | -128 |  127 | 0 | byte b = 5
@@ -75,7 +75,21 @@ double | 64 bit floating point | - |  - | 0.0d | double d = 11.12
 boolean | single bit | 0 |  1 | false | boolean b = true;
 char | 16 bit character | '\u0000'  | '\uffff' | - | char c = 'a'
 
-## Reference
+### Enum
+* Java Enums can be thought of as classes that have fixed set of constants.
+* enum can be traversed
+* enum can have fields, constructors and methods
+* enum may implement many interfaces but cannot extend any class because it internally extends Enum class
+* The **values()** method returns an array containing all the values of the enum.
+* Can be defined outside/indside of the class.
+* Its constructor is private. So cannot be instantiated.
+
+```java
+enum Season { WINTER(2), SPRING(2), SUMMER, FALL };
+```
+
+
+## Non-Primitive (Reference) Types
 * Class objects
 * Default is **null**
 * Some of them is like below:
@@ -110,6 +124,16 @@ for (int i = 0; i < varName.length; i++0) {
     System.out.println(varName[i] + " ");
 }
 ```
+
+### Number Wrapper Classes
+![Number Classes](./number_classes.jpg)
+
+* All the wrapper classes (Integer, Long, Byte, Double, Float, Short) are subclasses of the abstract class Number.
+* See Also [https://docs.oracle.com/javase/7/docs/api/java/lang/Number.html](https://docs.oracle.com/javase/7/docs/api/java/lang/Number.html)
+
+### Character Wrapper Classes
+* See Also [https://docs.oracle.com/javase/7/docs/api/java/lang/Character.html](https://docs.oracle.com/javase/7/docs/api/java/lang/Character.html)
+
 
 
 
@@ -153,9 +177,16 @@ Different Pkg & Non-Subclass | No | No | No | Yes
   * final method cannot be overrided at subclasses
   * final class cannot be a parent class
 * abstract
-  * abstract class connot be initialized
-  * class cannot be both abstract and final
-  * abstract method is just definition, must be implemented at subclass.
+  * abstract class 
+    * connot be instantiated
+    * cannot be final
+    * can contain constructor and static methods
+    * can contain overloaded abstract methods
+  * abstract method 
+    * does not contain body, must be implemented at subclass
+    * connot be declared in non abstract class
+    * cannot be final, private, static
+    * 
 * synchronized
   * synchronized method can be accessible from just one thread at a time
 * transient
@@ -457,8 +488,12 @@ public class Example {
 
 
 # Annotation
-* TODO: write sth.
-
+* Java Annotation is a tag that represents the **metadata** i.e. attached with class, interface, methods or fields to indicate some additional information which can be **used by java compiler** and JVM.
+* Annotations in java are used to provide additional information.
+* Built-in annotations:
+  * @Override
+  * @SuppressWarnings
+  * @Deprecated
 
 
 
@@ -576,17 +611,6 @@ class Dog extends Animal {
 
 
 
-
-# Wrapper Classes for Data Types
-
-## Number
-![Number Classes](./number_classes.jpg)
-
-* All the wrapper classes (Integer, Long, Byte, Double, Float, Short) are subclasses of the abstract class Number.
-* See Also [https://docs.oracle.com/javase/7/docs/api/java/lang/Number.html](https://docs.oracle.com/javase/7/docs/api/java/lang/Number.html)
-
-## Character
-* See Also [https://docs.oracle.com/javase/7/docs/api/java/lang/Character.html](https://docs.oracle.com/javase/7/docs/api/java/lang/Character.html)
 
 
 # Exception Handling

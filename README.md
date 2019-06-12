@@ -23,7 +23,9 @@ Notes to myself about technology stack.
       * Storybook
       * JWT (JSON Web Token)
   * [Typescript](Languages/Typescript)
-  * [Java](Languages/Java)
+  * Java
+    * [Core](Languages/Java/Core)
+    * [Maven](Languages/Java/Maven)
   * Python
   * Bash
   * CSS
