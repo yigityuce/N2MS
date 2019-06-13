@@ -1,4 +1,13 @@
 
+- [Introduction](#introduction)
+- [Configuration](#configuration)
+  - [Minimum configuration](#minimum-configuration)
+  - [Variables](#variables)
+  - [Super POM](#super-pom)
+- [Usage](#usage)
+  - [Build](#build)
+  - [Run](#run)
+
 
 # Introduction
 * Build automation tool
@@ -12,7 +21,7 @@
 * **pom.xml** file in project root
 * **POM**: Project Object Model
 
-## Minimum configuration:
+## Minimum configuration
 
 ```xml
 <project>

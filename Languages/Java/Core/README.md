@@ -19,12 +19,6 @@
       - [Inner Class](#inner-class)
       - [Method-Local Inner Class](#method-local-inner-class)
       - [Anonymous Inner Class](#anonymous-inner-class)
-- [Interfaces](#interfaces)
-- [Packages](#packages)
-  - [import](#import)
-  - [CLASSPATH](#classpath)
-- [Annotation](#annotation)
-- [Object Oriented Java](#object-oriented-java)
   - [Inheritance](#inheritance)
     - [super keyword](#super-keyword)
     - [instanceof operator](#instanceof-operator)
@@ -32,10 +26,11 @@
     - [Virtuality](#virtuality)
   - [Polymorphism](#polymorphism)
   - [Encapsulation](#encapsulation)
-- [Exception Handling](#exception-handling)
-- [File Operations](#file-operations)
-- [Parallel Programming](#parallel-programming)
-- [Socket Programming](#socket-programming)
+- [Interfaces](#interfaces)
+- [Packages](#packages)
+  - [import](#import)
+  - [CLASSPATH](#classpath)
+- [Annotation](#annotation)
 - [Java Environment](#java-environment)
   - [Java Compiler (javac)](#java-compiler-javac)
   - [JVM (java)](#jvm-java)
@@ -212,8 +207,16 @@ void printInt (int... args) {
 
 
 
+
+
+
 # Classes
-* Class can be public, private
+* Class can be public, private.
+* Class can be final, abstract.
+* Can extend **just one** class.
+* Can implement **any number** of interface.
+* Each .java file can contain **just one** public class, **any number** private class.
+* Source file name **must** match the public class name.
 * Constructor has to have same name with the class.
 
 ```java
@@ -356,6 +359,115 @@ public class Outer_class {
 }
 ```
 
+## Inheritance
+![Types of Inheritance](./types_of_inheritance.jpg)
+
+* Java **does not support** multiple ınheritance.
+* Can be done with **extends** keyword for classes.
+* Can be done with **implements** keyword for interfaces.
+
+```java
+class Base {
+}
+
+public class Derived extends Base {
+}
+```
+
+### super keyword
+* call base class constructor with **super()**
+* access base class members with **super.memberName**
+
+```java
+class Base {
+    Base (String msg) {
+        System.out.println("This is base class constructor.");
+        this.printMsg(msg);
+    }
+
+    public void printMsg (String msg) {
+        System.out.println("Msg:" + msg);
+    }
+}
+
+public class Derived extends Base {
+    Derived () {
+        super("Hello base.");
+        System.out.println("This is derived class constructor");
+    }
+
+    protected finalize () {
+        super.printMsg("Goodbye base.");
+    }
+}
+```
+
+
+
+### instanceof operator
+* objects that instantiate from subclass are returns true of the below statements:
+
+```java
+Derived obj = new Derived();
+System.out.println(obj instanceof Base); // true
+System.out.println(obj instanceof DerivedBase); // true
+```
+
+
+
+## Overriding
+* Method signature must be same at child class.
+  * Return type can be subtype of the original method's return type.
+* Overridden method must not be static.
+* Overridden method must not be final.
+* Overridden method must not be private.
+* Overridden method must not be constructor.
+* Method accessiblity must not be more restrictive than the overriddn method.
+* Original method can call with:
+
+```java
+...
+@Override
+public void methodName () {
+    super.methodName();
+    // do other stuff
+}
+...
+```
+
+### Virtuality
+* Compile time: reference time will be checked
+* Runtime: object type will be checked
+
+```java
+class Animal {
+    public void walk () {
+        System.out.println('Animal walks');
+    }
+}
+
+class Dog extends Animal {
+    @Override
+    public void walk () {
+        System.out.println('Dog walks');
+    }
+
+    public static void main (String[] args) {
+        Dog d1 = new Dog();
+        // this line is IMPORTANT!
+        Animal d2 = new Dog();
+
+        d1.walk(); // prints: Dog walks
+        d2.walk(); // prints: Dog walks
+    }
+}
+```
+
+## Polymorphism
+## Encapsulation
+
+
+
 
 
 
@@ -497,113 +609,6 @@ public class Example {
 
 
 
-# Object Oriented Java
-## Inheritance
-![Types of Inheritance](./types_of_inheritance.jpg)
-
-* Java **does not support** multiple ınheritance.
-* Can be done with **extends** keyword for classes.
-* Can be done with **implements** keyword for interfaces.
-
-```java
-class Base {
-}
-
-public class Derived extends Base {
-}
-```
-
-### super keyword
-* call base class constructor with **super()**
-* access base class members with **super.memberName**
-
-```java
-class Base {
-    Base (String msg) {
-        System.out.println("This is base class constructor.");
-        this.printMsg(msg);
-    }
-
-    public void printMsg (String msg) {
-        System.out.println("Msg:" + msg);
-    }
-}
-
-public class Derived extends Base {
-    Derived () {
-        super("Hello base.");
-        System.out.println("This is derived class constructor");
-    }
-
-    protected finalize () {
-        super.printMsg("Goodbye base.");
-    }
-}
-```
-
-
-
-### instanceof operator
-* objects that instantiate from subclass are returns true of the below statements:
-
-```java
-Derived obj = new Derived();
-System.out.println(obj instanceof Base); // true
-System.out.println(obj instanceof DerivedBase); // true
-```
-
-
-
-## Overriding
-* Method signature must be same at child class.
-  * Return type can be subtype of the original method's return type.
-* Overridden method must not be static.
-* Overridden method must not be final.
-* Overridden method must not be private.
-* Overridden method must not be constructor.
-* Method accessiblity must not be more restrictive than the overriddn method.
-* Original method can call with:
-
-```java
-...
-@Override
-public void methodName () {
-    super.methodName();
-    // do other stuff
-}
-...
-```
-
-### Virtuality
-* Compile time: reference time will be checked
-* Runtime: object type will be checked
-
-```java
-class Animal {
-    public void walk () {
-        System.out.println('Animal walks');
-    }
-}
-
-class Dog extends Animal {
-    @Override
-    public void walk () {
-        System.out.println('Dog walks');
-    }
-
-    public static void main (String[] args) {
-        Dog d1 = new Dog();
-        // this line is IMPORTANT!
-        Animal d2 = new Dog();
-
-        d1.walk(); // prints: Dog walks
-        d2.walk(); // prints: Dog walks
-    }
-}
-```
-
-## Polymorphism
-## Encapsulation
 
 
 
@@ -612,14 +617,6 @@ class Dog extends Animal {
 
 
 
-
-# Exception Handling
-
-# File Operations
-
-# Parallel Programming
-
-# Socket Programming
 
 # Java Environment
 ## Java Compiler (javac)

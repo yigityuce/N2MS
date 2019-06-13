@@ -26,6 +26,7 @@ Notes to myself about technology stack.
   * Java
     * [Core](Languages/Java/Core)
     * [Maven](Languages/Java/Maven)
+    * [Lombok](Languages/Java/Lombok)
   * Python
   * Bash
   * CSS
