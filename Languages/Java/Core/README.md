@@ -13,19 +13,19 @@
   - [Non-Access Modifiers](#non-access-modifiers)
 - [Methods](#methods)
 - [Classes](#classes)
-  - [Nested Class](#nested-class)
-    - [Static Nested Class](#static-nested-class)
-    - [Non-static Nested Classes](#non-static-nested-classes)
-      - [Inner Class](#inner-class)
-      - [Method-Local Inner Class](#method-local-inner-class)
-      - [Anonymous Inner Class](#anonymous-inner-class)
   - [Inheritance](#inheritance)
     - [super keyword](#super-keyword)
     - [instanceof operator](#instanceof-operator)
   - [Overriding](#overriding)
     - [Virtuality](#virtuality)
   - [Polymorphism](#polymorphism)
+    - [Method Overloading](#method-overloading)
   - [Encapsulation](#encapsulation)
+    - [Static Nested Class](#static-nested-class)
+    - [Non-static Nested Classes](#non-static-nested-classes)
+      - [Inner Class](#inner-class)
+      - [Method-Local Inner Class](#method-local-inner-class)
+      - [Anonymous Inner Class](#anonymous-inner-class)
 - [Interfaces](#interfaces)
 - [Packages](#packages)
   - [import](#import)
@@ -165,28 +165,29 @@ Different Pkg & Non-Subclass | No | No | No | Yes
 
 ## Non-Access Modifiers
 * static
-  * Local variables cannot be declared static
+  * Local variables cannot be declared static.
   * Method/Variable of the instance that static method belongs to can not be used within the static method.
 * final
-  * final variable means its value can not be changed
-  * final method cannot be overrided at subclasses
-  * final class cannot be a parent class
+  * final variable means its value can not be changed.
+  * final method cannot be overrided at subclasses.
+  * final class cannot be a parent class.
 * abstract
   * abstract class 
-    * connot be instantiated
-    * cannot be final
-    * can contain constructor and static methods
-    * can contain overloaded abstract methods
+    * connot be instantiated.
+    * cannot be final.
+    * can contain method with body.
+    * can contain constructor and static methods.
+    * can contain overloaded abstract methods.
   * abstract method 
-    * does not contain body, must be implemented at subclass
-    * connot be declared in non abstract class
-    * cannot be final, private, static
-    * 
+    * does not contain body, must be implemented at subclass.
+    * connot be declared in non abstract class.
+    * cannot be final, private, static.
 * synchronized
-  * synchronized method can be accessible from just one thread at a time
+  * synchronized method can be accessible from just one thread at a time.
 * transient
+  * transient variable value doesn't persist when an object is serialized.
 * volatile
-
+  * tells the compiler that the volatile variable can be changed unexpectedly by other parts of your program.
 
 
 
@@ -236,6 +237,11 @@ public class Employee {
         this.name = name;
     }
 
+    // constructor chaining
+    public Employee () {
+        this("unnamed");
+    }
+
     // destructor
     protected finalize () {
         // do clean-up before object destruction
@@ -265,7 +271,129 @@ public class Employee {
 }
 ```
 
-## Nested Class
+
+## Inheritance
+![Types of Inheritance](./types_of_inheritance.jpg)
+
+* Java **does not support** multiple inheritance.
+* Can be done with **extends** keyword for classes.
+* Can be done with **implements** keyword for interfaces.
+
+```java
+class Base {
+}
+
+public class Derived extends Base {
+}
+```
+
+### super keyword
+* call base class constructor with **super()**
+* access base class members with **super.memberName**
+
+```java
+class Base {
+    Base (String msg) {
+        System.out.println("This is base class constructor.");
+        this.printMsg(msg);
+    }
+
+    public void printMsg (String msg) {
+        System.out.println("Msg:" + msg);
+    }
+}
+
+public class Derived extends Base {
+    Derived () {
+        super("Hello base.");
+        System.out.println("This is derived class constructor");
+    }
+
+    protected finalize () {
+        super.printMsg("Goodbye base.");
+    }
+}
+```
+
+
+
+### instanceof operator
+* objects that instantiate from subclass are returns true of the below statements:
+
+```java
+Derived obj = new Derived();
+System.out.println(obj instanceof Base); // true
+System.out.println(obj instanceof DerivedBase); // true
+```
+
+
+
+## Overriding
+* Method signature must be same at child class.
+  * Return type can be subtype of the original method's return type.
+* Overridden method must not be static.
+* Overridden method must not be final.
+* Overridden method must not be private.
+* Overridden method must not be constructor.
+* Method accessiblity must not be more restrictive than the overridden method.
+* Original method can call with:
+
+```java
+...
+@Override
+public void methodName () {
+    super.methodName();
+    // do other stuff
+}
+...
+```
+
+### Virtuality
+* Compile time: reference time will be checked
+* Runtime: object type will be checked
+
+```java
+class Animal {
+    public void walk () {
+        System.out.println('Animal walks');
+    }
+}
+
+class Dog extends Animal {
+    @Override
+    public void walk () {
+        System.out.println('Dog walks');
+    }
+
+    public static void main (String[] args) {
+        Dog d1 = new Dog();
+        // this line is IMPORTANT!
+        Animal d2 = new Dog();
+
+        d1.walk(); // prints: Dog walks
+        d2.walk(); // prints: Dog walks
+    }
+}
+```
+
+## Polymorphism
+
+### Method Overloading
+* Same method name, different argument types or count.
+
+```java
+class Math {
+    public Integer sum (Integer a, Integer b) {
+        return a + b;
+    }
+    public Float sum (Float a, Float b) {
+        return a + b;
+    }
+}
+
+```
+
+## Encapsulation
 
 ### Static Nested Class
 * It is defined like a regular static class member.
@@ -359,114 +487,6 @@ public class Outer_class {
 }
 ```
 
-## Inheritance
-![Types of Inheritance](./types_of_inheritance.jpg)
-
-* Java **does not support** multiple ınheritance.
-* Can be done with **extends** keyword for classes.
-* Can be done with **implements** keyword for interfaces.
-
-```java
-class Base {
-}
-
-public class Derived extends Base {
-}
-```
-
-### super keyword
-* call base class constructor with **super()**
-* access base class members with **super.memberName**
-
-```java
-class Base {
-    Base (String msg) {
-        System.out.println("This is base class constructor.");
-        this.printMsg(msg);
-    }
-
-    public void printMsg (String msg) {
-        System.out.println("Msg:" + msg);
-    }
-}
-
-public class Derived extends Base {
-    Derived () {
-        super("Hello base.");
-        System.out.println("This is derived class constructor");
-    }
-
-    protected finalize () {
-        super.printMsg("Goodbye base.");
-    }
-}
-```
-
-
-
-### instanceof operator
-* objects that instantiate from subclass are returns true of the below statements:
-
-```java
-Derived obj = new Derived();
-System.out.println(obj instanceof Base); // true
-System.out.println(obj instanceof DerivedBase); // true
-```
-
-
-
-## Overriding
-* Method signature must be same at child class.
-  * Return type can be subtype of the original method's return type.
-* Overridden method must not be static.
-* Overridden method must not be final.
-* Overridden method must not be private.
-* Overridden method must not be constructor.
-* Method accessiblity must not be more restrictive than the overriddn method.
-* Original method can call with:
-
-```java
-...
-@Override
-public void methodName () {
-    super.methodName();
-    // do other stuff
-}
-...
-```
-
-### Virtuality
-* Compile time: reference time will be checked
-* Runtime: object type will be checked
-
-```java
-class Animal {
-    public void walk () {
-        System.out.println('Animal walks');
-    }
-}
-
-class Dog extends Animal {
-    @Override
-    public void walk () {
-        System.out.println('Dog walks');
-    }
-
-    public static void main (String[] args) {
-        Dog d1 = new Dog();
-        // this line is IMPORTANT!
-        Animal d2 = new Dog();
-
-        d1.walk(); // prints: Dog walks
-        d2.walk(); // prints: Dog walks
-    }
-}
-```
-
-## Polymorphism
-## Encapsulation
-
-
 
 
 
@@ -476,13 +496,13 @@ class Dog extends Animal {
   * All methods are **implicitly** abstract.
   * Interface is **implicitly** abstract.
 * Can contain:
-  * constants (static final)
+  * static final variables
   * default methods with body
   * static methods with body
   * nested types
 * Can not contain:
   * constuctor
-  * instance fields
+  * instance variables
 * File naming is same exactly with class files.
 * Can not instatiate.
 * Interfaces are **implement**ed by class, not extend.
@@ -547,15 +567,9 @@ package com.apple.phone; // com/apple/phone
 * It is like a **namespace** in C++;
 * Prevents name conflicts.
 * Groups related elements. (class, interface, enumaration and annotation)
-* Package name should be lowercase to prevent conflict with class/interface
-* To compile the Java programs with package statements, 
-  * you have to use -d option
-  * then a folder with the given package name is created in the specified destination
-  * and the compiled class files will be placed in that folder
-
-```bash
-javac -d dest_dir classname.java
-```
+* Package name should be lowercase to prevent conflict with class/interface.
+* Package name structure and package directory structure must be matched.
+* All classes within the package must have the package statement as its first line
 
 ## import
 * accessing class from another package with these:
@@ -592,10 +606,10 @@ public class Example {
 * the compiler and JVM will look for .class files in:
   * CLASSPATH/package_name_to_dir_path
   * Ex: 
-    * CLASSPATH = /home/yigit/javatest/project1/classes
+    * CLASSPATH = /home/yigit/javatest/project1/src/main/java
     * package_name_to_dir_path = com.yigityuce.project1
   * Result:
-    * /home/yigit/javatest/project1/classes/com/yigityuce/project1
+    * /home/yigit/javatest/project1/src/main/java/com/yigityuce/project1
 
 
 
