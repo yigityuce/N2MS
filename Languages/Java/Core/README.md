@@ -1,39 +1,63 @@
-- [Source File Declaration Rules](#source-file-declaration-rules)
-- [Data Types](#data-types)
-  - [Primitive Types](#primitive-types)
-    - [Enum](#enum)
-  - [Non-Primitive (Reference) Types](#non-primitive-reference-types)
-    - [String](#string)
-    - [Array](#array)
-    - [Number Wrapper Classes](#number-wrapper-classes)
-    - [Character Wrapper Classes](#character-wrapper-classes)
-- [Variable Types](#variable-types)
-- [Modifiers](#modifiers)
-  - [Access Modifiers](#access-modifiers)
-  - [Non-Access Modifiers](#non-access-modifiers)
-- [Methods](#methods)
-- [Classes](#classes)
-  - [Inheritance](#inheritance)
+- [Source File Declaration Rules](#Source-File-Declaration-Rules)
+- [Data Types](#Data-Types)
+  - [Primitive Types](#Primitive-Types)
+    - [Enum](#Enum)
+  - [Non-Primitive (Reference) Types](#Non-Primitive-Reference-Types)
+    - [String](#String)
+      - [Concat](#Concat)
+      - [Comparison](#Comparison)
+      - [Converting to string](#Converting-to-string)
+    - [Array](#Array)
+    - [Number Wrapper Classes](#Number-Wrapper-Classes)
+    - [Character Wrapper Classes](#Character-Wrapper-Classes)
+- [Variable Types](#Variable-Types)
+- [Modifiers](#Modifiers)
+  - [Access Modifiers](#Access-Modifiers)
+  - [Non-Access Modifiers](#Non-Access-Modifiers)
+- [Methods](#Methods)
+- [Classes](#Classes)
+  - [Inheritance](#Inheritance)
     - [super keyword](#super-keyword)
     - [instanceof operator](#instanceof-operator)
-  - [Overriding](#overriding)
-    - [Virtuality](#virtuality)
-  - [Polymorphism](#polymorphism)
-    - [Method Overloading](#method-overloading)
-  - [Encapsulation](#encapsulation)
-    - [Static Nested Class](#static-nested-class)
-    - [Non-static Nested Classes](#non-static-nested-classes)
-      - [Inner Class](#inner-class)
-      - [Method-Local Inner Class](#method-local-inner-class)
-      - [Anonymous Inner Class](#anonymous-inner-class)
-- [Interfaces](#interfaces)
-- [Packages](#packages)
+  - [Overriding](#Overriding)
+    - [Virtuality](#Virtuality)
+  - [Polymorphism](#Polymorphism)
+    - [Method Overloading](#Method-Overloading)
+  - [Encapsulation](#Encapsulation)
+    - [Static Nested Class](#Static-Nested-Class)
+    - [Non-static Nested Classes](#Non-static-Nested-Classes)
+      - [Inner Class](#Inner-Class)
+      - [Method-Local Inner Class](#Method-Local-Inner-Class)
+      - [Anonymous Inner Class](#Anonymous-Inner-Class)
+- [Interfaces](#Interfaces)
+- [Packages](#Packages)
   - [import](#import)
-  - [CLASSPATH](#classpath)
-- [Annotation](#annotation)
-- [Java Environment](#java-environment)
-  - [Java Compiler (javac)](#java-compiler-javac)
-  - [JVM (java)](#jvm-java)
+  - [CLASSPATH](#CLASSPATH)
+- [Annotation](#Annotation)
+- [Handling Exception](#Handling-Exception)
+  - [Try Catch Block](#Try-Catch-Block)
+  - [Try with Resource Statement](#Try-with-Resource-Statement)
+  - [Throwing Exception](#Throwing-Exception)
+  - [User Defined Exceptions](#User-Defined-Exceptions)
+- [Multithreading](#Multithreading)
+  - [Main Thread](#Main-Thread)
+  - [Lifecycle](#Lifecycle)
+  - [Priority](#Priority)
+  - [Thread Class](#Thread-Class)
+    - [Construct](#Construct)
+    - [Sleep](#Sleep)
+    - [Join](#Join)
+  - [Synchronization](#Synchronization)
+    - [Synchronized Method](#Synchronized-Method)
+    - [Synchronized Block](#Synchronized-Block)
+  - [Thread Communication](#Thread-Communication)
+    - [Object.wait()](#Objectwait)
+    - [Object.notify()](#Objectnotify)
+    - [Object.notifyAll()](#ObjectnotifyAll)
+  - [Example](#Example)
+- [Java Environment](#Java-Environment)
+  - [Java Compiler (javac)](#Java-Compiler-javac)
+  - [JVM (java)](#JVM-java)
 
 # Source File Declaration Rules
 
@@ -93,6 +117,7 @@ enum Season { WINTER(2), SPRING(2), SUMMER, FALL };
 * String class is immutable, so it cannot be changed.
 * If you want to do make changes on string you should use:
   * StringBuffer
+    * It represents growable and writable character sequence.
     * Thread-safe
   * StringBuilder
     * Not thread-safe
@@ -101,6 +126,22 @@ enum Season { WINTER(2), SPRING(2), SUMMER, FALL };
   *  [https://docs.oracle.com/javase/7/docs/api/java/lang/String.html](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html)
   *  [https://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html](https://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html)
   *  [https://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html](https://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html)
+
+
+#### Concat
+* **String.concat()** method
+* **\+** operator
+
+#### Comparison
+* **String.equals()** method.
+
+#### Converting to string
+* **String.valueOf()** method.
+
+```java
+int x = 345;
+String xStr = String.valueOf(x);
+```
 
 ### Array
 * definition:
@@ -124,9 +165,11 @@ for (int i = 0; i < varName.length; i++0) {
 ![Number Classes](./number_classes.jpg)
 
 * All the wrapper classes (Integer, Long, Byte, Double, Float, Short) are subclasses of the abstract class Number.
+* All the wrapper classes are immutable. So it cannot be changed.
 * See Also [https://docs.oracle.com/javase/7/docs/api/java/lang/Number.html](https://docs.oracle.com/javase/7/docs/api/java/lang/Number.html)
 
 ### Character Wrapper Classes
+* All the wrapper classes are immutable. So it cannot be changed.
 * See Also [https://docs.oracle.com/javase/7/docs/api/java/lang/Character.html](https://docs.oracle.com/javase/7/docs/api/java/lang/Character.html)
 
 
@@ -621,6 +664,266 @@ public class Example {
   * @SuppressWarnings
   * @Deprecated
 
+
+
+# Handling Exception
+![](./exception-class-hierarchy-java.jpg)
+
+* **Exception** class is for exceptional conditions that program should catch. This class can be extended to create **user specific** exception classes.
+* **RuntimeException** is a subclass of Exception. Exceptions under this class are automatically defined for programs.
+* **Exceptions of type Error** are used by the Java run-time system to indicate errors having to do with the run-time environment, itself. Stack overflow is an example of such an error.
+
+
+## Try Catch Block
+
+```java
+class ExceptionTutorial
+{
+    public static void main (String args[])
+    {
+        try {
+            int a = 0;
+            int b = 10;
+            int c = b/a;
+        }
+        catch (ArithmeticException e) {
+            System.out.println("Divided by zero");
+        }
+    }
+}
+```
+
+## Try with Resource Statement
+* Since JDK 7.
+* Referred as **automatic resource management**.
+* A resource is an object that is used in program and must be **closed after the program** is finished.
+* Any object that implements **java.lang.AutoCloseable** or **java.io.Closeable**, can be passed as a parameter to try statement.
+
+```java
+class Test
+{
+    public static void main(String[] args)
+    {
+        try (BufferedReader br = new BufferedReader(new FileReader("./myfile.txt")))
+        {
+            String str;
+            while ((str = br.readLine()) != null) {
+                System.out.println(str);
+            }
+        }
+        catch (IOException ioe) { System.out.println("exception");  }
+    }
+}
+```
+
+## Throwing Exception
+
+* Exceptions can be thrown with **throw \<exception-instance\>** 
+* Thrown exceptions must be defined in function signature with **throws** keyword.
+
+```java
+class Test
+{
+    static void test () throws Exception {
+        try {
+            throw new Exception("demo");
+        }
+        catch (Exception e) {
+            System.out.println("Exception caught");
+        }
+    }
+
+    public static void main (String args[]) {
+        test();
+    }
+}
+```
+
+## User Defined Exceptions
+* You don't have to implement anything inside it, no methods are required.
+* Override the toString() function, to display customized message.
+
+```java
+class ExceptionWithCode extends Exception
+{
+    private int errorCode;
+
+    ExceptionWithCode (int c) {
+        errorCode = c;
+    }
+
+    public String toString () {
+        return "Error occured. Code: " + this.errorCode;
+    }
+}
+```
+
+# Multithreading
+
+## Main Thread
+* Main thread can be obtained with **Thread.currentThread()**
+
+```java
+class Example
+{
+    public static void main(String[] args)
+    {
+        Thread t = Thread.currentThread();
+        t.setName("Example Main");
+        System.out.println("Name of thread is " + t);
+    }
+}
+```
+
+## Lifecycle
+
+![thread-life-cycle](./thread-life-cycle.jpg)
+
+* **New**: A thread begins its life cycle in the new state. It remains in this state until the start() method is called on it.
+* **Runnable**: After invocation of start() method on new thread, the thread becomes runnable.
+* **Running**: A thread is in running state if the thread scheduler has selected it.
+* **Waiting**: A thread is in waiting state if it waits for another thread to perform a task. In this stage the thread is still alive.
+* **Terminated**: A thread enter the terminated state when it complete its task.
+
+
+## Priority
+* It is used to help the operating system to determine which threads are scheduled for execution.
+* Thread priority ranges between 1 to 10.
+
+
+## Thread Class
+
+### Construct
+* You can create new thread:
+  * extending **Thread class** or 
+  * implementing **Runnable interface**
+
+```java
+// constructors
+Thread ()
+Thread (String str)
+Thread (Runnable r)
+Thread (Runnable r, String str)
+```
+
+### Sleep
+* While using **sleep()** method, always handle the exception it throws.
+
+```java
+static void sleep(long milliseconds) throws InterruptedException
+```
+
+### Join
+* Using **join()** method, we tell our thread to wait until the specified thread completes its execution.
+
+```java
+final void join() throws InterruptedException;
+
+final void join(long milliseconds) throws InterruptedException;
+```
+
+
+## Synchronization
+* It is like Mutex in C++.
+* When more than one thread try to access a shared resource, we need to ensure that resource will be used by only one thread at a time.
+
+### Synchronized Method
+```java
+public synchronized void writeToResource (String msg);
+```
+
+### Synchronized Block
+* Way more efficent compared to synchronized method.
+```java
+public void writeToResource (String msg) {
+    System.out.println("Writing is started");
+    String resourcePath = "./example.txt";
+    // ... do something else
+
+    synchronized (resourceObj) {
+        // ... do something critical with resourceObj
+    }
+}
+```
+
+## Thread Communication
+
+### Object.wait()
+* The wait() method causes the current thread to wait indefinitely until another thread either invokes **notify()** for this object or **notifyAll()**.
+* Can be called only inside:
+  * synchronized blocks
+  * synchronized methods
+* The current thread must own this object's monitor. (synchronized block's scope)
+* When wait is called, the thread **releases ownership** of this monitor and waits until another thread notifies threads waiting on this object's monitor.
+* After notify() or notifyAll() called the thread can **re-obtain ownership** of the monitor and resumes execution.
+
+```java
+final void wait() throws InterruptedException;
+
+final void wait(long timeout) throws InterruptedException;
+
+final void wait(long timeout, int nanos) throws InterruptedException;
+```
+
+### Object.notify()
+* Wakes up a single thread that is waiting on this object's monitor. 
+* If any threads are waiting on this object, one of them is chosen to be awakened. 
+* The choice is arbitrary and depends to the implementation.
+* The awakened thread will not be able to proceed until the current thread relinquishes the lock on this object. 
+
+
+### Object.notifyAll()
+* Wakes up all threads that are waiting on this object's monitor.
+
+
+
+## Example
+* If you try to start same thread more than once, **IllegalThreadStateException** will be thrown.
+
+```java
+class Job1 implements Runnable {
+    private int counter = 0;
+    
+    public void run() {
+        while (this.counter++ < 5) {
+            System.out.println("Job1.counter is " + this.counter);
+            try { Thread.sleep(1000); }
+            catch (InterruptedException e) {}
+        }
+    }
+}
+
+
+class Job2 extends Thread {
+    private int counter = 0;
+    
+    public void run() {
+        while (this.counter++ < 1000) {
+            System.out.println("Job2.counter is " + this.counter);
+            try { Thread.sleep(1000); }
+            catch (InterruptedException e) {}
+        }
+    }
+}
+
+class Example
+{
+    public static void main( String args[] )
+    {
+        Thread t1 = new Thread(new Job1());
+        Job2 t2 = new Job2();
+        t1.start();
+
+        try {
+  			t1.join();	//Waiting for t1 to finish
+		}
+        catch (InterruptedException ie) {}
+
+        // then start t2
+        t2.start();
+    }
+}
+```
 
 
 
