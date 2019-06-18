@@ -16,8 +16,8 @@ Notes to myself about technology stack.
     * NPM
     * Libraries & Frameworks
       * Vue.js
-      * React
       * [Angular](Languages/Javascript/Libraries%20&%20Frameworks/Angular)
+      * [React](Languages/Javascript/Libraries%20&%20Frameworks/React)
       * [Pug.js](Languages/Javascript/Libraries%20&%20Frameworks/Pug.js)
       * Electron
       * Storybook
