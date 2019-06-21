@@ -3,6 +3,11 @@
   - [Remove](#remove)
   - [Run](#run)
     - [Run Options](#run-options)
+  - [Build](#build)
+    - [Dockerfile](#dockerfile)
+  - [Publish and Pull Image](#publish-and-pull-image)
+    - [Publish](#publish)
+    - [Pull and Run](#pull-and-run)
 - [Containers](#containers)
   - [List](#list-1)
   - [Stop](#stop)
@@ -10,14 +15,16 @@
   - [Remove](#remove-1)
   - [Shell Access](#shell-access)
   - [Show Tasks (Processes)](#show-tasks-processes)
-- [Dockerfile](#dockerfile)
-  - [Directives](#directives)
-  - [Build](#build)
-- [Publish and Pull Image](#publish-and-pull-image)
-  - [Publish](#publish)
-  - [Pull and Run](#pull-and-run)
 - [Services](#services)
   - [docker-compose.yml](#docker-composeyml)
+  - [Run Services](#run-services)
+  - [List](#list-2)
+  - [Remove](#remove-2)
+- [Swarms](#swarms)
+  - [Swarm Manager](#swarm-manager)
+  - [Setting Up Swarm](#setting-up-swarm)
+    - [Init](#init)
+    - [Join](#join)
 
 
 * **Docker for Mac/Linux/Windows** − It allows to run Docker containers.
@@ -67,10 +74,69 @@ docker run <image-name>
 
 
 
+## Build
+
+### Dockerfile
+* Dockerfile defines what goes on in the environment inside your container.
+* Build operation uses dockerfile.
+* Directives:
+  * **FROM**
+    * Base image
+    * **Ex**: FROM nginx:latest
+  * **WORKDIR**
+    * Container working directory
+    * **Ex**: WORKDIR /usr/share/nginx/html
+  * **COPY**
+    * Copy files
+    * **Ex**: COPY *.html .
+  * **RUN**
+    * Run command
+    * **Ex**: RUN npm i
+  * **ENV**
+    * Set environment variable
+    * **Ex**: ENV NODE_ENV production
+  * **EXPOSE**
+    * Container port definition.
+    * **Ex**: EXPOSE 3000
+  * **CMD**
+    * Run application when the container launched
+    * **Ex**: CMD ["npm", "start"]
+  * and much more...
+
+
+```sh
+# build image from directives that define in Dockerfile in current directory
+docker build -t mysuperapp:v0.0.1 .
+
+# build from another Dockerfile that locate in different directory
+docker build -f config/docker/Dockerfile -t mysuperapp:v0.0.1 .
+```
+
+
+
+## Publish and Pull Image
+
+### Publish
+```sh
+# login
+docker login
+
+# tag the image
+docker tag <image-name> username/repository:tag
+
+# push tagged image
+docker push username/repository:tag
+```
+
+### Pull and Run
+```sh
+docker run username/repository:tag
+```
+
+
 
 # Containers
 * A container is a runtime instance of an **image**.
-* A container runs natively on Linux and shares the kernel of the host machine with other containers.
 
 ![vm-vs-docker.png](./vm-vs-docker.png)
 
@@ -103,83 +169,118 @@ docker container rm <hash> -f
 
 ## Shell Access
 ```sh
-docker container exec --it <my-container-name> bash
+docker container exec -it <container-name> bash
+
+# shorthand
+docker exec -it <container-name> bash
 ```
 
 ## Show Tasks (Processes)
 ```sh
-docker container top <my-container-name>
+docker container top <container-name>
 ```
-
-
-
-
-# Dockerfile
-* Dockerfile defines what goes on in the environment inside your container.
-
-## Directives
-* **FROM**
-  * Base image
-  * **Ex**: FROM nginx:latest
-* **WORKDIR**
-  * Container working directory
-  * **Ex**: WORKDIR /usr/share/nginx/html
-* **COPY**
-  * Copy files
-  * **Ex**: COPY *.html .
-* **RUN**
-  * Run command
-  * **Ex**: RUN npm i
-* **ENV**
-  * Set environment variable
-  * **Ex**: ENV NODE_ENV production
-* **EXPOSE**
-  * Container port definition.
-  * **Ex**: EXPOSE 3000
-* **CMD**
-  * Run application when the container launched
-  * **Ex**: CMD ["npm", "start"]
-
-
-## Build
-* This generates image.
-  
-```sh
-docker build -t mysuperapp:v0.0.1 .
-```
-
-
-
-
-
-# Publish and Pull Image
-
-## Publish
-```sh
-# login
-docker login
-
-# tag the image
-docker tag <image-name> username/repository:tag
-
-# push tagged image
-docker push username/repository:tag
-```
-
-## Pull and Run
-```sh
-docker run username/repository:tag
-```
-
 
 
 # Services
 * In a distributed application, different pieces of the app are called “services”.
 * A service only runs one image, but it codifies the way that image runs
   * what ports it should use
-  * how many replicas of the container should run so the service has the capacity it needs
+  * how many replicas of the container should run
   * and so on
 * Scaling a service changes the number of container instances running that piece of software, assigning more computing resources to the service in the process.
 * To be done with **docker compose** and **docker-compose.yml** file
 
 ## docker-compose.yml
+
+* Example docker-compose.yml
+
+```yml
+version: "3"
+services:
+  web:
+    # replace username/repo:tag with your name and image details
+    image: username/repo:tag
+    deploy:
+      replicas: 5
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "4000:80"
+    networks:
+      - webnet
+networks:
+  # default is a load-balanced overlay network
+  webnet:
+```
+
+## Run Services
+
+```sh
+# init the swarm
+docker swarm init
+
+# run services according to compose file
+docker stack deploy -c docker-compose.yml <stack-name|app-name>
+```
+
+## List
+```sh
+# List stacks or apps
+docker stack ls
+
+# lets you view all services associated with the stack
+docker stack services <stack-name>
+
+# view all tasks of a stack
+docker stack ps <stack-name>
+
+# view all tasks of a service
+docker service ps <service-name>
+
+# view all services
+docker service ls
+
+```
+
+## Remove
+```sh
+# Take the app down
+docker stack rm <stack-name>
+
+# Take the swarm down
+docker swarm leave --force
+```
+
+
+# Swarms
+* A swarm is a group of machines that are running Docker and joined into a **cluster**.
+* Commands are executed on a cluster by a **swarm manager**.
+* After joining a swarm, they are referred to as **nodes**.
+
+## Swarm Manager
+* Swarm managers can use several strategies to run containers:
+  * **Emptiest node**
+    * fills the least utilized machines with containers
+  * **Global**
+    * ensures that each machine gets exactly one instance of the specified container
+
+## Setting Up Swarm
+
+### Init
+* Enables swarm mode and makes your current machine a swarm manager.
+
+```sh
+docker swarm init
+```
+
+### Join
+* Run the command below on other machines to have them join the swarm as workers.
+
+```sh
+docker swarm join
+```
+
