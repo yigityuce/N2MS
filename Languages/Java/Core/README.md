@@ -2,6 +2,7 @@
 - [Data Types](#Data-Types)
   - [Primitive Types](#Primitive-Types)
     - [Enum](#Enum)
+      - [values()](#values)
   - [Non-Primitive (Reference) Types](#Non-Primitive-Reference-Types)
     - [String](#String)
       - [Concat](#Concat)
@@ -15,6 +16,7 @@
   - [Access Modifiers](#Access-Modifiers)
   - [Non-Access Modifiers](#Non-Access-Modifiers)
 - [Methods](#Methods)
+  - [Anonymous Methods (Lambda Expressions)](#Anonymous-Methods-Lambda-Expressions)
 - [Classes](#Classes)
   - [Inheritance](#Inheritance)
     - [super keyword](#super-keyword)
@@ -30,10 +32,11 @@
       - [Method-Local Inner Class](#Method-Local-Inner-Class)
       - [Anonymous Inner Class](#Anonymous-Inner-Class)
 - [Interfaces](#Interfaces)
+- [Generics](#Generics)
+  - [Bounded Generic Types](#Bounded-Generic-Types)
 - [Packages](#Packages)
   - [import](#import)
   - [CLASSPATH](#CLASSPATH)
-- [Annotation](#Annotation)
 - [Handling Exception](#Handling-Exception)
   - [Try Catch Block](#Try-Catch-Block)
   - [Try with Resource Statement](#Try-with-Resource-Statement)
@@ -55,9 +58,8 @@
     - [Object.notify()](#Objectnotify)
     - [Object.notifyAll()](#ObjectnotifyAll)
   - [Example](#Example)
-- [Java Environment](#Java-Environment)
-  - [Java Compiler (javac)](#Java-Compiler-javac)
-  - [JVM (java)](#JVM-java)
+- [IO Operations](#IO-Operations)
+- [Collections](#Collections)
 
 # Source File Declaration Rules
 
@@ -95,17 +97,27 @@ boolean | single bit | 0 |  1 | false | boolean b = true;
 char | 16 bit character | '\u0000'  | '\uffff' | - | char c = 'a'
 
 ### Enum
-* Java Enums can be thought of as classes that have fixed set of constants.
-* enum can be traversed
-* enum can have fields, constructors and methods
-* enum may implement many interfaces but cannot extend any class because it internally extends Enum class
-* The **values()** method returns an array containing all the values of the enum.
-* Can be defined outside/indside of the class.
-* Its constructor is private. So cannot be instantiated.
+* Java Enumerations can be thought as classes that have fixed set of constants.
+* Enumerations can have:
+  * instance variables
+  * constructors
+  * methods
+* Each enumeration constant is public, static and final by default. 
+* Enumerations may implement many interfaces
+* Enumerations cannot extend any class because it internally extends **java.lang.Enum** class.
+* Enumerations are not instantiated using new keyword.
+
+// TODO: needs more info
 
 ```java
-enum Season { WINTER(2), SPRING(2), SUMMER, FALL };
+enum Season { WINTER, SPRING, SUMMER, FALL };
+
+Season s = Season.SUMMER;
 ```
+
+#### values()
+* returns an array containing all the values of the enum.
+
 
 
 ## Non-Primitive (Reference) Types
@@ -248,6 +260,8 @@ void printInt (int... args) {
 }
 ```
 
+## Anonymous Methods (Lambda Expressions)
+// TODO: this will be written asap.
 
 
 
@@ -546,6 +560,7 @@ public class Outer_class {
 * Can not contain:
   * constuctor
   * instance variables
+  * public abstract methods
 * File naming is same exactly with class files.
 * Can not instatiate.
 * Interfaces are **implement**ed by class, not extend.
@@ -596,7 +611,85 @@ class Bird implements FlyingAnimal, Event {
 
 
 
+# Generics
+* Same as C++ template classes.
+* Generics work **only with object types**. Primitive types are not allowed.
+  * You can use Integer, Char etc. classes instead of primitive data types.
+* Generics work with interface.
+* Generic typed array is not allowed.
+* Generic data type can be more than one.
+* Generic class example:
 
+```java
+// Filename: CustomCollection.java
+import java.util.ArrayList;
+
+public class CustomCollection <T> {
+    private ArrayList<T> _storage = new ArrayList<>();
+
+    public CustomCollection() {
+    }
+
+    public CustomCollection<T> add (T element) {
+        this._storage.add(element);
+        return this;
+    }
+
+    public int size () {
+        return this._storage.size();
+    }
+}
+
+// Filename: App.java
+public class App
+{
+    public static void main(String[] args)
+    {
+        CustomCollection<Integer> myList = new CustomCollection<>();
+        myList.add(1).add(2).add(3);
+
+        System.out.println(myList.size());
+    }
+}
+```
+
+* Generic method example:
+
+```java
+// Filename: App.java
+public class App
+{
+    public static <T> void print(T msg) {
+        System.out.println("[" + (new Date()).toString() + "] " + msg);
+    }
+
+    public static void main(String[] args)
+    {
+        App.print("Custom print");
+    }
+}
+```
+
+## Bounded Generic Types
+* Specify the parameter type.
+* Generic type can be extended class of the bounded type.
+* use **extends** keyword.
+
+```java
+// Filename: App.java
+public class App
+{
+    public static <T extends String> void print(T msg) {
+        System.out.println("[" + (new Date()).toString() + "] " + msg);
+    }
+
+    public static void main(String[] args)
+    {
+        App.print("Custom print"); // valid
+        App.print(5); // invalid
+    }
+}
+```
 
 # Packages
 
@@ -653,16 +746,6 @@ public class Example {
     * package_name_to_dir_path = com.yigityuce.project1
   * Result:
     * /home/yigit/javatest/project1/src/main/java/com/yigityuce/project1
-
-
-
-# Annotation
-* Java Annotation is a tag that represents the **metadata** i.e. attached with class, interface, methods or fields to indicate some additional information which can be **used by java compiler** and JVM.
-* Annotations in java are used to provide additional information.
-* Built-in annotations:
-  * @Override
-  * @SuppressWarnings
-  * @Deprecated
 
 
 
@@ -926,19 +1009,7 @@ class Example
 ```
 
 
+# IO Operations
 
 
-
-
-
-
-
-
-
-# Java Environment
-## Java Compiler (javac)
-## JVM (java)
-
-https://www.javatpoint.com/java-tutorial
-
-![jvm-jre-jdk](./jvm-jre-jdk.png)
+# Collections
