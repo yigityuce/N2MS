@@ -60,6 +60,10 @@
   - [Example](#Example)
 - [IO Operations](#IO-Operations)
 - [Collections](#Collections)
+  - [Accessing Elements](#Accessing-Elements)
+    - [Iterator](#Iterator)
+    - [ListIterator](#ListIterator)
+    - [for-each Loop](#for-each-Loop)
 
 # Source File Declaration Rules
 
@@ -1013,3 +1017,94 @@ class Example
 
 
 # Collections
+
+![collection-heirarchy.jpg](./collection-heirarchy.jpg)
+
+* List
+  * Elements can be duplicated.
+  * Random access and insertions based on a position.
+* Set
+  * Elements are unique.
+* Queue
+  * It is a FIFO. (first in first out)
+* Map
+  * Stores data in key and value association.
+  * Both key and values are objects. 
+  * Key must be unique.
+* Vector
+  * synchronized
+  * contains many legacy methods that ArrayList does not have
+  * Iterable with for-each loop
+* Stack
+  * Extends vector class.
+  * LIFO (Last in first out)
+
+## Accessing Elements
+* You can access all elements of all type of collection by these methods.
+
+### Iterator
+* Iterate over one direction (next)
+* Usage:
+  * Call collection's **iterator()** method.
+  * Set up a loop that checks the **hasNext()** method
+  * Within the loop, obtain each element by calling **next()** method.
+  * If needed you can call to **remove()** method to remove current element from collection.
+
+```java
+
+class Test_Iterator
+{
+    public static void main(String[] args)
+    {
+        ArrayList<String> ar = new ArrayList<String>();
+        ar.add("ab");
+        ar.add("bc");
+        ar.add("cd");
+        ar.add("de");
+        Iterator it = ar.iterator();
+
+        while (it.hasNext()) System.out.print(it.next() + " ");
+    }
+}
+```
+  
+
+### ListIterator
+* ListIterator Interface is used to traverse a list in both **forward** and **backward** direction. 
+* It is available to only those collections that implements the **List** Interface.
+
+```java
+class Test_Iterator
+{
+    public static void main(String[] args)
+    {
+        ArrayList<String> ar = new ArrayList<String>();
+        ar.add("ab");
+        ar.add("bc");
+        ar.add("cd");
+        ar.add("de");
+        ListIterator litr = ar.listIterator();
+        while(litr.hasNext()) System.out.print(litr.next() + " ");
+        while(litr.hasPrevious()) System.out.print(litr.previous() + " ");
+    }
+}
+```
+
+### for-each Loop 
+* This can only be used if we don't want to **modify** the contents of a collection and we don't want any **reverse access**.
+
+```java
+class ForEachDemo
+{
+    public static void main(String[] args)
+    {
+        LinkedList<String> ls = new LinkedList<String>();
+        ls.add("a");
+        ls.add("b");
+        ls.add("c");
+        ls.add("d");
+
+        for(String str : ls) System.out.print(str + " ");
+    }
+}
+```
