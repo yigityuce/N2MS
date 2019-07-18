@@ -64,6 +64,10 @@
     - [Iterator](#Iterator)
     - [ListIterator](#ListIterator)
     - [for-each Loop](#for-each-Loop)
+- [Helper Classes/Methods](#Helper-ClassesMethods)
+  - [Math](#Math)
+  - [Character](#Character)
+  - [Date](#Date)
 
 # Source File Declaration Rules
 
@@ -1108,3 +1112,67 @@ class ForEachDemo
     }
 }
 ```
+
+# Helper Classes/Methods
+
+## Math
+```java
+Math.abs(-5);
+Math.floor(1.5);
+Math.ceil(1.5);
+Math.round(1.5);
+Math.min(-5, 3);
+Math.max(-5, 3);
+Math.random();
+
+// etc...
+```
+
+## Character
+
+```java
+Character.isLetter('Y');
+Character.isDigit('4');
+Character.isUpperCase('M');
+Character.toUpperCase('m');
+
+// etc...
+```
+
+## Date
+```java
+import java.util.*;
+import java.text.*;
+
+public class DateDemo {
+    public static void main(String args[]) {
+        // Instantiate a Date object
+        Date date = new Date();
+
+        // display date and time
+        System.out.println(date.toString());
+
+        // display elapsed time in miliseconds
+        System.out.println(date.getTime());
+
+        // display custom formatted date and time
+        SimpleDateFormat ft = new SimpleDateFormat ("yyyy.MM.dd hh:mm:ss");
+        System.out.println("Current Date: " + ft.format(date));
+
+        // display formatted date with printf
+        System.out.printf("%s %tB %<te, %<tY", "Due date:", date);
+
+        // parse date string to date object
+        try {
+            date = ft.parse("2018.07.18 23:08:04"); 
+            System.out.println(date); 
+        } 
+        catch (ParseException e) { 
+            System.out.println("Unparseable using " + ft); 
+        }
+    }
+}
+```
+
+* See also:
+  * [Date and Time Conversion Characters](https://www.tutorialspoint.com/conversion-characters-for-time-in-java)
