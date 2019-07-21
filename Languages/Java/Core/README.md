@@ -59,6 +59,8 @@
     - [Object.notifyAll()](#ObjectnotifyAll)
   - [Example](#Example)
 - [IO Operations](#IO-Operations)
+  - [Byte Streams](#Byte-Streams)
+  - [Character Streams](#Character-Streams)
 - [Collections](#Collections)
   - [Accessing Elements](#Accessing-Elements)
     - [Iterator](#Iterator)
@@ -1018,6 +1020,26 @@ class Example
 
 
 # IO Operations
+* Java performs I/O through **Streams**. 
+* A Stream is linked to a physical layer by java I/O system to make input and output operations.
+* Java defines two types of streams:
+  * **Byte Stream**
+    * handles input and output as an 8-bits **byte**.
+    * Java classes are ends with **Stream** (ex. FileInputStream, BufferedOutputStream etc.)
+  * **Character Stream**
+    * handles input and output as a 16-bits **char**.
+    * can be internationalized.
+    * Java classes are ends with **Writer/Reader** (ex. FileReader, BufferedWriter etc.)
+* There are some important methods to know.
+  * <code>read()</code>
+  * <code>close()</code>
+  * <code>write()</code>
+
+## Byte Streams
+![file-io-byte-streams.jpg](./file-io-byte-streams.jpg)
+
+## Character Streams
+![file-io-character-streams.gif](./file-io-character-streams.gif)
 
 
 # Collections
@@ -1045,6 +1067,9 @@ class Example
 
 ## Accessing Elements
 * You can access all elements of all type of collection by these methods.
+  * Iterator
+  * ListIterator
+  * for-each Loop
 
 ### Iterator
 * Iterate over one direction (next)
@@ -1168,7 +1193,7 @@ public class DateDemo {
             System.out.println(date); 
         } 
         catch (ParseException e) { 
-            System.out.println("Unparseable using " + ft); 
+            System.out.println("Unparseable using " + ft);
         }
     }
 }
