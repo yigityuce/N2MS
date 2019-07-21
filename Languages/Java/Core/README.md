@@ -1,77 +1,77 @@
-- [Source File Declaration Rules](#Source-File-Declaration-Rules)
-- [Data Types](#Data-Types)
-  - [Primitive Types](#Primitive-Types)
-    - [Enum](#Enum)
+- [Source File Declaration Rules](#source-file-declaration-rules)
+- [Data Types](#data-types)
+  - [Primitive Types](#primitive-types)
+    - [Enum](#enum)
       - [values()](#values)
-  - [Non-Primitive (Reference) Types](#Non-Primitive-Reference-Types)
-    - [String](#String)
-      - [Concat](#Concat)
-      - [Comparison](#Comparison)
-      - [Converting to string](#Converting-to-string)
-    - [Array](#Array)
-    - [Number Wrapper Classes](#Number-Wrapper-Classes)
-    - [Character Wrapper Classes](#Character-Wrapper-Classes)
-- [Variable Types](#Variable-Types)
-- [Modifiers](#Modifiers)
-  - [Access Modifiers](#Access-Modifiers)
-  - [Non-Access Modifiers](#Non-Access-Modifiers)
-- [Methods](#Methods)
-  - [Anonymous Methods (Lambda Expressions)](#Anonymous-Methods-Lambda-Expressions)
-- [Classes](#Classes)
-  - [Inheritance](#Inheritance)
+  - [Non-Primitive (Reference) Types](#non-primitive-reference-types)
+    - [String](#string)
+      - [Concat](#concat)
+      - [Comparison](#comparison)
+      - [Converting to string](#converting-to-string)
+    - [Array](#array)
+    - [Number Wrapper Classes](#number-wrapper-classes)
+    - [Character Wrapper Classes](#character-wrapper-classes)
+- [Variable Types](#variable-types)
+- [Modifiers](#modifiers)
+  - [Access Modifiers](#access-modifiers)
+  - [Non-Access Modifiers](#non-access-modifiers)
+- [Methods](#methods)
+  - [Anonymous Methods (Lambda Expressions)](#anonymous-methods-lambda-expressions)
+- [Classes](#classes)
+  - [Inheritance](#inheritance)
     - [super keyword](#super-keyword)
     - [instanceof operator](#instanceof-operator)
-  - [Overriding](#Overriding)
-    - [Virtuality](#Virtuality)
-  - [Polymorphism](#Polymorphism)
-    - [Method Overloading](#Method-Overloading)
-  - [Encapsulation](#Encapsulation)
-    - [Static Nested Class](#Static-Nested-Class)
-    - [Non-static Nested Classes](#Non-static-Nested-Classes)
-      - [Inner Class](#Inner-Class)
-      - [Method-Local Inner Class](#Method-Local-Inner-Class)
-      - [Anonymous Inner Class](#Anonymous-Inner-Class)
-- [Interfaces](#Interfaces)
-  - [Functional Interfaces](#Functional-Interfaces)
-  - [Default Methods](#Default-Methods)
-- [Generics](#Generics)
-  - [Bounded Generic Types](#Bounded-Generic-Types)
-- [Packages](#Packages)
+  - [Overriding](#overriding)
+    - [Virtuality](#virtuality)
+  - [Polymorphism](#polymorphism)
+    - [Method Overloading](#method-overloading)
+  - [Encapsulation](#encapsulation)
+    - [Static Nested Class](#static-nested-class)
+    - [Non-static Nested Classes](#non-static-nested-classes)
+      - [Inner Class](#inner-class)
+      - [Method-Local Inner Class](#method-local-inner-class)
+      - [Anonymous Inner Class](#anonymous-inner-class)
+- [Interfaces](#interfaces)
+  - [Functional Interfaces](#functional-interfaces)
+  - [Default Methods](#default-methods)
+- [Generics](#generics)
+  - [Bounded Generic Types](#bounded-generic-types)
+- [Packages](#packages)
   - [import](#import)
-  - [CLASSPATH](#CLASSPATH)
-- [Handling Exception](#Handling-Exception)
-  - [Try Catch Block](#Try-Catch-Block)
-  - [Try with Resource Statement](#Try-with-Resource-Statement)
-  - [Throwing Exception](#Throwing-Exception)
-  - [User Defined Exceptions](#User-Defined-Exceptions)
-- [Multithreading](#Multithreading)
-  - [Main Thread](#Main-Thread)
-  - [Lifecycle](#Lifecycle)
-  - [Priority](#Priority)
-  - [Thread Class](#Thread-Class)
-    - [Construct](#Construct)
-    - [Sleep](#Sleep)
-    - [Join](#Join)
-  - [Synchronization](#Synchronization)
-    - [Synchronized Method](#Synchronized-Method)
-    - [Synchronized Block](#Synchronized-Block)
-  - [Thread Communication](#Thread-Communication)
-    - [Object.wait()](#Objectwait)
-    - [Object.notify()](#Objectnotify)
-    - [Object.notifyAll()](#ObjectnotifyAll)
-  - [Example](#Example)
-- [IO Operations](#IO-Operations)
-  - [Byte Streams](#Byte-Streams)
-  - [Character Streams](#Character-Streams)
-- [Collections](#Collections)
-  - [Accessing Elements](#Accessing-Elements)
-    - [Iterator](#Iterator)
-    - [ListIterator](#ListIterator)
-    - [for-each Loop](#for-each-Loop)
-- [Streams](#Streams)
-  - [Generating Streams](#Generating-Streams)
-  - [Stream Methods](#Stream-Methods)
-    - [forEach](#forEach)
+  - [CLASSPATH](#classpath)
+- [Handling Exception](#handling-exception)
+  - [Try Catch Block](#try-catch-block)
+  - [Try with Resource Statement](#try-with-resource-statement)
+  - [Throwing Exception](#throwing-exception)
+  - [User Defined Exceptions](#user-defined-exceptions)
+- [Multithreading](#multithreading)
+  - [Main Thread](#main-thread)
+  - [Lifecycle](#lifecycle)
+  - [Priority](#priority)
+  - [Thread Class](#thread-class)
+    - [Construct](#construct)
+    - [Sleep](#sleep)
+    - [Join](#join)
+  - [Synchronization](#synchronization)
+    - [Synchronized Method](#synchronized-method)
+    - [Synchronized Block](#synchronized-block)
+  - [Thread Communication](#thread-communication)
+    - [Object.wait()](#objectwait)
+    - [Object.notify()](#objectnotify)
+    - [Object.notifyAll()](#objectnotifyall)
+  - [Example](#example)
+- [IO Operations](#io-operations)
+  - [Byte Streams](#byte-streams)
+  - [Character Streams](#character-streams)
+- [Collections](#collections)
+  - [Accessing Elements](#accessing-elements)
+    - [Iterator](#iterator)
+    - [ListIterator](#listiterator)
+    - [for-each Loop](#for-each-loop)
+- [Streams](#streams)
+  - [Generating Streams](#generating-streams)
+  - [Stream Methods](#stream-methods)
+    - [forEach](#foreach)
     - [map](#map)
     - [filter](#filter)
     - [limit](#limit)
@@ -79,10 +79,13 @@
     - [distinct](#distinct)
     - [count](#count)
     - [collect](#collect)
-- [Helper Classes/Methods](#Helper-ClassesMethods)
-  - [Math](#Math)
-  - [Character](#Character)
-  - [Date](#Date)
+- [Optional](#optional)
+  - [Generating Optional](#generating-optional)
+  - [Methods](#methods-1)
+- [Date](#date)
+- [Helper Classes/Methods](#helper-classesmethods)
+  - [Math](#math)
+  - [Character](#character)
 
 # Source File Declaration Rules
 
@@ -701,9 +704,9 @@ class Bird implements FlyingAnimal, Event {
 
 
 ---
+* Some of them with a **single type** are like below:
   * <code>Consumer\<T\></code>
     * accepts a single input argument and returns no result.
-* Some of them with a **single type** are like below:
   * <code>Function<T,R></code>
     * accepts one argument and produces a result.
   * <code>Predicate\<T\></code>
@@ -1335,7 +1338,7 @@ class ForEachDemo
     * Returns a sequential stream considering collection as its source.
   * **parallelStream()** 
     * Returns a parallel Stream considering collection as its source.
-* Stream class has some static methods also to create stream.
+* Stream class has some static methods also to create stream:
   * **of()**
     * Returns a stream whose elements are the specified values at variadic arg list.
   * **generate()**
@@ -1408,34 +1411,44 @@ List<String> filteredList = stream.collect(Collectors.toList());
 String mergedString = stream.collect(Collectors.joining(", "));
 ```
 
+# Optional
+* It is introduced in Java 8.
+* Optional is a container object used to contain not-null objects. 
+* This class has various utility methods to facilitate code to handle values as **‘available’** or **‘not available’** instead of checking null values. 
 
-# Helper Classes/Methods
+## Generating Optional
+* Optional class has some static methods to create optional:
+  * **of()**
+    * The argument passed to the method can’t be null. 
+    * Otherwise, we’ll get a NullPointerException.
+  * **ofNullable()**
+    * Returns an Optional describing the specified value, if non-null.
+    * Otherwise returns an empty Optional.
 
-## Math
+## Methods
+* **isPresent()**
+  * Returns true if there is a value present, otherwise false.
 ```java
-Math.abs(-5);
-Math.floor(1.5);
-Math.ceil(1.5);
-Math.round(1.5);
-Math.min(-5, 3);
-Math.max(-5, 3);
-Math.random();
 
-// etc...
+Optional<String> test = Optional.ofNullable("Yigit Yuce");
+if (test.isPresent()) {
+    System.out.println("Value exist");
+}
 ```
 
-## Character
-
+* **orElse(T defaultValue)**
+  * Returns true if there is a value present, otherwise false.
 ```java
-Character.isLetter('Y');
-Character.isDigit('4');
-Character.isUpperCase('M');
-Character.toUpperCase('m');
-
-// etc...
+Optional<String> test = Optional.ofNullable(null);
+String notNullValue = test.orElse("Yigit Yuce");
 ```
 
-## Date
+* See also:
+  * [https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html)
+  * [https://www.tutorialspoint.com/java8/java8_optional_class.htm](https://www.tutorialspoint.com/java8/java8_optional_class.htm)
+
+
+# Date
 ```java
 import java.util.*;
 import java.text.*;
@@ -1472,3 +1485,30 @@ public class DateDemo {
 
 * See also:
   * [Date and Time Conversion Characters](https://www.tutorialspoint.com/conversion-characters-for-time-in-java)
+
+
+# Helper Classes/Methods
+
+## Math
+```java
+Math.abs(-5);
+Math.floor(1.5);
+Math.ceil(1.5);
+Math.round(1.5);
+Math.min(-5, 3);
+Math.max(-5, 3);
+Math.random();
+
+// etc...
+```
+
+## Character
+
+```java
+Character.isLetter('Y');
+Character.isDigit('4');
+Character.isUpperCase('M');
+Character.toUpperCase('m');
+
+// etc...
+```
