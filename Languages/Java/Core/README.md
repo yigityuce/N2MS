@@ -32,6 +32,8 @@
       - [Method-Local Inner Class](#Method-Local-Inner-Class)
       - [Anonymous Inner Class](#Anonymous-Inner-Class)
 - [Interfaces](#Interfaces)
+  - [Functional Interfaces](#Functional-Interfaces)
+  - [Default Methods](#Default-Methods)
 - [Generics](#Generics)
   - [Bounded Generic Types](#Bounded-Generic-Types)
 - [Packages](#Packages)
@@ -66,6 +68,17 @@
     - [Iterator](#Iterator)
     - [ListIterator](#ListIterator)
     - [for-each Loop](#for-each-Loop)
+- [Streams](#Streams)
+  - [Generating Streams](#Generating-Streams)
+  - [Stream Methods](#Stream-Methods)
+    - [forEach](#forEach)
+    - [map](#map)
+    - [filter](#filter)
+    - [limit](#limit)
+    - [sorted](#sorted)
+    - [distinct](#distinct)
+    - [count](#count)
+    - [collect](#collect)
 - [Helper Classes/Methods](#Helper-ClassesMethods)
   - [Math](#Math)
   - [Character](#Character)
@@ -271,9 +284,72 @@ void printInt (int... args) {
 ```
 
 ## Anonymous Methods (Lambda Expressions)
-// TODO: this will be written asap.
+* Lambda expressions are introduced in Java 8.
+```
+parameter -> expression body
+```
+* Characteristics of lambda expressions:
+  * **Optional type declaration**: 
+    * No need to declare the type of a parameter.
+  * **Optional parenthesis around parameter**: 
+    * No need to declare a single parameter in parenthesis. 
+    * For multiple parameters, parentheses are required.
+  * **Optional curly braces**:
+    * No need to use curly braces in expression body if the body contains a single statement.
+  * **Optional return keyword**: 
+    * The compiler automatically returns the value if the body has a single expression to return the value. 
+    * Curly braces are required to indicate that expression returns a value.
 
+```java
+public class LambdaExp {
 
+    // Define interfaces that contains lambda expressions
+    interface MathOperation {
+        int operation(int a, int b);
+    }
+        
+    interface GreetingService {
+        void sayMessage(String message);
+    }
+
+    private int operate(int a, int b, MathOperation mathOperation) {
+        return mathOperation.operation(a, b);
+    }
+
+    public static void main(String args[]) {
+		
+        // with type declaration
+        MathOperation addition = (int a, int b) -> a + b;
+		
+        // with out type declaration
+        MathOperation subtraction = (a, b) -> a - b;
+		
+        // with return statement along with curly braces
+        MathOperation multiplication = (int a, int b) -> { return a * b; };
+		
+        //without return statement and without curly braces
+        MathOperation division = (int a, int b) -> a / b;
+		
+        //without parenthesis
+        GreetingService greetService1 = message -> System.out.println("Hello " + message);
+            
+        //with parenthesis
+        GreetingService greetService2 = (message) -> System.out.println("Hello " + message);
+
+        LambdaExp tester = new LambdaExp();
+
+        System.out.println("10 + 5 = " + tester.operate(10, 5, addition));
+        System.out.println("10 - 5 = " + tester.operate(10, 5, subtraction));
+        System.out.println("10 x 5 = " + tester.operate(10, 5, multiplication));
+        System.out.println("10 / 5 = " + tester.operate(10, 5, division));
+		
+        greetService1.sayMessage("Mahesh");
+        greetService2.sayMessage("Suresh");
+    }
+}
+```
+
+* Some [Functional Interfaces](#Functional-Interfaces) are predefined within Java 8. 
 
 
 
@@ -615,6 +691,105 @@ class Bird implements FlyingAnimal, Event {
         Bird b = new Bird();
         b.eat();
         b.travel();
+    }
+}
+```
+
+## Functional Interfaces
+* Functional Interfaces are introduced in Java 8.
+* Java 8 has defined a lot of functional interfaces to be used extensively in **lambda expressions**.
+
+
+---
+  * <code>Consumer\<T\></code>
+    * accepts a single input argument and returns no result.
+* Some of them with a **single type** are like below:
+  * <code>Function<T,R></code>
+    * accepts one argument and produces a result.
+  * <code>Predicate\<T\></code>
+    *  a predicate (Boolean-valued function) of one argument.
+  * <code>Supplier\<T\></code>
+    * a supplier of results.
+  * <code>UnaryOperator\<T\></code>
+    * a single operand that produces a result of the same type as its operand.
+  * <code>BinaryOperator\<T\></code>
+    * two operands of the same type, producing a result of the same type as the operands.
+---
+* Some of them with a **multi type** are like below:
+  * <code>BiConsumer<T,U></code>
+    * two input arguments with no return
+  * <code>BiFunction<T,U,R></code>
+    * two input arguments with return value
+  * <code>BiPredicate<T,U></code>
+    * a predicate (Boolean-valued function) of two arguments.
+
+---
+* Some of them with a **predefined type** like double, int, long etc. are like below:
+  * <code>DoubleConsumer</code>
+    * accepts a single double-valued argument and returns no result.
+  * <code>DoubleFunction\<R\></code>
+    * accepts a double-valued argument and produces a result.
+  * <code>DoublePredicate</code>
+    * a predicate (Boolean-valued function) of one double-valued argument.
+  * <code>DoubleSupplier</code>
+    * a supplier of double-valued results.
+  * <code>DoubleUnaryOperator</code>
+    * a single double-valued operand that produces a double-valued result.
+  * <code>DoubleBinaryOperator</code>
+    * two double-valued operands and producing a double-valued result.
+  * <code>DoubleToIntFunction</code>
+    * accepts a double-valued argument and produces an int-valued result.
+  * <code>DoubleToLongFunction</code>
+    * accepts a double-valued argument and produces a long-valued result.
+
+```java
+
+public class App
+{
+    public static void main(String[] args) throws Exception
+    {
+        ArrayList<String> list = new ArrayList<>(
+            Arrays.asList(
+                "Yigit",
+                "Yuce",
+                "ygtyce@gmail.com"
+            )
+        );
+
+        Consumer<String> c = (String a) -> System.out.println(a);
+
+        list.forEach(c);
+        list.forEach((item) -> System.out.println("Item is: " + item));
+    }
+}
+```
+
+## Default Methods
+* It is used in interfaces.
+* It is used to backcompability reasons mostly.
+
+```java
+interface IPrintable {
+    default void print() {
+        System.out.println("I am a printable!");
+    }
+}
+
+class Test1 implements IPrintable {
+}
+
+class Test2 implements IPrintable {
+    public void print() {
+        System.out.println("Implemented print function!");
+    }
+}
+
+public class App {
+    public static void main(String[] args) {
+        Test1 t1 = new Test1();
+        Test2 t2 = new Test2();
+        t1.print(); // prints: I am a printable!
+        t2.print(); // prints: Implemented print function!
     }
 }
 ```
@@ -1137,6 +1312,102 @@ class ForEachDemo
     }
 }
 ```
+
+# Streams
+* Stream represents a sequence of objects from a source, which supports aggregate operations.
+* Following are the characteristics of a Stream:
+  * **Sequence of elements**
+    * A stream provides a set of elements of specific type in a sequential manner. 
+    * A stream gets/computes elements on demand. 
+    * It never stores the elements.
+  * **Source**
+    * Stream takes Collections, Arrays, or I/O resources as input source.
+  * **Aggregate operations**
+    * Stream supports aggregate operations like filter, map, limit, reduce, find, match, and so on.
+  * **Pipelining**
+    * Most of the stream operations return stream itself so that their result can be pipelined. 
+    * <code>collect()</code> method is a terminal operation which is normally present at the end of the pipelining operation to mark the end of the stream.
+
+
+## Generating Streams
+* With Java 8, Collection interface has two methods to generate a Stream:
+  * **stream()**
+    * Returns a sequential stream considering collection as its source.
+  * **parallelStream()** 
+    * Returns a parallel Stream considering collection as its source.
+* Stream class has some static methods also to create stream.
+  * **of()**
+    * Returns a stream whose elements are the specified values at variadic arg list.
+  * **generate()**
+    * Returns a stream where each element is generated by the provided Supplier.
+  * **empty()**
+    * Returns an empty stream.
+
+```java
+List<String> strings = Arrays.asList("ab", "", "bc", "efg", "abcd", "", "jkl");
+List<String> filtered = strings.stream().filter(s -> !s.isEmpty()).collect(Collectors.toList());
+
+List<Integer> ints = Stream.of(1, 2, 3, 4).collect(Collectors.toList());
+List<Integer> same = Stream.generate(() -> 5).limit(10).collect(Collectors.toList());
+```
+
+* See also:
+  * [Stream Documentation](https://docs.oracle.com/javase/8/docs/api/?java/util/stream/Stream.html)
+
+## Stream Methods
+
+### forEach
+* Returns void.
+```java
+Random random = new Random();
+random.ints().limit(10).forEach(System.out::println);
+```
+### map
+
+```java
+List<Integer> numbers = Arrays.asList(1, 2, 3, 4);
+numbers.stream().map(i -> i*i).forEach(System.out::println);
+// Prints: 1 4 9 16
+```
+
+### filter
+```java
+List<String> strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+int count = strings.stream().filter(s -> s.isEmpty()).count();
+```
+
+### limit
+```java
+List<Integer> same = Stream.generate(() -> 5).limit(10).collect(Collectors.toList());
+```
+
+### sorted
+```java
+Random random = new Random();
+random.ints().limit(10).sorted().forEach(System.out::println);
+```
+
+### distinct
+```java
+Stream.of(1, 2, 2, 3, 7, 3, 5).distinct().forEach(System.out::println);
+// Prints: 1 2 3 7 5
+```
+
+### count
+```java
+List<String> strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+int count = strings.stream().filter(s -> s.isEmpty()).count();
+```
+
+### collect
+```java
+List<String> strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+Stream<String> stream = strings.stream().filter(s -> !s.isEmpty());
+
+List<String> filteredList = stream.collect(Collectors.toList());
+String mergedString = stream.collect(Collectors.joining(", "));
+```
+
 
 # Helper Classes/Methods
 
