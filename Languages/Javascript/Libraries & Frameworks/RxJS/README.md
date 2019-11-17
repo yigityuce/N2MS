@@ -24,6 +24,16 @@
   - [Creating with "zip()"](#creating-with-zip)
 - [Operators](#operators)
   - [Creating Custom Operator](#creating-custom-operator)
+  - [Transformation Operators](#transformation-operators)
+    - [buffer](#buffer)
+    - [bufferCount](#buffercount)
+    - [bufferTime](#buffertime)
+    - [bufferWhen](#bufferwhen)
+    - [concatMap](#concatmap)
+    - [exhaust](#exhaust)
+    - [exhaustMap](#exhaustmap)
+    - [expand](#expand)
+    - [groupBy](#groupby)
 - [Subsription (Disposable)](#subsription-disposable)
   - [Unsubscribing (Disposing)](#unsubscribing-disposing)
 
@@ -186,7 +196,7 @@ generate(0, (x) => x < 3, (x) => x + 1); // 0 // 1 // 2
 - Creates an Observable that emits **sequential numbers** every specified **interval** of time
 
 ```ts
-interval(1000);
+interval(1000); // 0 // <-- 1 sec --> 1 // <-- 1 sec --> 2 // and so on...
 ```
 
 ## Creating with "of()"
@@ -435,6 +445,151 @@ function delay(delayInMillis) {
       };
     });
 }
+```
+
+## Transformation Operators
+
+### buffer
+
+- Buffers the source Observable values until **closingNotifier** emits.
+- Collects values from the past as an array, and emits that array only when another Observable emits.
+
+```ts
+const clicks = fromEvent(document, "click");
+const intervalEvents = interval(1000);
+const buffered = intervalEvents.pipe(buffer(clicks));
+
+// interval counter will be buffered and printed out when document clicked
+// after clicked new buffer will be started
+```
+
+### bufferCount
+
+- Buffers the source Observable values until the size hits the **maximum** bufferSize given
+
+![](./bufferCount.png)
+
+```ts
+const clicks = fromEvent(document, "click");
+const buffered = clicks.pipe(bufferCount(2));
+
+// Emit the last two click events as an array
+```
+
+### bufferTime
+
+- Buffers the source Observable values for a specific **time period**.
+
+```ts
+const clicks = fromEvent(document, "click");
+const buffered = clicks.pipe(bufferTime(1000));
+```
+
+### bufferWhen
+
+- Same as **buffer**
+- Collects values from the past as an array.
+- When it starts collecting values, it calls a function that returns an Observable that tells when to close the buffer and restart collecting.
+
+```ts
+const clicks = fromEvent(document, "click");
+const buffered = clicks.pipe(
+  bufferWhen(() => {
+    return Math.random() < 0.5 ? interval(1000) : interval(2000)
+  }
+);
+```
+
+### concatMap
+
+- Maps each value to an Observable, then flattens all of these inner Observables using concatAll.
+
+```ts
+const clicks = fromEvent(document, "click");
+const result = clicks.pipe(concatMap(ev => interval(1000).pipe(take(4))));
+
+// (results are not concurrent)
+// For every click on the "document" it will emit values 0 to 3 spaced
+// on a 1000ms interval
+// click -> 1000ms-> 0 -1000ms-> 1 -1000ms-> 2 -1000ms-> 3
+```
+
+### exhaust
+
+- Flattens an Observable-of-Observables by dropping the next inner Observables while the current inner is still executing.
+- exhaust **ignores** every new inner Observable if the previous Observable has **not yet completed**.
+- Once that one completes, it will accept and flatten the next inner Observable and repeat this process.
+
+![](./exhaust.png)
+
+```ts
+const clicks = fromEvent(document, "click");
+const higherOrder = clicks.pipe(map(ev => interval(1000).pipe(take(5))));
+const result = higherOrder.pipe(exhaust());
+// click -> (1s) 0 (1s) 1 (1s) 2 (1s) 3 -> click(ignored) -> (1s) 4 -> ... click -> ...
+```
+
+### exhaustMap
+
+- Projects each source value to an Observable which is merged in the output Observable only if the previous projected Observable has completed.
+- Maps each value to an Observable, then flattens all of these inner Observables using **exhaust**.
+
+![](./exhaustMap.png)
+
+```ts
+const clicks = fromEvent(document, "click");
+const result = clicks.pipe(exhaustMap(ev => interval(1000).pipe(take(5))));
+// click -> (1s) 0 (1s) 1 (1s) 2 (1s) 3 -> click(ignored) -> (1s) 4 -> ... click -> ...
+```
+
+### expand
+
+- Recursively call provided function.
+
+```ts
+const example = of(2).pipe(
+  expand(val => {
+    console.log(`Passed value: ${val}`);
+    return of(1 + val);
+  }),
+  take(5)
+);
+
+// "Passed value: 2"
+// "Passed value: 3"
+// "Passed value: 4"
+// "Passed value: 5"
+// "Passed value: 6"
+```
+
+### groupBy
+
+- Groups the items emitted by an Observable according to a specified criterion, and emits these grouped items as **GroupedObservables**, one GroupedObservable per group.
+
+![](./groupBy.png)
+
+```ts
+of(
+  { id: 1, name: "JavaScript" },
+  { id: 2, name: "Parcel" },
+  { id: 2, name: "webpack" },
+  { id: 1, name: "TypeScript" },
+  { id: 3, name: "TSLint" }
+)
+  .pipe(
+    groupBy(p => p.id),
+    mergeMap(group$ => group$.pipe(reduce((acc, cur) => [...acc, cur], [])))
+  )
+  .subscribe(p => console.log(p));
+
+// displays:
+// [ { id: 1, name: 'JavaScript'},
+//   { id: 1, name: 'TypeScript'} ]
+//
+// [ { id: 2, name: 'Parcel'},
+//   { id: 2, name: 'webpack'} ]
+//
+// [ { id: 3, name: 'TSLint'} ]
 ```
 
 # Subsription (Disposable)
