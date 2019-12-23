@@ -29,13 +29,26 @@
     - [bufferCount](#buffercount)
     - [bufferTime](#buffertime)
     - [bufferWhen](#bufferwhen)
-    - [concatMap](#concatmap)
-    - [exhaust](#exhaust)
-    - [exhaustMap](#exhaustmap)
+    - [window](#window)
     - [expand](#expand)
     - [groupBy](#groupby)
+    - [pairwise](#pairwise)
+    - [partition](#partition)
+    - [scan](#scan)
+    - [map](#map)
+    - [mapTo](#mapto)
+    - [concatMap](#concatmap)
+    - [concatMapTo](#concatmapto)
+    - [exhaust](#exhaust)
+    - [exhaustMap](#exhaustmap)
+    - [mergeMap](#mergemap)
+    - [mergeMapTo](#mergemapto)
+    - [switchMap](#switchmap)
+    - [switchMapTo](#switchmapto)
 - [Subsription (Disposable)](#subsription-disposable)
   - [Unsubscribing (Disposing)](#unsubscribing-disposing)
+- [Summary](#summary)
+  - [Map Operators](#map-operators)
 
 # General
 
@@ -500,46 +513,19 @@ const buffered = clicks.pipe(
 );
 ```
 
-### concatMap
+### window
 
-- Maps each value to an Observable, then flattens all of these inner Observables using concatAll.
-
-```ts
-const clicks = fromEvent(document, "click");
-const result = clicks.pipe(concatMap(ev => interval(1000).pipe(take(4))));
-
-// (results are not concurrent)
-// For every click on the "document" it will emit values 0 to 3 spaced
-// on a 1000ms interval
-// click -> 1000ms-> 0 -1000ms-> 1 -1000ms-> 2 -1000ms-> 3
-```
-
-### exhaust
-
-- Flattens an Observable-of-Observables by dropping the next inner Observables while the current inner is still executing.
-- exhaust **ignores** every new inner Observable if the previous Observable has **not yet completed**.
-- Once that one completes, it will accept and flatten the next inner Observable and repeat this process.
-
-![](./exhaust.png)
+- Same as **buffer**
+- Collects values from the past as an array.
+- When it starts collecting values, it calls a function that returns an Observable that tells when to close the buffer and restart collecting.
 
 ```ts
 const clicks = fromEvent(document, "click");
-const higherOrder = clicks.pipe(map(ev => interval(1000).pipe(take(5))));
-const result = higherOrder.pipe(exhaust());
-// click -> (1s) 0 (1s) 1 (1s) 2 (1s) 3 -> click(ignored) -> (1s) 4 -> ... click -> ...
-```
-
-### exhaustMap
-
-- Projects each source value to an Observable which is merged in the output Observable only if the previous projected Observable has completed.
-- Maps each value to an Observable, then flattens all of these inner Observables using **exhaust**.
-
-![](./exhaustMap.png)
-
-```ts
-const clicks = fromEvent(document, "click");
-const result = clicks.pipe(exhaustMap(ev => interval(1000).pipe(take(5))));
-// click -> (1s) 0 (1s) 1 (1s) 2 (1s) 3 -> click(ignored) -> (1s) 4 -> ... click -> ...
+const buffered = clicks.pipe(
+  bufferWhen(() => {
+    return Math.random() < 0.5 ? interval(1000) : interval(2000)
+  }
+);
 ```
 
 ### expand
@@ -592,6 +578,190 @@ of(
 // [ { id: 3, name: 'TSLint'} ]
 ```
 
+### pairwise
+
+- Groups pairs of consecutive emissions together and emits them as an array of **two** values.
+
+![](./pairwise.png)
+
+```ts
+fromEvent(document, "click").pipe(
+  pairwise(),
+  map(pair => {
+    const x0 = pair[0].clientX;
+    const y0 = pair[0].clientY;
+    const x1 = pair[1].clientX;
+    const y1 = pair[1].clientY;
+    return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
+  })
+);
+```
+
+### partition
+
+- Splits the source Observable into **two**, one with values that satisfy a predicate, and another with values that don't satisfy the predicate
+- It's like **filter**, but returns two Observables: one like the output of filter, and the other with values that did not pass the condition.
+
+![](./partition.png)
+
+```ts
+const [evens, odds] = from([1, 2, 3, 4, 5, 6]).pipe(
+  partition(val => val % 2 === 0)
+);
+// Output:
+// "Even: 2"
+// "Even: 4"
+// "Even: 6"
+// "Odd: 1"
+// "Odd: 3"
+// "Odd: 5"
+```
+
+### scan
+
+- Applies an accumulator function over the source Observable, and returns each intermediate result, with an optional seed value.
+- It's like **reduce**, but emits the current accumulation whenever the source emits a value.
+- If a **seed** value is specified, then that value will be used as the initial value for the accumulator.
+
+![](./scan.png)
+
+```ts
+const seed = 0;
+const ones = fromEvent(document, "click").pipe(
+  mapTo(1),
+  scan((acc, one) => acc + one, seed)
+);
+```
+
+### map
+
+- Applies a given project function to each value emitted by the source Observable, and emits the resulting values as an Observable.
+
+![](./map.png)
+
+```ts
+fromEvent(document, "click").pipe(map(ev => ev.clientX));
+```
+
+### mapTo
+
+- Emits the given constant value on the output Observable every time the source Observable emits a value.
+
+![](./mapTo.png)
+
+```ts
+fromEvent(document, "click").pipe(mapTo("Hi"));
+```
+
+### concatMap
+
+- Maps each value to an Observable, then flattens all of these inner Observables using concatAll.
+- concatMap does not subscribe to the next observable until the previous completes
+
+```ts
+const clicks = fromEvent(document, "click");
+const result = clicks.pipe(concatMap(ev => interval(1000).pipe(take(4))));
+
+// (results are not concurrent)
+// For every click on the "document" it will emit values 0 to 3 spaced
+// on a 1000ms interval
+// click -> 1000ms-> 0 -1000ms-> 1 -1000ms-> 2 -1000ms-> 3
+```
+
+### concatMapTo
+
+- Projects each source value to the same Observable which is merged multiple times in a serialized fashion on the output Observable
+
+```ts
+const clicks = fromEvent(document, "click");
+const result = clicks.pipe(concatMapTo(interval(1000).pipe(take(4))));
+
+// (results are not concurrent)
+// For every click on the "document" it will emit values 0 to 3 spaced
+// on a 1000ms interval
+// click -> 1000ms-> 0 -1000ms-> 1 -1000ms-> 2 -1000ms-> 3
+```
+
+### exhaust
+
+- Flattens an Observable-of-Observables by dropping the next inner Observables while the current inner is still executing.
+- exhaust **ignores** every new inner Observable if the previous Observable has **not yet completed**.
+
+![](./exhaust.png)
+
+```ts
+const clicks = fromEvent(document, "click");
+const higherOrder = clicks.pipe(map(ev => interval(1000).pipe(take(5))));
+const result = higherOrder.pipe(exhaust());
+// click -> (1s) 0 (1s) 1 (1s) 2 (1s) 3 -> click(ignored) -> (1s) 4 -> ... click -> ...
+```
+
+### exhaustMap
+
+- Projects each source value to an Observable which is merged in the output Observable only if the previous projected Observable has completed.
+- Maps each value to an Observable, then flattens all of these inner Observables using **exhaust**.
+
+![](./exhaustMap.png)
+
+```ts
+const clicks = fromEvent(document, "click");
+const result = clicks.pipe(exhaustMap(ev => interval(1000).pipe(take(5))));
+// click -> (1s) 0 (1s) 1 (1s) 2 (1s) 3 -> click(ignored) -> (1s) 4 -> ... click -> ...
+```
+
+### mergeMap
+
+- Projects each source value to an Observable which is merged in the output Observable.
+- mergeMap allows for multiple inner subscriptions to be active at a time
+
+![](./mergeMap.png)
+
+```ts
+fromEvent(document, "click").pipe(
+  mergeMap((e: MouseEvent) => {
+    return of({
+      x: e.clientX,
+      y: e.clientY,
+      timestamp: Date.now()
+    }).pipe(delay(500));
+  })
+);
+```
+
+### mergeMapTo
+
+- Projects each source value to the same Observable
+- mergeMap allows for multiple inner subscriptions to be active at a time
+
+![](./mergeMapTo.png)
+
+```ts
+fromEvent(document, "click").pipe(mergeMap(interval(1000).pipe(take(4))));
+```
+
+### switchMap
+
+- On each emission the previous inner observable is cancelled and the new observable is subscribed.
+- You can remember this by the phrase **switch to a new observable**.
+- This works perfectly for scenarios like **typeaheads** where you are no longer concerned with the response of the previous request when a new input arrives.
+- This also is a safe option in situations where a long lived inner observable could cause memory leaks
+
+![](./switchMap.png)
+
+```ts
+fromEvent(document, "click").pipe(
+  switchMap(() => interval(1000)) // restart counter on every click
+);
+```
+
+### switchMapTo
+
+- Projects each source value to the same Observable
+
+```ts
+fromEvent(document, "click").pipe(switchMap(interval(1000).pipe(take(4))));
+```
+
 # Subsription (Disposable)
 
 - A Subscription has one important method, unsubscribe, that takes no argument and just disposes the resource held by the subscription
@@ -609,3 +779,13 @@ const subscription = observable.subscribe(x => console.log(x));
 // Later:
 subscription.unsubscribe();
 ```
+
+# Summary
+
+## Map Operators
+
+- **map**: Takes observable value and converts it to another value
+- **concatMap**: Runs observables sequently
+- **mergeMap**: Runs observables simultaneously
+- **exhaustMap**: Ignores new observables while the previous one still continue
+- **switchMap**: Stops emitting items from previous observable and runs the new one immediately
