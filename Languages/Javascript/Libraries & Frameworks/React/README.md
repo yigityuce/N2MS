@@ -1,9 +1,9 @@
 
-- [BASICS](#basics)
+- [Basics](#basics)
   - [Embedding JS into JSX](#embedding-js-into-jsx)
   - [Multiline JSX](#multiline-jsx)
   - [HTML Attributes at JSX](#html-attributes-at-jsx)
-- [COMPONENTS](#components)
+- [Components](#components)
   - [Props](#props)
   - [States](#states)
   - [Lifecycles](#lifecycles)
@@ -14,20 +14,21 @@
   - [Special Props](#special-props)
     - [props.children](#propschildren)
     - [Render Props](#render-props)
-- [FORMS](#forms)
+- [Forms](#forms)
   - [Controlled Component](#controlled-component)
-- [LAZY LOADING](#lazy-loading)
-- [CONTEXT](#context)
-- [ERROR HANDLING (Error Boundary)](#error-handling-error-boundary)
-- [FORWARD REFS](#forward-refs)
+- [Lazy Loading](#lazy-loading)
+- [Context](#context)
+- [Error Handling (Error Boundary)](#error-handling-error-boundary)
+- [Forward Refs](#forward-refs)
   - [Creating Refs](#creating-refs)
   - [Accessing Refs](#accessing-refs)
   - [Callback Refs](#callback-refs)
 - [Best Practices](#best-practices)
   - [Wrapping a Component (Higher-Order Components)](#wrapping-a-component-higher-order-components)
+  - [Project Initiation](#project-initiation)
 
 
-# BASICS
+# Basics
 
 ```jsx
 // netiher HTML, nor string
@@ -69,7 +70,7 @@ const el = (
 );
 ```
 
-# COMPONENTS
+# Components
 * define components with function or class.
 * preferred is defining with class.
 * Component names have to start with capital letter.
@@ -503,7 +504,7 @@ class MouseTracker extends React.Component {
 
 
 
-# FORMS
+# Forms
 
 * If you’re looking for a complete solution including validation, keeping track of the visited fields, and handling form submission, **Formik** is one of the popular choices
 
@@ -571,7 +572,7 @@ class NameForm extends React.Component {
 
 ```
 
-# LAZY LOADING
+# Lazy Loading
 
 * The React.lazy function lets you render a dynamic import as a regular component.
 * Calls the import when first needed
@@ -600,7 +601,7 @@ class MyComponent extends React.Component {
 }
 ```
 
-# CONTEXT
+# Context
 * Context is designed to **share** data that can be considered **“global”** for a **set** of React components.
 * Using context, we can avoid passing props through intermediate elements.
 
@@ -634,7 +635,7 @@ class ThemedButton extends React.Component {
 }
 ```
 
-# ERROR HANDLING (Error Boundary)
+# Error Handling (Error Boundary)
 
 * A JavaScript error in a part of the UI shouldn’t break the whole app.
 * Error boundaries are React components that catch JavaScript errors anywhere in their **child component** tree, log those errors, and **display a fallback UI**
@@ -693,7 +694,7 @@ class App extends React.Component {
 }
 ```
 
-# FORWARD REFS
+# Forward Refs
 
 ## Creating Refs
 * Refs are created using ```React.createRef()``` and attached to React elements via the ref attribute.
@@ -798,4 +799,32 @@ function enhance(WrappedComponent) {
     Enhance.staticMethod = WrappedComponent.staticMethod;
     return Enhance;
 }
+```
+
+## Project Initiation
+
+* Init typescript project & use npm
+```sh
+npx create-react-app _APPNAME_ --use-npm --template typescript
+```
+
+* Integrate default project files like prettier, linter configs etc
+
+```sh
+git clone https://github.com/yigityuce/fe-project-config.git
+cp -r fe-project-config/* _APPNAME_/
+```
+
+* Add sass support
+
+```sh
+npm i -D node-sass
+```
+
+* Create services, components and pages dir
+
+```
+mkdir _APPNAME_/src/components
+mkdir _APPNAME_/src/services
+mkdir _APPNAME_/src/pages
 ```
