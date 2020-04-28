@@ -1,4 +1,5 @@
 
+- [Version](#version)
 - [Basics](#basics)
   - [Embedding JS into JSX](#embedding-js-into-jsx)
   - [Multiline JSX](#multiline-jsx)
@@ -23,10 +24,15 @@
   - [Creating Refs](#creating-refs)
   - [Accessing Refs](#accessing-refs)
   - [Callback Refs](#callback-refs)
+- [Hooks](#hooks)
+  - [useState](#usestate)
+  - [useEffect](#useeffect)
 - [Best Practices](#best-practices)
   - [Wrapping a Component (Higher-Order Components)](#wrapping-a-component-higher-order-components)
   - [Project Initiation](#project-initiation)
 
+# Version
+* Document created for React version 16.13.1
 
 # Basics
 
@@ -195,6 +201,9 @@ class Clock extends React.Component {
 
 ReactDOM.render(<Clock />, document.getElementById('root'));
 ```
+
+
+![lifecycle](./lifecycle.png)
 
 
 
@@ -759,6 +768,78 @@ class CustomTextInput extends React.Component {
     }
 }
 ```
+
+
+
+# Hooks
+
+* Hooks are back-compatible.
+* Hooks don’t work inside classes — they let you use React without classes
+* Hooks allow you to reuse stateful logic without changing your component hierarchy
+* You won't be needed to use HOC (higher-order components), render props etc. abstraction layers
+* Hooks let you split one component into smaller functions based on what pieces are related (such as setting up a subscription or fetching data)
+* React provides a few built-in Hooks.
+* You can also create your own Hooks to reuse stateful behavior between different components.
+
+## useState
+* Returns array with two items
+  * state variable
+  * state variable setter (mutation) function
+* Takes an argument which is the initial value of state variable
+
+
+```jsx
+const [count, setCount]: [number, (number) => void ] = setState(0);
+
+console.log(count); // prints 0
+setCount(1);
+console.log(count); // prints 1
+```
+
+## useEffect
+* The Effect Hook, useEffect, adds the ability to perform side effects from a function component. 
+* It serves the same purpose as **componentDidMount**, **componentDidUpdate**, and **componentWillUnmount** in React classes, **but unified into a single API**
+* Runs your “effect” function after flushing changes to the DOM.
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function Example() {
+    const [count, setCount] = useState(0);
+
+    // Similar to componentDidMount and componentDidUpdate:
+    useEffect(() => (document.title = `You clicked ${count} times`));
+
+    return <button onClick={() => setCount(count + 1)}>Click me</button>;
+}
+```
+
+
+* Effects may also optionally specify how to “clean up” after them by returning a function.
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function Example() {
+    const [isOnline, setIsOnline] = useState(0);
+
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+
+    // Similar to componentDidMount and componentDidUpdate:
+    useEffect(() => {
+        const subscription = SomeService.isOnlineStatus$.subscribe(this.handleStatusChange);
+        return () => subscription.unsubscribe();
+    });
+
+    if (isOnline === null) {
+      return 'Loading...';
+    }
+    return isOnline ? 'Online' : 'Offline';
+}
+```
+
 
 
 # Best Practices
