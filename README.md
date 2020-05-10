@@ -31,6 +31,8 @@ Notes to myself about technology stack.
   - CSS
     - Pure CSS
     - SCSS
+- Cloud
+  - [AWS](Cloud/AWS)
 - Concepts
   - Version Controlling
     - [Git](Concepts/Version%20Controlling/Git)
