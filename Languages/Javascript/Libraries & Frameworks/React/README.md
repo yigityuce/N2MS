@@ -15,6 +15,11 @@
   - [Special Props](#special-props)
     - [props.children](#propschildren)
     - [Render Props](#render-props)
+  - [Styling](#styling)
+    - [Inline CSS](#inline-css)
+    - [CSS-in-JS](#css-in-js)
+    - [Styled Components](#styled-components)
+    - [CSS Modules](#css-modules)
 - [Forms](#forms)
   - [Controlled Component](#controlled-component)
 - [Lazy Loading](#lazy-loading)
@@ -89,8 +94,8 @@ function Welcome(props) {
 ```
 
 ```jsx
-class Welcome extends React.Component {
-    render() {
+export default class Welcome extends React.Component {
+    public render(): ReactNode {
         return <h1>Hello, {this.props.name}</h1>;
     }
 }
@@ -116,13 +121,13 @@ ReactDOM.render(
 
 
 ```jsx
-class Clock extends React.Component {
+export default class Clock extends React.Component {
     constructor(props) {
         super(props);
         this.state = { date: new Date() };
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <div>
                 Time is {this.state.date.toLocaleTimeString()}
@@ -174,23 +179,23 @@ this.setState((state, props) => ({
 
 
 ```jsx
-class Clock extends React.Component {
+export default class Clock extends React.Component {
     constructor(props) {
         super(props);
         this.state = { date:new Date() };
     }
 
-    componentDidMount () {
+    public componentDidMount(): void {
         this.timer = setInterval(() => {
             this.setState({ date: new Date() });
         }), 1000);
     }
 
-    componentWillUnmount () {
+    public componentWillUnmount(): void {
         clearInterval(this.timer);
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <div>
                 Time is {this.state.date.toLocaleTimeString()}
@@ -212,22 +217,22 @@ ReactDOM.render(<Clock />, document.getElementById('root'));
 * Must be binded this to handler.
 
 ```jsx
-class Button extends Raect.Component {
+export default class Button extends Raect.Component {
     constructor (props) {
         super (props);
         this.buttonClicked = this.buttonClicked.bind(this);
     }
 
-    buttonClicked (ev) {
+    public buttonClicked(ev): void {
         console.log(`${this.props.text} button clicked`);
     }
 
     
-    buttonMouseDown = (ev) => {
+    public buttonMouseDown = (ev): void => {
         console.log(`${this.props.text} button mouse down`);
     }
 
-    render () {
+    public render(): ReactNode {
         return (
             <button onClick={ buttonClicked } onMouseDown={ buttonMouseDown }>
                 { this.props.text }
@@ -257,7 +262,7 @@ function Greeting(props) {
 function LoginButton(props) { return <button onClick={props.onClick}>Login</button>; }
 function LogoutButton(props) { return <button onClick={props.onClick}>Logout</button>; }
 
-class LoginControl extends React.Component {
+export default class LoginControl extends React.Component {
     constructor (props) {
         super(props);
         this.handleLoginClick = this.handleLoginClick.bind(this);
@@ -265,10 +270,15 @@ class LoginControl extends React.Component {
         this.state = { isLoggedIn:false };
     }
 
-    handleLoginClick() { this.setState({isLoggedIn: true}); }
-    handleLogoutClick() { this.setState({isLoggedIn: false}); }
+    public handleLoginClick(): void { 
+        this.setState({isLoggedIn: true}); 
+    }
+
+    public handleLogoutClick(): void { 
+        this.setState({isLoggedIn: false}); 
+    }
     
-    render () {
+    public render(): ReactNode {
         const isLoggedIn = this.state.isLoggedIn;
         let button;
 
@@ -299,19 +309,17 @@ ReactDOM.render(<LoginControl />, document.getElementById('root'));
 * Keys should be unique among their **siblings**, don’t need to be **globally** unique.
 
 ```jsx
-class List extends React.Component {
+export default class List extends React.Component {
     constructor (props) {
         super(props);
     }
 
-    render () {
+    public render(): ReactNode {
         const elements = this.props.elements || []).map((el, i) => {
             return <li id={ el.id } key={ `item_${i}` }> { el.text } </li>;
         });
 
-        return (
-            <ul> { elements } </ul>
-        );
+        return <ul> { elements } </ul>;
     }
 }
 
@@ -335,8 +343,8 @@ ReactDOM.render(<List elements={elements}/>, document.getElementById('root'));
 
 
 ```jsx
-class Columns extends React.Component {
-    render() {
+export default class Columns extends React.Component {
+    public render(): ReactNode {
         return (
             <React.Fragment>
                 <td>Hello</td>
@@ -348,8 +356,8 @@ class Columns extends React.Component {
 
 
 // short syntax
-class Columns extends React.Component {
-    render() {
+export default class Columns extends React.Component {
+    public render(): ReactNode {
         return (
             <>
                 <td>Hello</td>
@@ -368,12 +376,12 @@ class Columns extends React.Component {
 * Use the special ```children``` prop to pass children elements directly into their output
 
 ```jsx
-class FancyBorder extends React.Component {
+export default class FancyBorder extends React.Component {
     constructor(props) {
         super(props);
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <div className= {'FancyBorder FancyBorder-' + props.color }>
                 { props.children }
@@ -382,12 +390,12 @@ class FancyBorder extends React.Component {
     }
 }
 
-class WelcomeDialog extends React.Component {
+export default class WelcomeDialog extends React.Component {
     constructor(props) {
         super(props);
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <FancyBorder color="blue">
                 <h1>Welcome</h1>
@@ -462,8 +470,8 @@ function ListOfTenThings() {
 
 
 ```jsx
-class Cat extends React.Component {
-    render() {
+export default class Cat extends React.Component {
+    public render(): ReactNode {
         const mouse = this.props.mouse;
         return (
             <img src="/cat.jpg" style={{ position: 'absolute', left: mouse.x, top: mouse.y }} />
@@ -471,21 +479,21 @@ class Cat extends React.Component {
     }
 }
 
-class Mouse extends React.Component {
+export default class Mouse extends React.Component {
     constructor(props) {
         super(props);
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.state = { x: 0, y: 0 };
     }
 
-    handleMouseMove(event) {
+    public handleMouseMove(event): void {
         this.setState({
             x: event.clientX,
             y: event.clientY
         });
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <div onMouseMove={this.handleMouseMove}>
                 { this.props.render(this.state) }
@@ -494,8 +502,8 @@ class Mouse extends React.Component {
     }
 }
 
-class MouseTracker extends React.Component {
-    render() {
+export default class MouseTracker extends React.Component {
+    public render(): ReactNode {
         return (
             <div>
                 <h1>Move the mouse around!</h1>
@@ -512,6 +520,92 @@ class MouseTracker extends React.Component {
 * In fact, any prop that is a function that a component uses to know what to render is technically a “render prop”
 
 
+## Styling
+
+### Inline CSS
+* define styles in javascript way (object with camelCase key)
+* then pass it to the component as "style" prop
+```tsx
+export default class MyComponent extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            style: {
+                color: '#000000',
+                backgroundColor: '#ffffff'
+            }
+        };
+    }
+
+    public render(): ReactNode {
+        return <div style={this.state.style}>Hello world!</div>;
+    }
+}
+```
+
+### CSS-in-JS
+
+```tsx
+// TODO: TBD
+```
+
+### Styled Components
+
+```tsx
+// TODO: TBD
+```
+
+### CSS Modules
+* A CSS Module is a CSS file in which all class names and animation names are scoped **locally** by default.
+* create-react-app project supports [CSS Modules](https://github.com/css-modules/css-modules) alongside regular stylesheets using the ```[name].module.scss``` file naming convention
+* You should add custom typings like below to prevent typescript error.
+
+```ts
+// filename: declarations.d.ts
+declare module '*.scss' {
+	const content: { [className: string]: string };
+	export = content;
+}
+```
+
+
+```scss
+// MyComponent.module.scss
+.MyComponent {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+    :global .text {
+        background-color: #cccccc;
+        color: #ff0000;
+
+        &.green {
+            color: green;
+        }
+    }
+}
+```
+
+```tsx
+// MyComponent.tsx
+import styles from './MyComponent.module.scss';
+
+export default class MyComponent extends React.Component {
+    public render(): ReactNode {
+        return (
+            <div style={styles.MyComponent}>
+                <span className="text">Hello</span>
+                <span className="text green">World!</span>
+                <span className="text">yigityuce</span>
+            </div>
+        );
+    }
+}
+```
 
 # Forms
 
@@ -531,7 +625,7 @@ class MouseTracker extends React.Component {
 
 
 ```jsx
-class NameForm extends React.Component {
+export default class NameForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -543,11 +637,11 @@ class NameForm extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    handleChange(event) {
+    public handleChange(event): void {
         this.setState({ [event.name]: event.target.value });
     }
 
-    handleSubmit(event) {
+    public handleSubmit(event): void {
         console.log(
             'User infos are submitted:', 
             this.state.userName, 
@@ -556,7 +650,7 @@ class NameForm extends React.Component {
         event.preventDefault();
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <form onSubmit={ this.handleSubmit }>
                 <label>
@@ -593,12 +687,12 @@ class NameForm extends React.Component {
 ```jsx
 const OtherComponent = React.lazy(() => import('./OtherComponent'));
 
-class MyComponent extends React.Component {
+export default class MyComponent extends React.Component {
     constructor(props) {
         super(props);
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <div>
                 <Suspense fallback={<div>Loading...</div>}>
@@ -617,8 +711,8 @@ class MyComponent extends React.Component {
 ```jsx
 const ThemeContext = React.createContext('light');
 
-class App extends React.Component {
-    render() {
+export default export default class App extends React.Component {
+    public render(): ReactNode {
         return (
             <ThemeContext.Provider value="dark">
                 <Toolbar />
@@ -635,10 +729,10 @@ function Toolbar(props) {
     );
 }
 
-class ThemedButton extends React.Component {
+export default class ThemedButton extends React.Component {
     static contextType = ThemeContext;
 
-    render() {
+    public render(): ReactNode {
         return <Button theme={this.context} />;
     }
 }
@@ -663,7 +757,7 @@ class ThemedButton extends React.Component {
 
 
 ```jsx
-class ErrorBoundary extends React.Component {
+export default class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
         this.state = { hasError: false };
@@ -674,11 +768,11 @@ class ErrorBoundary extends React.Component {
         return { hasError: true };
     }
 
-    componentDidCatch(error, errorInfo) {
+    public componentDidCatch(error, errorInfo): void {
         console.error(error, errorInfo);
     }
 
-    render() {
+    public render(): ReactNode {
         if (this.state.hasError) {
             // Fallback UI for error
             return <h1> Something went wrong. </h1>;
@@ -688,12 +782,12 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-class App extends React.Component {
+export default class App extends React.Component {
     constructor(props) {
         super(props);
     }
 
-    render() {
+    public render(): ReactNode {
         return (
             <ErrorBoundary>
                 <MyWidget />
@@ -709,13 +803,13 @@ class App extends React.Component {
 * Refs are created using ```React.createRef()``` and attached to React elements via the ref attribute.
 
 ```jsx
-class MyComponent extends React.Component {
+export default class MyComponent extends React.Component {
     constructor(props) {
         super(props);
         this.myRef = React.createRef();
     }
 
-    render() {
+    public render(): ReactNode {
         return <div ref={this.myRef} />;
     }
 }
@@ -735,25 +829,27 @@ const node = this.myRef.current;
 
 
 ```jsx
-class CustomTextInput extends React.Component {
+export default class CustomTextInput extends React.Component {
     constructor(props) {
         super(props);
         this.textInput = null;
+        this.focusTextInput = this.focusTextInput.bind(this);
+        this.setTextInputRef = this.setTextInputRef.bind(this);
     }
     
-    focusTextInput: () => {
+    public focusTextInput(): void {
         if (this.textInput) this.textInput.focus();
     }
 
-    setTextInputRef: (element) => {
+    public setTextInputRef(element): void {
         this.textInput = element;
     }
 
-    componentDidMount() {
+    public componentDidMount(): void {
         this.focusTextInput();
     }
 
-    render() {
+    public render(): ReactNode {
         return (
         <div>
             <input
@@ -857,12 +953,12 @@ function someWrapper(WrappedComponent) {
             super(props);
         }
 
-        componentDidUpdate(prevProps) {
+        public componentDidUpdate(prevProps): void {
             console.log('old props:', prevProps);
             console.log('new props:', this.props);
         }
 
-        render() {
+        public render(): ReactNode {
             return <WrappedComponent {...this.props} />;
         }
     }
