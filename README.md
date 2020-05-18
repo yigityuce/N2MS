@@ -21,6 +21,7 @@ Notes to myself about technology stack.
       - Electron
       - Storybook
       - [RxJS](Languages/Javascript/Libraries%20&%20Frameworks/RxJS)
+      - [Redux](Languages/Javascript/Libraries%20&%20Frameworks/Redux)
   - [Typescript](Languages/Typescript)
   - Java
     - [Core](Languages/Java/Core)
