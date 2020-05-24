@@ -33,6 +33,7 @@
   - [useState](#usestate)
   - [useEffect](#useeffect)
 - [Best Practices](#best-practices)
+  - [Presentational and Container Components](#presentational-and-container-components)
   - [Wrapping a Component (Higher-Order Components)](#wrapping-a-component-higher-order-components)
   - [Project Initiation](#project-initiation)
 
@@ -939,6 +940,15 @@ function Example() {
 
 
 # Best Practices
+
+## Presentational and Container Components
+
+|                | Presentational Components        | Container Components |
+| ---            | ---                              | ---                                            |
+| Purpose        | How things look (markup, styles) | How things work (data fetching, state updates) |
+| Aware of Redux | No                               | Yes                                            |
+| To read data   | Read data from props             | Subscribe to Redux state                       |
+| To change data | Invoke callbacks from props      | Dispatch Redux actions                         |
 
 ## Wrapping a Component (Higher-Order Components)
 
