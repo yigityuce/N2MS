@@ -1,12 +1,24 @@
 - [Overview](#overview)
+  - [Data Flow](#data-flow)
 - [Actions](#actions)
 - [Reducers](#reducers)
   - [Reducer Composition](#reducer-composition)
 - [Store](#store)
+  - [Subscribing to Store](#subscribing-to-store)
+  - [Dispatching Actions](#dispatching-actions)
 
 
 # Overview
 ![./redux-pattern.png](./redux-pattern.png)
+
+## Data Flow
+* The data lifecycle in any Redux app follows these 4 steps:
+  * **You** call ```store.dispatch(action)```
+  * **The Redux store** calls the **reducer function** you gave it
+    * With two argument; **current state** and the **action**
+  * **The root reducer** may combine the output of multiple reducers into a single state tree
+  * **The Redux store** saves the complete state tree returned by the root reducer
+
 
 # Actions
 * Plain objects
@@ -94,8 +106,8 @@ const store = createStore(todoApp);
 ```js
 // better way to merge/combine reducers (combineReducer method):
 import { combineReducers, createStore } from 'redux';
-const reducer = combineReducers({ visibilityFilter, todos });
-const store = createStore(reducer);
+const todoApp = combineReducers({ visibilityFilter, todos });
+const store = createStore(todoApp);
 ```
 
 * Note that each of these reducers is managing its **own part** of the global state
@@ -110,3 +122,39 @@ const store = createStore(reducer);
   * Allows state to be updated via ```dispatch(action)```
   * Registers listeners via ```subscribe(listener)```
   * Handles unregistering of listeners via the function returned by ```subscribe(listener)```
+
+## Subscribing to Store
+* Subscribe method returns a function which you can use while unsubscribing
+
+```ts
+const unsubscribe = store.subscribe(() => console.log(store.getState()));
+
+// ... do some fancy stuff
+
+unsubscribe(); // Stop listening to state updates
+```
+
+```ts
+// RxJS way
+const storeObservable = new Observable(subscriber => {
+  return store.subscribe(() => subscriber.next(store.getState()));
+});
+
+
+const subscription = storeObservable.subscribe(state => console.log(state));
+
+// ... do some fancy stuff
+
+subscription.unsubscribe();
+```
+
+
+## Dispatching Actions
+
+
+```ts
+store.dispatch(addTodo('Learn about actions'));
+store.dispatch(toggleTodo(0));
+store.dispatch(setVisibilityFilter(VisibilityFilters.SHOW_COMPLETED));
+```
+
