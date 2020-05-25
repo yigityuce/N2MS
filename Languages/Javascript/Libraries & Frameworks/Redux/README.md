@@ -6,6 +6,10 @@
 - [Store](#store)
   - [Subscribing to Store](#subscribing-to-store)
   - [Dispatching Actions](#dispatching-actions)
+- [Middleware](#middleware)
+  - [Redux-Thunk Middleware (Async Operations)](#redux-thunk-middleware-async-operations)
+- [Async](#async)
+  - [Async Actions](#async-actions)
 
 
 # Overview
@@ -157,4 +161,58 @@ store.dispatch(addTodo('Learn about actions'));
 store.dispatch(toggleTodo(0));
 store.dispatch(setVisibilityFilter(VisibilityFilters.SHOW_COMPLETED));
 ```
+
+# Middleware
+* With a plain basic Redux store, you can only do simple synchronous updates by dispatching an action.
+* Middleware **extend** the store's abilities, and let you write **async** logic that interacts with the store.
+* Without middleware, Redux store only supports **synchronous** data flow.
+* Any middleware you use can then intercept anything you dispatch, and in turn, can pass actions to the next middleware in the chain.
+* When the last middleware in the chain dispatches an action, it has to be a **plain object**.
+* It provides a third-party extension point **between dispatching an action, and the moment it reaches the reducer**
+* Middlewares can be used for:
+  * logging
+  * crash reporting
+  * talking to an asynchronous API
+  * routing
+  * and more...
+
+## Redux-Thunk Middleware (Async Operations)
+* Redux Thunk middleware allows you to write action creators that return a **function** instead of an action object. 
+* The thunk can be used
+  * to delay the dispatch of an action
+  * to dispatch only if a certain condition is met
+* The inner function receives the store methods **dispatch** and **getState** as parameters.
+* Github Link: [Redux-Thunk](https://github.com/reduxjs/redux-thunk)
+
+```ts
+const INCREMENT_COUNTER = 'INCREMENT_COUNTER';
+
+function increment() {
+  return { type: INCREMENT_COUNTER };
+}
+
+function incrementAsync() {
+  return (dispatch) => {
+    setTimeout(() => dispatch(increment()), 1000);
+  };
+}
+
+// ...
+
+import thunk from 'redux-thunk';
+const store = createStore(rootReducer, applyMiddleware(thunk));
+
+// ...
+```
+
+# Async
+
+## Async Actions
+* We have to use middlewares to handle async operations [Redux-Thunk Middleware (Async Operations)](#redux-thunk-middleware-async-operations)
+* We need to create **synchronous** actions to be used
+  * before the async operation is started (to inform user - like showing loading spinner)
+  * after the async operation is finished (to save the results and to inform user)
+  * if the error occurs during the async operation (to inform user)
+* We need to create **asynchronous** action which returns a **function** instead of an action object
+  * See an example on the [Redux-Thunk Middleware (Async Operations)](#redux-thunk-middleware-async-operations) part
 
