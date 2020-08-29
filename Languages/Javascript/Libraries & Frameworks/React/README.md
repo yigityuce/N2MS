@@ -25,13 +25,15 @@
 - [Lazy Loading](#lazy-loading)
 - [Context](#context)
 - [Error Handling (Error Boundary)](#error-handling-error-boundary)
-- [Forward Refs](#forward-refs)
+- [Element Refs](#element-refs)
   - [Creating Refs](#creating-refs)
   - [Accessing Refs](#accessing-refs)
   - [Callback Refs](#callback-refs)
 - [Hooks](#hooks)
   - [useState](#usestate)
   - [useEffect](#useeffect)
+- [React Redux](#react-redux)
+  - [Install](#install)
 - [Best Practices](#best-practices)
   - [Presentational and Container Components](#presentational-and-container-components)
   - [Wrapping a Component (Higher-Order Components)](#wrapping-a-component-higher-order-components)
@@ -712,7 +714,7 @@ export default class MyComponent extends React.Component {
 ```jsx
 const ThemeContext = React.createContext('light');
 
-export default export default class App extends React.Component {
+export default class App extends React.Component {
     public render(): ReactNode {
         return (
             <ThemeContext.Provider value="dark">
@@ -798,20 +800,17 @@ export default class App extends React.Component {
 }
 ```
 
-# Forward Refs
+# Element Refs
 
 ## Creating Refs
 * Refs are created using ```React.createRef()``` and attached to React elements via the ref attribute.
 
 ```jsx
 export default class MyComponent extends React.Component {
-    constructor(props) {
-        super(props);
-        this.myRef = React.createRef();
-    }
+	private element: React.RefObject<HTMLDivElement> = React.createRef();
 
     public render(): ReactNode {
-        return <div ref={this.myRef} />;
+        return <div ref={this.element} />;
     }
 }
 ```
@@ -936,6 +935,16 @@ function Example() {
     return isOnline ? 'Online' : 'Offline';
 }
 ```
+
+
+# React Redux
+
+## Install
+```sh
+npm i react-redux
+npm i -D redux-devtools
+```
+
 
 
 
