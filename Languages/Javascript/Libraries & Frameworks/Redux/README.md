@@ -22,9 +22,14 @@
     - [useDispatch()](#usedispatch)
     - [useStore()](#usestore)
   - [Usage with Typescript](#usage-with-typescript)
-- [Redux Toolkit (Your New Savior)](#redux-toolkit-your-new-savior)
-  - [Store Setup](#store-setup)
-  - [Reducers and Actions](#reducers-and-actions)
+- [Redux Toolkit - RTK (Your New Savior)](#redux-toolkit---rtk-your-new-savior)
+  - [Store Setup - **configureStore()**](#store-setup---configurestore)
+  - [Creating Action - **createAction()**](#creating-action---createaction)
+  - [Creating Reducer - **createReducer()**](#creating-reducer---createreducer)
+  - [Creating Slice - **createSlice()**](#creating-slice---createslice)
+  - [Immutablity](#immutablity)
+  - [Additional Logic for Action Creators](#additional-logic-for-action-creators)
+  - [Thunk](#thunk)
 - [FAQ](#faq)
 
 
@@ -50,6 +55,8 @@
     [key: string]: any 
   }
   ```
+
+* Describes **"what happened?"**
 * Plain objects
 * You can think of an action as an event
 * "**type**" field is required
@@ -254,7 +261,9 @@ const currentValue = selectNestedValue(store.getState())
   * and more...
 
 ## Redux-Thunk Middleware (Async Operations)
-* Redux Thunk middleware allows you to write action creators that return a **function** instead of an action object. 
+* Redux Thunk middleware allows you to write action creators that return a **function** instead of an action object.
+* When an action creator returns a **function**, that function will get executed by the Redux Thunk middleware. 
+* This function **doesn't need to be pure**; it is thus allowed to have side effects.
 * The thunk can be used
   * to delay the dispatch of an action
   * to dispatch only if a certain condition is met
@@ -509,14 +518,300 @@ export type RootState = ReturnType<typeof rootReducer>
 // {posts: PostsState, comments: CommentsState, users: UsersState}
 ```
 
-# Redux Toolkit (Your New Savior)
+# Redux Toolkit - RTK (Your New Savior)
 
-## Store Setup
+* The Redux Toolkit package is intended to be the **standard way to write Redux logic**. 
+* It was originally created to help address three common concerns about Redux:
+  * "Configuring a Redux store is too complicated"
+  * "I have to add a lot of packages to get Redux to do anything useful"
+  * "Redux requires too much boilerplate code"
 
-* pass store to the children
+## Store Setup - **configureStore()**
 
-## Reducers and Actions
+* Normally, you create a Redux store by calling ```createStore()``` and passing in your **root reducer function**. 
+* RTK has a ```configureStore()``` function that wraps ```createStore()``` to do the same thing, but also sets up some useful development tools for you as part of the store creation process.
+* Having an options object with "**named**" parameters, which can be easier to read.
+* Letting you provide arrays of **middleware** and **enhancers** you want to add to the store, and calling `applyMiddleware()` and `compose()` for you automatically.
+* Enabling the **Redux DevTools Extension** automatically
 
+```ts
+// configure store with reducers object
+import { configureStore } from '@reduxjs/toolkit';
+
+const store = configureStore({
+  reducer: { counter }
+});
+
+export default store;
+```
+
+```ts
+// configure store with root reducer
+import { configureStore } from '@reduxjs/toolkit';
+import rootReducer from './reducers';
+
+const store = configureStore({
+  reducer: rootReducer
+});
+
+export default store;
+```
+
+* If you provide the middleware argument, `configureStore()` will only use whatever middleware you've listed. 
+* If you want to have some **custom middleware and the defaults all together**, you can call `getDefaultMiddleware()` and include the results in the middleware array you provide.
+
+```ts
+import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
+
+import monitorReducersEnhancer from './enhancers/monitorReducers';
+import loggerMiddleware from './middleware/logger';
+import rootReducer from './reducers';
+
+export default function configureAppStore(preloadedState) {
+  return configureStore({
+    reducer: rootReducer,
+    middleware: [loggerMiddleware, ...getDefaultMiddleware()],
+    preloadedState,
+    enhancers: [monitorReducersEnhancer]
+  });
+}
+```
+
+## Creating Action - **createAction()**
+
+* ```createAction()``` accepts an action **type** string as an argument, and **returns an action creator function** that uses that type string.
+* The action creator's ```toString()``` method has been overridden, and will return the action type string. 
+* The type string is also available as a ```.type``` field on the function
+
+```ts
+import { createAction } from '@reduxjs/toolkit';
+
+const increment = createAction('INCREMENT');
+
+console.log(increment()); // prints: { type: "INCREMENT" }
+console.log(increment(5)); // prints: { type: "INCREMENT", payload: 5 }
+console.log(increment.toString()); // prints: INCREMENT
+console.log(increment.type); // prints: INCREMENT
+```
+
+## Creating Reducer - **createReducer()**
+
+* While you can use any conditional logic you want in a Redux reducer, including if statements and loops, the most common approach is to check the ```action.type``` field and do some specific logic for each action type. 
+* A reducer will also provide an **initial state** value, and return the existing state if the action isn't something it cares about.
+* ```createReducer()``` function that lets you write reducers using a **"lookup table" object**, where each key in the object is a Redux action type string, and the values are reducer functions.
+* It uses the **Immer library** internally, which lets you write code that "**mutates**" some data, but actually applies the updates immutably.
+
+```ts
+import { createAction, createReducer } from '@reduxjs/toolkit';
+
+const increment = createAction('INCREMENT');
+const decrement = createAction('DECREMENT');
+
+const counter = createReducer(0, {
+  [increment]: (state) => state + 1,
+  [decrement]: (state) => state - 1
+});
+```
+
+
+## Creating Slice - **createSlice()**
+
+* A standart Redux application has a JS object at the top of its state tree, and that object is the result of calling the Redux ```combineReducers()``` function to join **multiple reducer functions into one "root reducer"**. 
+* We refer to **one** key/value section of that object as a "**slice**"
+* We use the term "**slice reducer**" to describe the reducer function responsible for updating that slice of the state.
+* It uses ```createReducer()``` and ```createAction()``` internally, so in most apps, **you won't need to use them yourself** - **createSlice is all you need**.
+* ```createSlice()``` function allows us to provide **an object with the reducer functions**, and belows will automatically be generated based on the names of the reducers;
+  * **the action type strings**
+  * **action creator functions**
+* ```createSlice()``` returns a "slice" object that contains;
+  * the generated **reducer function** as a field named ```reducer```
+  * and the generated **action creators** inside an object called ```actions```
+* ```createSlice()``` takes an options object as its argument, with these options:
+  * **name**: a string that is used as the **prefix for action types**
+  * **initialState**: the initial state value for the reducer
+  * **reducers**: an object, where ;
+    * the **keys** will become **action type strings**, 
+    * and the **functions are reducers** that will be run when that action type is dispatched
+* There's no default handler here. The reducer generated by ```createSlice()``` will automatically handle all other action types by returning the current state.
+
+```ts
+// File: features/counter/counterSlice.ts
+import { createSlice } from '@reduxjs/toolkit';
+
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState: 0,
+  reducers: {
+    increment: (state, action) => state + 1,
+    decrement: (state, action) => state - 1
+  }
+});
+
+export default counterSlice.reducer;
+export const { increment, decrement } = counterSlice.actions;
+```
+
+
+```ts
+// File: app/store.js
+import { configureStore } from '@reduxjs/toolkit';
+import counterReducer from '../features/counter/counterSlice';
+
+export default configureStore({
+  reducer: {
+    counter: counterReducer
+  }
+});
+```
+
+## Immutablity
+* `createSlice()` and `createReducer()` wrap your function with [produce from the Immer library](https://immerjs.github.io/immer/docs/introduction). 
+* This means **you can write code that "mutates" the state inside the reducer**, and Immer will safely return a correct immutably updated result.
+
+
+## Additional Logic for Action Creators
+* RTK allows you to customize how the payload field is created in your action objects.
+* You may want to add extra field for actions inside the action creators. 
+* **For ex**: auto-incremented ID, etc... 
+* If you are using `createAction()` by itself, you can pass a "prepare callback" as the second argument.
+* > **Note that the "prepare callback" must return an object with a field called "*payload*" inside!**
+
+```ts
+let nextTodoId = 0;
+
+export const addTodo = createAction('ADD_TODO', text => {
+  return {
+    payload: { id: nextTodoId++, text }
+  };
+});
+```
+
+* If you're using `createSlice()`, it automatically calls `createAction()` for you. 
+* If you need to customize the payload there, you can do so by passing **an object containing `reducer` and `prepare` functions** to the reducers object, instead of just the reducer function by itself.
+
+```ts
+let nextTodoId = 0;
+
+const todosSlice = createSlice({
+  name: 'todos',
+  initialState: [],
+  reducers: {
+    addTodo: {
+      reducer(state, action) {
+        const { id, text } = action.payload
+        state.push({ id, text, completed: false })
+      },
+      prepare(text) {
+        return { payload: { text, id: nextTodoId++ } }
+      }
+    }
+  }
+};
+```
+
+
+## Thunk 
+* Redux Toolkit's `configureStore()` function adds **redux-thunk middleware** automatically to the store as part of the setup process.
+* Redux Toolkit does not provide any special functions or syntax for writing thunk functions.
+* Async operation is defined in a standart function which dispatches several actions according to your needs.
+
+```ts
+// FILE: api/user
+export class User {
+  constructor(public name: string, public surname: string, public email: string, public age: number);
+}
+
+export async function getUsers(): User[] {
+  return fetch('http://example.com/users')
+    .then(resp => resp.json())
+    .then(users => users.map(u => new User(u.name, u.surname, u.email, u.age)));
+}
+```
+
+
+```ts
+// FILE: app/rootReducer.ts
+import { combineReducers } from '@reduxjs/toolkit';
+
+const rootReducer = combineReducers({ ... });
+
+export type RootState = ReturnType<typeof rootReducer>;
+export default rootReducer;
+```
+
+
+```ts
+// FILE: app/store.ts
+import { configureStore, Action } from '@reduxjs/toolkit';
+import { ThunkAction } from 'redux-thunk';
+import rootReducer, { RootState } from './rootReducer';
+
+const store = configureStore({
+  reducer: rootReducer
+});
+
+if (process.env.NODE_ENV === 'development' && module.hot) {
+  module.hot.accept('./rootReducer', () => {
+    store.replaceReducer(require('./rootReducer').default)
+  });
+}
+
+export type AppDispatch = typeof store.dispatch;
+export type AppThunk = ThunkAction<void, RootState, unknown, Action<string>>
+export default store;
+```
+
+
+
+```ts
+// FILE: features/users/usersSlice
+
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { User, getUsers as getUsersApiCall } from 'api/user';
+import { AppThunk, AppDispatch } from 'app/store';
+
+interface UsersState {
+  users: User[];
+  error: string | null
+};
+
+const initialState: UsersState = {
+  users: [],
+  error: null
+};
+
+const usersSlice = createSlice({
+  name: 'users',
+  initialState,
+  reducers: {
+    getUsersSuccess: (state: UsersState, action: PayloadAction<Users[]>) => {
+      state.users = action.payload;
+      state.error = null;
+    },
+    getUsersError: (state: UsersState, action: PayloadAction<string>) => {
+      state.users = [];
+      state.error = action.payload;
+    }
+  }
+});
+
+export const { getUsersSuccess, getUsersError } = usersSlice.actions;
+export default usersSlice.reducer;
+
+export function getUsers(): AppThunk {
+  return async (dispatch: AppDispatch) => {
+    try {
+      dispatch(getUsersSuccess(await getUsersApiCall()));
+    } catch (err) {
+      dispatch(getUsersError(err.toString()));
+    }
+  }
+}
+```
+
+* We have our first data fetching thunk. The important things to notice here are:
+  * **The thunk is defined separately from the slice,** since RTK currently has no special syntax for defining thunks as part of a slice.
+  * **Inside the thunk, we dispatch the plain action creators** that were generated by the `createSlice()` call.
 
 
 # FAQ
