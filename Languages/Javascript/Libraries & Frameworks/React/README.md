@@ -24,17 +24,26 @@
   - [Controlled Component](#controlled-component)
 - [Lazy Loading](#lazy-loading)
 - [Context](#context)
+  - [Creating Context](#creating-context)
+  - [Providing Context](#providing-context)
+  - [Consuming Context](#consuming-context)
+    - [From Class Components](#from-class-components)
+    - [From Function Components](#from-function-components)
 - [Error Handling (Error Boundary)](#error-handling-error-boundary)
 - [Element Refs](#element-refs)
   - [Creating Refs](#creating-refs)
+  - [Forwarding Refs](#forwarding-refs)
   - [Accessing Refs](#accessing-refs)
   - [Callback Refs](#callback-refs)
 - [Hooks](#hooks)
+  - [Rules of Hooks](#rules-of-hooks)
   - [useState](#usestate)
   - [useEffect](#useeffect)
+  - [Custom Hooks](#custom-hooks)
 - [React Redux](#react-redux)
   - [Install](#install)
 - [Best Practices](#best-practices)
+  - [Spread Operator](#spread-operator)
   - [Presentational and Container Components](#presentational-and-container-components)
   - [Wrapping a Component (Higher-Order Components)](#wrapping-a-component-higher-order-components)
   - [Project Initiation](#project-initiation)
@@ -44,7 +53,7 @@
 
 # Basics
 
-```jsx
+```tsx
 // netiher HTML, nor string
 // this is JSX
 const element = <h1>Hello, Yigit</h1>;
@@ -56,7 +65,7 @@ ReactDOM.render(element, domElement);
 ## Embedding JS into JSX
 * can be any javascript expr.
 
-```jsx
+```tsx
 const name = 'Yigit YUCE';
 const element = <h1>Hello, {name}</h1>;
 ```
@@ -65,7 +74,7 @@ const element = <h1>Hello, {name}</h1>;
 ## Multiline JSX
 * do it with parantheses.
 
-```jsx
+```tsx
 const el = (
     <div>
         {content}
@@ -76,7 +85,7 @@ const el = (
 ## HTML Attributes at JSX
 * do it with javascript style
 
-```jsx
+```tsx
 const el = (
     <div className="row" id={contentId}>
         {content}
@@ -85,18 +94,17 @@ const el = (
 ```
 
 # Components
-* define components with function or class.
-* preferred is defining with class.
+* Components can be defined as a function or aclass.
 * Component names have to start with capital letter.
 
 
-```jsx
+```tsx
 function Welcome(props) {
     return <h1>Hello, {props.name}</h1>;
 }
 ```
 
-```jsx
+```tsx
 export default class Welcome extends React.Component {
     public render(): ReactNode {
         return <h1>Hello, {this.props.name}</h1>;
@@ -105,9 +113,9 @@ export default class Welcome extends React.Component {
 ```
 
 * use component like below:
-```jsx
+```tsx
 ReactDOM.render(
-    <Welcome name="Sara"/>, 
+    <Welcome name="Yigit"/>, 
     document.getElementById('root')
 );
 ```
@@ -116,14 +124,14 @@ ReactDOM.render(
 * **Read-only**
 * Components must **never modify** its own props.
 * super() method should **always be called** with props argument at class constructor.
-* Props will be set in the class with <pre>this.props</pre>
+* Props will be set in the class with `this.props`
 
 ## States
-* State is similar to props, but it is private and fully controlled by the component.
+* State is similar to props, but it is **private** and **fully controlled by the component**.
 * States are defined at constructor.
 
 
-```jsx
+```tsx
 export default class Clock extends React.Component {
     constructor(props) {
         super(props);
@@ -142,11 +150,11 @@ export default class Clock extends React.Component {
 ReactDOM.render(<Clock />, document.getElementById('root'));
 ```
 
-* States have to be update with setState() function. 
+* States have to be update with `setState()` function. 
 * **Direct update is not valid.**
 * New state will be **merged** the original one.
 
-```jsx
+```tsx
 this.setState({
     key: 'value'
 });
@@ -154,7 +162,7 @@ this.setState({
 
 * Props and states may be updated asynchronously, you should not rely on their values for calculating the next state.
 
-```jsx
+```tsx
 // WRONG
 this.setState({
     key: this.state.key + this.props.key,
@@ -166,7 +174,7 @@ this.setState({
   * first argument is the previous state
   * second argument is the props at that time
 
-```jsx
+```tsx
 this.setState((state, props) => ({
     key: state.key + props.key,
 }));
@@ -177,11 +185,13 @@ this.setState((state, props) => ({
 ## Lifecycles
 
 * Some of the component lifecycles are:
-  * componentDidMount()
-  * componentWillUnmount()
+  * `componentDidMount()`
+    * runs once after the component output has been rendered to the DOM
+  * `componentWillUnmount()`
+    * runs once before the component will be unmounted from the DOM
 
 
-```jsx
+```tsx
 export default class Clock extends React.Component {
     constructor(props) {
         super(props);
@@ -216,10 +226,10 @@ ReactDOM.render(<Clock />, document.getElementById('root'));
 
 
 ## Event Handling
-* Event names are camelCase.
+* Event names are **camelCase**.
 * Must be binded this to handler.
 
-```jsx
+```tsx
 export default class Button extends Raect.Component {
     constructor (props) {
         super (props);
@@ -237,7 +247,7 @@ export default class Button extends Raect.Component {
 
     public render(): ReactNode {
         return (
-            <button onClick={ buttonClicked } onMouseDown={ buttonMouseDown }>
+            <button onClick={ this.buttonClicked } onMouseDown={ this.buttonMouseDown }>
                 { this.props.text }
             </button>
         );
@@ -255,12 +265,10 @@ ReactDOM.render(<Button text="Login"/>, document.getElementById('root'));
 * Component can be **hidden with returning null** at render function.
 * You can use variables to store elements. This can help you conditionally render a **part of the component**.
 
-```jsx
-function UserGreeting(props) { return <h1>Welcome back!</h1>; }
-function GuestGreeting(props) { return <h1>Please sign up.</h1>; }
-function Greeting(props) {
-    return props.isLoggedIn ? <UserGreeting /> : <GuestGreeting />;
-}
+```tsx
+const UserGreeting = () => <h1>Welcome back!</h1>;
+const GuestGreeting = () => <h1>Please sign up.</h1>;
+const Greeting = (props) => props.isLoggedIn ? <UserGreeting /> : <GuestGreeting />;
 
 function LoginButton(props) { return <button onClick={props.onClick}>Login</button>; }
 function LogoutButton(props) { return <button onClick={props.onClick}>Logout</button>; }
@@ -270,7 +278,7 @@ export default class LoginControl extends React.Component {
         super(props);
         this.handleLoginClick = this.handleLoginClick.bind(this);
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
-        this.state = { isLoggedIn:false };
+        this.state = { isLoggedIn: false };
     }
 
     public handleLoginClick(): void { 
@@ -311,18 +319,18 @@ ReactDOM.render(<LoginControl />, document.getElementById('root'));
 * **Key attribute** have to be set for each element.
 * Keys should be unique among their **siblings**, don’t need to be **globally** unique.
 
-```jsx
+```tsx
 export default class List extends React.Component {
     constructor (props) {
         super(props);
     }
 
     public render(): ReactNode {
-        const elements = this.props.elements || []).map((el, i) => {
-            return <li id={ el.id } key={ `item_${i}` }> { el.text } </li>;
+        const elements = (this.props.elements || []).map((el, i) => {
+            return <li id={el.id} key={`item_${i}`}> {el.text} </li>;
         });
 
-        return <ul> { elements } </ul>;
+        return <ul> {elements} </ul>;
     }
 }
 
@@ -340,12 +348,25 @@ let elements = [
 ReactDOM.render(<List elements={elements}/>, document.getElementById('root'));
 ```
 
+* Keys serve as a hint to React but they **don’t get passed** to your components. 
+* If you need the same value in your component, **pass it explicitly as a prop** with a different name.
+
+```tsx
+const content = posts.map((post) =>
+  <Post
+    key={post.id}
+    id={post.id}
+    title={post.title} />
+);
+```
+
 ## Fragments
 * used to group sibling root level elements in the component
 * it is like Angular's ```<ng-container> ... </ng-container>```
+* Fragments declared with the explicit `<React.Fragment>` syntax may have **keys**.
 
 
-```jsx
+```tsx
 export default class Columns extends React.Component {
     public render(): ReactNode {
         return (
@@ -378,44 +399,64 @@ export default class Columns extends React.Component {
 * Some components don’t know their children ahead of time.
 * Use the special ```children``` prop to pass children elements directly into their output
 
-```jsx
-export default class FancyBorder extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
-    public render(): ReactNode {
-        return (
-            <div className= {'FancyBorder FancyBorder-' + props.color }>
-                { props.children }
-            </div>
-        );
-    }
+```tsx
+export const FancyBorder: FC<IFancyBorderProps> = (props) => {
+    return (
+        <div className={'FancyBorder FancyBorder-' + props.color}>
+            { props.children }
+        </div>
+    );
 }
 
-export default class WelcomeDialog extends React.Component {
-    constructor(props) {
-        super(props);
-    }
+export const WelcomeDialog: FC<IWelcomeDialogProps> = (props) => {
+    return (
+        <FancyBorder color="blue">
+            <h1>Welcome</h1>
+            <p> Good to see you again!</p>
+        </FancyBorder>
+    );
+}
+```
 
-    public render(): ReactNode {
-        return (
-            <FancyBorder color="blue">
-                <h1>Welcome</h1>
-                <p> Good to see you again!</p>
-            </FancyBorder>
-        );
-    }
+* Sometimes you might need **multiple “holes”** in a component. 
+* In such cases you may come up with **your own convention** instead of using `children`
+
+```tsx
+export const Card: FC<ICardProps> = (props) => {
+    return (
+        <div className={'Card Card-' + props.color}>
+            <div className="Title">
+                {props.title}
+            </div>
+            <div className="Content">
+                {props.children}
+            </div>
+            <div className="Footer">
+                {props.footer}
+            </div>
+        </div>
+    );
+}
+
+export const UserCard: FC<IUserCardProps> = ({user}) => {
+    const title = <h1>Dear {user?.name}</h1>;
+    const footer = <span>Last seen: {user?.lastSeen?.toString()}</span>;
+
+    return (
+        <Card color="blue" title={title} footer={footer}>
+            <span>Welcome again!</span>
+        </Card>
+    );
 }
 ```
 
 * Expressions as Children
-```jsx
-function Item(props) {
-    return <li>{props.message}</li>;
+```tsx
+export const Item: FC<IItemProps> = ({message}) => {
+    return <li>{message}</li>;
 }
 
-function TodoList() {
+export const Todo: FC<{}> = (props) => {
     const todos = ['finish doc', 'submit pr', 'nag dan to review'];
     return (
         <ul>
@@ -429,7 +470,7 @@ function TodoList() {
   * **props.children** works just like any other prop.
   * It can pass any sort of data, not just the sorts that React knows how to render.
 
-```jsx
+```tsx
 function Repeat(props) {
     let items = [];
     for (let i = 0; i < props.numTimes; i++) {
@@ -452,7 +493,7 @@ function ListOfTenThings() {
   * They simply **don’t render**. 
   * Those below are same:
 
-```jsx
+```tsx
 <div />
 
 <div></div>
@@ -472,7 +513,7 @@ function ListOfTenThings() {
 * a render prop is a function that a component uses to know what to render
 
 
-```jsx
+```tsx
 export default class Cat extends React.Component {
     public render(): ReactNode {
         const mouse = this.props.mouse;
@@ -627,7 +668,7 @@ export default class MyComponent extends React.Component {
 * Multiple input elements can be controlled with using "name" attribute.
 
 
-```jsx
+```tsx
 export default class NameForm extends React.Component {
     constructor(props) {
         super(props);
@@ -685,9 +726,10 @@ export default class NameForm extends React.Component {
 * The lazy component should then be rendered inside a **Suspense** component
 * It allows us to show some **fallback content** while we’re waiting for the lazy component to load.
 * React.lazy currently only supports **default exports**.
+* You can even wrap **multiple lazy components with a single Suspense component**.
 
 
-```jsx
+```tsx
 const OtherComponent = React.lazy(() => import('./OtherComponent'));
 
 export default class MyComponent extends React.Component {
@@ -708,38 +750,69 @@ export default class MyComponent extends React.Component {
 ```
 
 # Context
+
+* Context provides a way to **pass data through the component tree** without having to pass props down manually at every level.
 * Context is designed to **share** data that can be considered **“global”** for a **set** of React components.
 * Using context, we can avoid passing props through intermediate elements.
+* **Built-in alternative for Redux.**
 
-```jsx
-const ThemeContext = React.createContext('light');
+## Creating Context
+* When React renders a component that subscribes to this Context object, it will read the current context value from the **closest Provider above it in the tree**.
+* The `defaultValue` argument is only used when a component does not have a matching Provider above itself.
 
-export default class App extends React.Component {
-    public render(): ReactNode {
-        return (
-            <ThemeContext.Provider value="dark">
-                <Toolbar />
-            </ThemeContext.Provider>
-        );
-    }
-}
 
-function Toolbar(props) {
+```tsx
+const initialStore = {
+    theme: 'light'
+};
+const StoreContext = React.createContext(initialStore);
+```
+
+
+## Providing Context
+* Every `Context` object comes with a `Provider` React component that allows consuming components to **subscribe to context changes**.
+
+```tsx
+export default function App() {
     return (
-        <div>
-            <ThemedButton />
-        </div>
-    );
+        <StoreContext.Provider value="{}">
+            <Toolbar />
+        </StoreContext.Provider>
+    )
 }
+```
 
+## Consuming Context
+
+### From Class Components
+* The `contextType` property on a **class** can be assigned a Context object created by `React.createContext()`. 
+* This lets you **consume the nearest current value of that Context type** using `this.context`. 
+* You can reference this in any of the lifecycle methods including the render function
+
+
+```tsx
 export default class ThemedButton extends React.Component {
-    static contextType = ThemeContext;
+    static contextType = StoreContext; // required to use this.context
 
     public render(): ReactNode {
-        return <Button theme={this.context} />;
+        return <Button theme={this.context.theme} />;
     }
 }
 ```
+
+### From Function Components
+```tsx
+    <MyContext.Consumer>
+        { store => /* render something based on the context value */ }
+    </MyContext.Consumer>
+```
+
+* A React component that **subscribes to context changes**. 
+* This lets you subscribe to a context within a **function component**.
+* The function receives the current context value and returns a **React node**.
+
+
+
 
 # Error Handling (Error Boundary)
 
@@ -757,9 +830,12 @@ export default class ThemedButton extends React.Component {
   * Asynchronous code (setTimeout etc.)
   * Server side rendering
   * Errors thrown in the error boundary itself (rather than its children)
+* A class component **becomes an error boundary** if it defines either (or both) of the lifecycle methods `static getDerivedStateFromError()` or `componentDidCatch()`. 
+  * Use `static getDerivedStateFromError()` to **render a fallback UI** after an error has been thrown. 
+  * Use `componentDidCatch()` to **log error information**.
 
 
-```jsx
+```tsx
 export default class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
@@ -801,13 +877,19 @@ export default class App extends React.Component {
 ```
 
 # Element Refs
+* Refs provide a way to access DOM nodes or React elements created in the render method.
+* There are a few good use cases for refs:
+  * Managing focus, text selection, or media playback.
+  * Triggering imperative animations.
+  * Integrating with third-party DOM libraries.
+* Avoid using refs for anything that can be done declaratively.
 
 ## Creating Refs
 * Refs are created using ```React.createRef()``` and attached to React elements via the ref attribute.
 
-```jsx
+```tsx
 export default class MyComponent extends React.Component {
-	private element: React.RefObject<HTMLDivElement> = React.createRef();
+	private element: RefObject<HTMLDivElement> = createRef();
 
     public render(): ReactNode {
         return <div ref={this.element} />;
@@ -815,51 +897,104 @@ export default class MyComponent extends React.Component {
 }
 ```
 
+```tsx
+export const MyComponent: FC<IMyComponentProps> = () => {
+	const element = useRef(null);
+
+    return <div ref={this.element} />;
+}
+```
+
+## Forwarding Refs
+
+> We are just allowed to use `ref` prop with built-in HTML elements. So if we want to use `ref` with our components, we have to modify our component to accept it and forward it to one of its children.
+
+* Ref forwarding is a feature that lets some components take a `ref`, and pass it down (**“forward”** it) to a child.
+* You should define the function component to accept the forwarded ref as props by encapsulating it with `forwardRef()`
+
+
+```tsx
+// FILE: MyComponent.tsx
+export const MyComponent = forwardRef<HTMLDivElement, IMyComponentProps>((props, ref) => { 
+    return (
+        <div ref={ref} className="MyComponentContainer">
+            {props.children}
+        </div>
+    );
+});
+
+// FILE: any other component which use MyComponent
+const ref = createRef<HTMLDivElement>(null);
+<MyComponent ref={ref}>User Card!</MyComponent>;
+```
+
+* We can directly bind `ref` prop to the class component. 
+
+```tsx
+// FILE: MyComponent.tsx
+export class MyComponent extends Component {
+
+    constructor(props) {
+        super(props);
+    }
+
+    public render(): ReactNode {
+        const {ref, ...props} = this.props;
+        return (
+            <div ref={ref} className="MyComponentContainer">
+                {props.children}
+            </div>
+        );
+    }
+}
+
+// FILE: any other component which use MyComponent
+const ref = createRef<HTMLDivElement>(null);
+<MyComponent ref={ref}>User Card!</MyComponent>;
+```
+
 ## Accessing Refs
 
-```jsx
+```tsx
 const node = this.myRef.current;
 ```
 
 ## Callback Refs
-* Instead of passing a ref attribute created by createRef(), you pass a function. 
-* The function receives the React component instance or HTML DOM element as its argument
-* Then it can be stored and accessed elsewhere
+* Instead of passing a `ref` attribute created by `createRef()`, you pass a function. 
+* The function receives the React component instance or HTML DOM element as its argument.
+* Then it can be stored and accessed elsewhere.
 * [**!Important**] If the ref callback is defined as an inline function, it will get called **twice** during updates, first with **null** and then again with the DOM element. 
+* React will call the ref callback with the `DOM element` **when the component mounts**, and call it with `null` **when it unmounts**. 
+* Refs are guaranteed to be up-to-date before `componentDidMount` or `componentDidUpdate` fires.
 
 
-```jsx
+```tsx
 export default class CustomTextInput extends React.Component {
     constructor(props) {
         super(props);
-        this.textInput = null;
-        this.focusTextInput = this.focusTextInput.bind(this);
-        this.setTextInputRef = this.setTextInputRef.bind(this);
+        this.textInput: HtmlInputElement = null;
+        this.focus = this.focus.bind(this);
+        this.setRef = this.setRef.bind(this);
     }
     
-    public focusTextInput(): void {
-        if (this.textInput) this.textInput.focus();
+    public focus(): void {
+        this.textInput?.focus();
     }
 
-    public setTextInputRef(element): void {
+    public setRef(element: HtmlInputElement): void {
         this.textInput = element;
     }
 
     public componentDidMount(): void {
-        this.focusTextInput();
+        this.focus();
     }
 
     public render(): ReactNode {
         return (
-        <div>
-            <input
-                type="text"
-                ref={this.setTextInputRef}
-            />
-            <button type="button" onClick={this.focusTextInput}>
-                Focus the text input
-            </button>
-        </div>
+            <div>
+                <input type="text" ref={this.setRef} />
+                <button type="button" onClick={this.focus}> Focus the text input </button>
+            </div>
         );
     }
 }
@@ -870,12 +1005,17 @@ export default class CustomTextInput extends React.Component {
 # Hooks
 
 * Hooks are back-compatible.
-* Hooks don’t work inside classes — they let you use React without classes
+* Hooks don’t work inside classes — they let you use React **without** classes.
 * Hooks allow you to reuse stateful logic without changing your component hierarchy
 * You won't be needed to use HOC (higher-order components), render props etc. abstraction layers
 * Hooks let you split one component into smaller functions based on what pieces are related (such as setting up a subscription or fetching data)
 * React provides a few built-in Hooks.
 * You can also create your own Hooks to reuse stateful behavior between different components.
+
+## Rules of Hooks
+
+* Only call Hooks at the top level. **Don’t** call Hooks inside loops, conditions, or nested functions.
+* Only call Hooks from **function components**.
 
 ## useState
 * Returns array with two items
@@ -884,7 +1024,7 @@ export default class CustomTextInput extends React.Component {
 * Takes an argument which is the initial value of state variable
 
 
-```jsx
+```tsx
 const [count, setCount]: [number, (number) => void ] = setState(0);
 
 console.log(count); // prints 0
@@ -893,14 +1033,15 @@ console.log(count); // prints 1
 ```
 
 ## useEffect
-* The Effect Hook, useEffect, adds the ability to perform side effects from a function component. 
-* It serves the same purpose as **componentDidMount**, **componentDidUpdate**, and **componentWillUnmount** in React classes, **but unified into a single API**
-* Runs your “effect” function after flushing changes to the DOM.
+* The effect Hook adds the ability to perform **side effects** from a function component. 
+* It serves the same purpose as `componentDidMount`, `componentDidUpdate`, and `componentWillUnmount` in class components.
+* Runs your “effect” function **after flushing changes to the DOM**.
+* By default, it runs both **after the first render** and **after every update**
 
-```jsx
+```tsx
 import React, { useState, useEffect } from 'react';
 
-function Example() {
+export const Example: FC<{}> = () => {
     const [count, setCount] = useState(0);
 
     // Similar to componentDidMount and componentDidUpdate:
@@ -911,27 +1052,75 @@ function Example() {
 ```
 
 
-* Effects may also optionally specify how to “clean up” after them by returning a function.
+* Effects may also optionally specify how to **“clean up”** after them by returning a function.
+* In this example, React would unsubscribe from subscription when the component:
+  * **unmounts** and 
+  * as well as **before re-running the effect** due to a re-render
 
-```jsx
+```tsx
 import React, { useState, useEffect } from 'react';
 
-function Example() {
-    const [isOnline, setIsOnline] = useState(0);
+export const OnlineStatus: FC<{}> = () => {
+    const [isOnline, setIsOnline] = useState(null);
+    const handleStatusChange = (status) => setIsOnline(status.isOnline);
 
-    function handleStatusChange(status) {
-      setIsOnline(status.isOnline);
-    }
-
-    // Similar to componentDidMount and componentDidUpdate:
     useEffect(() => {
-        const subscription = SomeService.isOnlineStatus$.subscribe(this.handleStatusChange);
+        const subscription = SomeService.isOnlineStatus$.subscribe(handleStatusChange);
         return () => subscription.unsubscribe();
     });
 
-    if (isOnline === null) {
-      return 'Loading...';
-    }
+    if (isOnline === null) return 'Loading...';
+    return isOnline ? 'Online' : 'Offline';
+}
+```
+
+* There is no special code for handling **updates** because `useEffect` handles them by default. 
+* It **cleans up the previous effects** before **applying the next effects**
+* In some cases, cleaning up or applying the effect after every render might create a **performance problem**.
+* You can tell `useEffect` hook to **skip** applying an effect if certain values haven’t changed between re-renders **by passing optional second parameter list of state variable or prop**. 
+
+```tsx
+useEffect(() => {
+  document.title = `You clicked ${count} times`;
+}, [count]); // Only re-run the effect if "count" changes
+```
+
+* If you want to run an effect and clean it up **only once (on mount and unmount)**, you can pass an empty array (`[]`) as a second argument. 
+* This tells React that your effect doesn’t depend on any values from props or state, so it never needs to re-run.
+* It works like `componentDidMount` in class components.
+
+## Custom Hooks
+* Sometimes, we want to **reuse some stateful logic** between components.
+* The state of each component is completely **independent**. 
+* Hooks are a way to reuse stateful logic, not state itself. 
+* In fact, each call to a Hook has a completely **isolated state** — so you can even use the same custom Hook **more than once** in a component.
+* If a function’s name starts with `use` and it **calls other Hooks**, we say it is a custom Hook.
+
+```tsx
+// FILE: src/hooks/useOnlineStatus.ts
+
+import React, { useState, useEffect } from 'react';
+
+export const useOnlineStatus = (initial: boolean | null) => {
+    const [isOnline, setIsOnline] = useState(initial);
+    const handleStatusChange = (status) => setIsOnline(status.isOnline);
+
+    useEffect(() => {
+        const subscription = SomeService.isOnlineStatus$.subscribe(handleStatusChange);
+        return () => subscription.unsubscribe();
+    });
+
+    return isOnline;
+}
+```
+
+```tsx
+// FILE: src/features/connectivity/OnlineStatus.tsx
+
+export const OnlineStatus: FC<{}> = () => {
+    const isOnline = useOnlineStatus(null);
+
+    if (isOnline === null) return 'Loading...';
     return isOnline ? 'Online' : 'Offline';
 }
 ```
@@ -950,6 +1139,45 @@ npm i -D redux-devtools
 
 # Best Practices
 
+## Spread Operator
+
+* If you already have `props` as an **object**, and you want to pass to component, you can use `...` as a **“spread” operator** to pass the whole props object.
+
+```tsx
+export const MyComponent: FC = () => {
+  const props = {firstName: 'Ben', lastName: 'Hector'};
+  return <Greeting {...props} />;
+}
+```
+
+* You can extract specific key-value pair from object with using spread operator.
+
+```tsx
+
+export interface IMyComponentProps {
+    width: string;
+    onClick: () => void; 
+}
+
+export const MyComponent: FC<IMyComponentProps> = (props) => {
+    const { width, onClick, children, ...rest } = props;
+    return (
+        <div style={{ width }} onClick={onClick}>
+            { children }
+        </div>
+    );
+}
+
+// or even better
+export const MyComponent: FC<IMyComponentProps> = ({ width, onClick, children, ...rest }) => {
+    return (
+        <div style={{ width }} onClick={onClick}>
+            { children }
+        </div>
+    );
+}
+```
+
 ## Presentational and Container Components
 
 |                | Presentational Components        | Container Components |
@@ -965,7 +1193,7 @@ npm i -D redux-devtools
 * **Transforms** a component into another component
 * Improves re-usability
 
-```jsx
+```tsx
 function someWrapper(WrappedComponent) {
     return class extends React.Component {
         constructor(props) {
@@ -988,7 +1216,7 @@ function someWrapper(WrappedComponent) {
 * Refs Aren’t Passed Through
 * Static Methods Must Be Copied Over
 
-```jsx
+```tsx
 function enhance(WrappedComponent) {
     class Enhance extends React.Component {/*...*/}
     // Must know exactly which method(s) to copy :(
