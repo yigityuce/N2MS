@@ -17,11 +17,11 @@ Notes to myself about technology stack.
       - Vue.js
       - [Angular](Languages/Javascript/Libraries%20&%20Frameworks/Angular)
       - [React](Languages/Javascript/Libraries%20&%20Frameworks/React)
-      - [Pug.js](Languages/Javascript/Libraries%20&%20Frameworks/Pug.js)
       - Electron
       - Storybook
       - [RxJS](Languages/Javascript/Libraries%20&%20Frameworks/RxJS)
       - [Redux](Languages/Javascript/Libraries%20&%20Frameworks/Redux)
+      - [NextJS](Languages/Javascript/Libraries%20&%20Frameworks/NextJS)
   - [Typescript](Languages/Typescript)
   - Java
     - [Core](Languages/Java/Core)
