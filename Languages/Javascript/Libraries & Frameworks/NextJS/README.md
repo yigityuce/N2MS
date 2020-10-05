@@ -19,8 +19,10 @@
   - [Global Styles](#global-styles)
   - [Customizing Sass Options](#customizing-sass-options)
 - [Special Pages](#special-pages)
-  - [pages/_document.js](#pages_documentjs)
   - [pages/_app.js](#pages_appjs)
+  - [pages/_document.js](#pages_documentjs)
+  - [pages/404.js](#pages404js)
+  - [pages/_error.js](#pages_errorjs)
 - [Environment Variables](#environment-variables)
   - [Loading Environment Variables](#loading-environment-variables)
   - [Exposing Environment Variables to the Browser](#exposing-environment-variables-to-the-browser)
@@ -45,6 +47,9 @@
   - [Dynamic API Routes](#dynamic-api-routes)
   - [API Middlewares](#api-middlewares)
   - [Custom Config](#custom-config)
+- [Automatic Static Optimization](#automatic-static-optimization)
+- [Custom Server](#custom-server)
+- [next.config.js](#nextconfigjs)
 
 # Introduction
 * Next.js provides a solution to all of the above problems:
@@ -139,7 +144,7 @@ export default function About() {
 * **Scenario 1**: Your **page content** depends on external data
 
 ```tsx
-// FILE: src/pages/blog.tsx
+// FILE: ./pages/blog.tsx
 
 // This function gets called at build time
 export async function getStaticProps() {
@@ -163,7 +168,7 @@ export default function Blog({ posts }) {
 
 
 ```tsx
-// FILE: src/pages/posts/[id].tsx
+// FILE: ./pages/posts/[id].tsx
 
 export async function getStaticPaths() {
   // ...
@@ -193,7 +198,7 @@ export default function Post({ post }) {
 
 
 ```tsx
-// FILE: src/pages/blog.tsx
+// FILE: ./pages/blog.tsx
 
 // This gets called on every request
 export async function getServerSideProps() {
@@ -463,7 +468,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 ```tsx
 <img src="/logo.svg" alt="Logo" className="logo" />
 
-// refers to: src/public/logo.svg
+// refers to: ./public/logo.svg
 ```
 
 # Metadata / `<Head>`
@@ -475,7 +480,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 
 ```tsx
-// FILE: src/pages/index.tsx
+// FILE: ./pages/index.tsx
 import Head from 'next/head';
 
 export default function IndexPage() {
@@ -506,7 +511,7 @@ export default function IndexPage() {
 * Next.js has built-in support for **CSS**, **CSS Modules** and **Sass** which allows you to **import** `.css` and `.scss` files.
 
 ```scss
-// FILE: src/components/Layout/layout.module.scss
+// FILE: ./components/Layout/layout.module.scss
 
 .container {
   max-width: 36rem;
@@ -516,7 +521,7 @@ export default function IndexPage() {
 ```
 
 ```tsx
-// FILE: src/components/Layout/Layout.tsx
+// FILE: ./components/Layout/Layout.tsx
 
 import styles from './layout.module.scss';
 
@@ -537,7 +542,7 @@ npm install sass
 * To load global CSS files, create a file called `_app.js` under `pages` and add the following content:
 
 ```tsx
-// FILE: src/pages/_app.tsx
+// FILE: ./pages/_app.tsx
 
 import { AppProps } from 'next/app';
 import '../styles/global.scss'
@@ -566,9 +571,135 @@ module.exports = {
 
 # Special Pages
 
-## pages/_document.js
-
 ## pages/_app.js
+* Next.js uses the `App` component to initialize pages. 
+* You can override it and control the page initialization. 
+* Which allows you to do amazing things like:
+  * Persisting layout between page changes
+  * Keeping state when navigating pages
+  * Custom error handling using `componentDidCatch`
+  * Inject additional data into pages
+  * Add global CSS
+* To override the default `App`, create the file `./pages/_app.js` as shown below:
+
+```tsx
+// FILE: ./pages/_app.tsx
+
+// import App from 'next/app';
+import { AppProps } from 'next/app';
+import '../styles/global.scss'
+
+function MyApp({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />
+};
+
+// Only uncomment this method if you have blocking data requirements for
+// every single page in your application. This disables the ability to
+// perform automatic static optimization, causing every page in your app to
+// be server-side rendered.
+//
+// MyApp.getInitialProps = async (appContext) => {
+//   // calls page's `getInitialProps` and fills `appProps.pageProps`
+//   const appProps = await App.getInitialProps(appContext);
+//
+//   return { ...appProps }
+// }
+
+export default MyApp;
+```
+
+* The `Component` prop is the **active page**, so whenever you navigate between routes, `Component` will change to the new page. 
+* Therefore, any props you send to `Component` will be **received by the page**.
+* `pageProps` is an object with the initial props that were preloaded for your page by one of our data fetching methods, otherwise it's an empty object.
+* Adding a custom `getInitialProps` in your App will **disable Automatic Static Optimization** in pages without Static Generation.
+
+
+## pages/_document.js
+* A custom `Document` is commonly used to enhance your application's `<html>` and `<body>` tags. 
+* To override the default `Document`, create the file `./pages/_document.js` and extend the `Document` class as shown below:
+
+```tsx
+import Document, { Html, Head, Main, NextScript, DocumentContext } from 'next/document';
+
+class MyDocument extends Document {
+  static async getInitialProps(ctx: DocumentContext) {
+    const initialProps = await Document.getInitialProps(ctx);
+    return { ...initialProps };
+  }
+
+  render() {
+    return (
+      <Html>
+        <Head />
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+
+export default MyDocument;
+```
+
+* `<Html>`, `<Head />`, `<Main />` and `<NextScript />` are **required** for the page to be properly rendered.
+* Custom attributes are allowed as **props**, like `lang`:
+
+```tsx 
+<Html lang="en">
+```
+
+* The `<Head />` component used here is **not the same** one from `next/head`. 
+* The `<Head />` component used here should only be used for any `<head>` code that is common for all pages. 
+* For all other cases, such as `<title>` tags, we recommend using `next/head` in your pages or components.
+* `Document` is **only rendered in the server**, event handlers like `onClick` **won't work**.
+
+
+
+## pages/404.js
+* A 404 page may be accessed very often. 
+* Server-rendering an error page for every visit increases the load of the Next.js server. 
+* This can result in increased costs and slow experiences.
+* To avoid the above pitfalls, Next.js provides a static 404 page by default without having to add any additional files.
+* To create a custom 404 page you can create a `pages/404.js` file. This file is statically generated at build time.
+
+```tsx
+// FILE: pages/404.js
+export default function Custom404() {
+  return <h1>404 - Page Not Found</h1>
+};
+```
+
+
+## pages/_error.js
+* By default Next.js provides a 500 error page that matches the default 404 page’s style. 
+* This page is not statically optimized as it allows **server-side errors to be reported**. 
+* **This is why 404 and 500 (other errors) are separated.**
+* 500 errors are handled both **client-side** and **server-side** by the `Error` component.
+* `pages/_error.js` is **only** used in **production**. In development you’ll get an error with the call stack to know where the error originated from.
+* If you wish to override it, define the file `pages/_error.js` and add the following code:
+
+```tsx
+// FILE: pages/_error.js
+
+function Error({ statusCode }) {
+  return (
+    <p>
+      {statusCode
+        ? `An error ${statusCode} occurred on server`
+        : 'An error occurred on client'}
+    </p>
+  );
+}
+
+Error.getInitialProps = ({ res, err }) => {
+  const statusCode = res ? res.statusCode : err ? err.statusCode : 404;
+  return { statusCode };
+}
+
+export default Error;
+```
 
 
 # Environment Variables
@@ -915,5 +1046,125 @@ export const config = {
       sizeLimit: '1mb'
     }
   }
+}
+```
+
+
+# Automatic Static Optimization
+* Next.js automatically determines that a page is static (can be prerendered) if it has no blocking data requirements. 
+* This determination is made by the **absence** of `getServerSideProps` and `getInitialProps` in the page.
+* This feature allows Next.js to emit **hybrid applications** that contain both server-rendered and statically generated pages.
+* **Statically generated pages are still reactive**: Next.js will hydrate your application client-side to give it full interactivity.
+* One of the main benefits of this feature is that **optimized pages require no server-side computation**, and can be instantly streamed to the end-user from multiple CDN locations. The result is an ultra fast loading experience for your users.
+* If `getServerSideProps` or `getInitialProps` is present in a page, Next.js will switch to render the page **on-demand, per-request** (meaning **Server-Side Rendering**).
+* If the above is not the case, Next.js will **statically optimize your page** automatically by **prerendering the page to static HTML.**
+* During prerendering, the router's `query` object will be **empty** since we do not have query information to provide during this phase. 
+* After hydration, Next.js will **trigger an update** to your application to provide the route parameters in the `query` object.
+* This optimization will be **turned off**:
+  * If you have a **custom App** with `getInitialProps`
+  * If you have a **custom server**
+
+
+# Custom Server
+* It's possible, to start a server 100% programmatically in order to use **custom route patterns**.
+* Before deciding to use a custom server please keep in mind that it should **only be used when the integrated router can't meet your app requirements**. 
+* A custom server **will remove** important performance optimizations, like:
+  * serverless functions 
+  * Automatic Static Optimization.
+
+
+
+```ts
+// FILE: server.js
+const { createServer } = require('http');
+const { parse } = require('url');
+const next = require('next');
+
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
+
+app.prepare().then(() => {
+  createServer((req, res) => {
+    // Be sure to pass `true` as the second argument to `url.parse`.
+    // This tells it to parse the query portion of the URL.
+    const parsedUrl = parse(req.url, true)
+    const { pathname, query } = parsedUrl;
+
+    if (pathname === '/a') {
+      app.render(req, res, '/a', query);
+    } else if (pathname === '/b') {
+      app.render(req, res, '/b', query);
+    } else {
+      handle(req, res, parsedUrl);
+    }
+  })
+  .listen(3000, (err) => {
+    if (err) throw err
+    console.log('> Ready on http://localhost:3000')
+  });
+});
+```
+
+```json
+    // ...
+    "scripts": {
+        "dev": "node server.js",
+        "build": "next build",
+        "start": "NODE_ENV=production node server.js"
+    },
+    // ...
+```
+
+* `server.js` **doesn't go through** `babel` or `webpack`. Make sure the syntax and sources this file requires are compatible with the current node version you are running.
+* The above `next` import is a function that receives an object with the following options:
+  * `dev: Boolean` - Whether or not to launch Next.js in dev mode. Defaults to `false`
+  * `dir: String` - Location of the Next.js project. Defaults to `'.'`
+  * `quiet: Boolean` - Hide error messages containing server information. Defaults to `false`
+  * `conf: object` - The same object you would use in next.config.js. Defaults to `{}`
+* The returned app can then be used to let Next.js handle requests as required.
+
+
+
+# next.config.js
+* For custom advanced behavior of Next.js, you can create a `next.config.js` in the root of your project directory.
+* `next.config.js` is a regular Node.js module, not a JSON file. 
+* It gets used by the `server` and `build phases`, and it's **not included in the browser build**.
+* Avoid using new JavaScript features not available in your target Node.js version. `next.config.js` will **not be parsed** by **Webpack**, **Babel** or **TypeScript**.
+* There is so much config to note those in here, so you can check the [official document](https://nextjs.org/docs/api-reference/next.config.js/introduction) for this.
+
+
+```ts
+module.exports = {
+  /* config options here */
+}
+```
+or
+
+```ts
+module.exports = (phase, { defaultConfig }) => {
+  return {
+    /* config options here */
+  }
+}
+```
+
+* `phase` is the **current context** in which the configuration is loaded. 
+* You can see the available phases [here](https://github.com/vercel/next.js/blob/canary/packages/next/next-server/lib/constants.ts#L1-L4). 
+* Phases can be imported from `next/constants`:
+
+```ts
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
+
+module.exports = (phase, { defaultConfig }) => {
+  if (phase === PHASE_DEVELOPMENT_SERVER) {
+    return {
+      /* development only config options here */
+    };
+  }
+
+  return {
+    /* config options for all phases except development here */
+  };
 }
 ```
