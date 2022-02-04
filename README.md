@@ -6,6 +6,7 @@ Notes to myself about technology stack.
 
 - Languages
   - [Typescript](Languages/Typescript)
+  - [Dart](Languages/Dart)
   - VanillaJS (ES6+)
   - NodeJS
 - Frontend
