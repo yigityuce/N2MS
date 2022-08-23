@@ -31,3 +31,6 @@ Notes to myself about technology stack.
   - Websocket
   - Raw Socket
 - Design Patterns
+- Algorithms
+  - [Searching](Algorithms/Searching)
+  - [Sorting](Algorithms/Sorting)
