@@ -11,6 +11,7 @@
   - [Lists](#lists)
   - [Sets](#sets)
   - [Maps](#maps)
+- [Functions](#functions)
 
 # Introduction
 
@@ -447,4 +448,45 @@ days[5] = 'Friday';
 assert(days[1] == 'Monday');
 assert(days[2] == null);
 assert(days.length == 3);
+```
+
+# Functions
+
+- Functions are objects and have a type, [Function](https://api.dart.dev/stable/dart-core/Function-class.html)
+- This means that functions can be:
+  - assigned to variables or
+  - passed as arguments to other functions
+- You can also **call** an instance of a Dart class as if it were a function
+
+```dart
+bool isPositive(int number) {
+  return number >= 0;
+}
+```
+
+```dart
+// SHORTHAND
+bool isPositive(int number) => number >= 0;
+```
+
+- **Parameters:**
+  - A function can have any number of **required positional parameters**.
+  - These can be followed either by **named parameters** or by **optional positional parameters** (but not both).
+  - **Named parameters** are optional unless they’re specifically marked as required.
+- **Default values:**
+  - Function can use `=` to define default values for **optional parameters**, both named and positional.
+  - The default values must be compile-time constants. If no default value is provided, the default value is null.
+
+```dart
+// Function Declaration - named parameters & default value
+void enableFlags({ bool? bold, bool? hidden = true }) {...}
+
+// Function Declaration - named parameters & default value & required named parameter
+void updateColor({ required String color, double opacity = 1.0 }) {...}
+
+
+// Function call - named parameters
+enableFlags(bold: true); // bold & hidden
+enableFlags(bold: true, hidden: false); // bold & visible
+updateColor(color: '#FFFFFF', opacity: 0.7);
 ```
