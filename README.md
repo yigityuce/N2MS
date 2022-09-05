@@ -4,32 +4,27 @@ Notes to myself about technology stack.
 
 ---
 
+- Fundamentals
+  - [Git](Fundamentals/Git)
+  - [Docker](Fundamentals/Docker)
 - Languages
-  - [VanillaJS](Languages/VanillaJS)
+  - [Javascript](Languages/Javascript)
   - [Typescript](Languages/Typescript)
   - [Dart](Languages/Dart)
   - NodeJS
 - Frontend
-  - NPM
-  - Vue.js
-  - [Angular](Frontend/Angular)
-  - [React](Frontend/React)
-  - [NextJS](Frontend/NextJS)
-  - Electron
+  - Fundamentals
+    - [Browsers](Frontend/Fundamentals/Browsers)
+    - NPM
+  - Frameworks
+    - [Angular](Frontend/Frameworks/Angular)
+    - [React](Frontend/Frameworks/React)
+    - Vue.js
+    - [NextJS](Frontend/Frameworks/NextJS)
   - Libraries
     - [RxJS](Frontend/Libraries/RxJS)
     - [Redux](Frontend/Libraries/Redux)
     - Storybook
-- Concepts
-  - Version Controlling
-    - [Git](Concepts/Version%20Controlling/Git)
-  - Containerization
-    - [Docker](Concepts/Containerization/Docker)
-    - Kubernates
-- Communication Protocols
-  - MQTT
-  - Websocket
-  - Raw Socket
 - Design Patterns
   - [Structural](DesignPatterns/Structural)
 - Algorithms
