@@ -14,6 +14,15 @@
   - [Tree Construction Algorithm](#tree-construction-algorithm)
   - [Actions After Parsing](#actions-after-parsing)
   - [Browsers Error Tolerance](#browsers-error-tolerance)
+- [CSS Parsing](#css-parsing)
+  - [WebKit CSS Parser](#webkit-css-parser)
+- [Processing Order of Scripts and Stylesheets](#processing-order-of-scripts-and-stylesheets)
+  - [Scripts](#scripts)
+  - [Speculative parsing](#speculative-parsing)
+  - [Stylesheets](#stylesheets)
+- [Render Tree](#render-tree)
+  - [Relation with DOM Tree](#relation-with-dom-tree)
+  - [Style Computation](#style-computation)
 
 <br>
 <br>
@@ -310,3 +319,181 @@ term := INTEGER | expression
 - The document state will be then set to "**complete**" and a "**load**" event will be fired.
 
 ## Browsers Error Tolerance
+
+- You never get an "Invalid Syntax" error on an HTML page. Browsers fix any invalid content and go on.
+- Example:
+
+```html
+<html>
+  <mytag>
+  </mytag>
+  <div>
+  <p>
+  </div>
+    Really lousy HTML
+  </p>
+</html>
+```
+
+- `mytag` is not a standard tag, wrong nesting of the `p` and `div` elements and more, but the browser still shows it correctly and doesn't complain.
+- So a lot of the parser code is fixing the HTML author mistakes.
+- There are known invalid HTML constructs repeated on many sites, and the browsers try to fix them in a way conformant with other browsers.
+- Let's see some **WebKit** error tolerance examples:
+  - **`</br>` instead of `<br\>`**: Some sites use `</br>` instead of `<br>`. In order to be compatible with IE and Firefox, WebKit treats this like `<br>`.
+  - A **stray table** is a table inside another table, but not inside a table cell.
+  - **Nested form elements**: In case the user puts a form inside another form, the second form is ignored.
+  - A too deep tag hierarchy
+  - Misplaced html or body end tags
+
+# CSS Parsing
+
+- Unlike HTML, CSS is a context free grammar and can be parsed using the types of parsers described in the introduction.
+- In fact the [CSS specification](https://www.w3.org/TR/CSS2/grammar.html) defines CSS lexical and syntax grammar.
+- The lexical grammar (vocabulary) is defined by regular expressions for each token:
+
+```
+comment   \/\*[^*]*\*+([^/*][^*]*\*+)*\/
+num       [0-9]+|[0-9]*"."[0-9]+
+nonascii  [\200-\377]
+nmstart   [_a-z]|{nonascii}|{escape}
+nmchar    [_a-z0-9-]|{nonascii}|{escape}
+name      {nmchar}+
+ident     {nmstart}{nmchar}*
+```
+
+- `ident` is short for identifier, like a class name.
+- `name` is an element id (that is referred by "#" )
+- The syntax grammar is described in BNF:
+
+```
+ruleset
+  : selector [ ',' S* selector ]*
+    '{' S* declaration [ ';' S* declaration ]* '}' S*
+  ;
+selector
+  : simple_selector [ combinator selector | S+ [ combinator? selector ]? ]?
+  ;
+simple_selector
+  : element_name [ HASH | class | attrib | pseudo ]*
+  | [ HASH | class | attrib | pseudo ]+
+  ;
+class
+  : '.' IDENT
+  ;
+element_name
+  : IDENT | '*'
+  ;
+attrib
+  : '[' S* IDENT S* [ [ '=' | INCLUDES | DASHMATCH ] S*
+    [ IDENT | STRING ] S* ] ']'
+  ;
+pseudo
+  : ':' [ IDENT | FUNCTION S* [IDENT S*] ')' ]
+  ;
+```
+
+## WebKit CSS Parser
+
+- WebKit uses Flex and Bison parser generators to create parsers automatically from the CSS grammar files.
+- As you recall from the parser introduction, Bison creates a bottom up shift-reduce parser.
+- Firefox uses a top down parser written manually.
+- In both cases each CSS file is parsed into a `StyleSheet` object.
+- Each object contains `CSS rules`.
+- The CSS rule objects contain `selector` and `declaration objects` and other objects corresponding to CSS grammar.
+
+![](./css-parsing.png)
+
+# Processing Order of Scripts and Stylesheets
+
+## Scripts
+
+- The model of the web is synchronous.
+- Authors expect scripts to be parsed and executed immediately when the parser reaches a `<script>` tag.
+- The parsing of the document **halts** until the script has been executed.
+- If the script is external then the resource must first be fetched from the network - this is also done synchronously, and parsing **halts** until the resource is fetched.
+- This was the model for many years and is also specified in HTML4 and 5 specifications.
+- Authors can add the `defer` attribute to a script, in which case it will not halt document parsing and will execute after the document is parsed.
+- HTML5 adds an option to mark the script as asynchronous so it will be parsed and executed by a different thread.
+
+## Speculative parsing
+
+- Both WebKit and Firefox do this optimization.
+- While executing scripts, another thread parses the rest of the document and finds out what other resources need to be loaded from the network and loads them.
+- In this way, resources can be loaded on parallel connections and overall speed is improved.
+- Note: the speculative parser only parses references to external resources like external scripts, style sheets and images: it doesn't modify the DOM tree - that is left to the main parser.
+
+## Stylesheets
+
+- Style sheets on the other hand have a different model.
+- Conceptually it seems that since style sheets don't change the DOM tree, there is no reason to wait for them and stop the document parsing.
+- There is an issue, though, of scripts asking for style information during the document parsing stage.
+- If the style is not loaded and parsed yet, the script will get wrong answers and apparently this caused lots of problems.
+- It seems to be an edge case but is quite common.
+- Firefox blocks all scripts when there is a style sheet that is still being loaded and parsed.
+- WebKit blocks scripts only when they try to access certain style properties that may be affected by unloaded style sheets.
+
+# Render Tree
+
+- While the DOM tree is being constructed, the browser constructs another tree, the **render tree**.
+- This tree is of visual elements in the order in which they will be displayed.
+- It is the visual representation of the document.
+- The purpose of this tree is to enable painting the contents in their **correct order**.
+  >
+- Firefox calls the elements in the render tree `frames`. WebKit uses the term `renderer` or `render object`.
+- A renderer knows how to lay out and paint itself and its children.
+- Each renderer represents a **rectangular area** usually corresponding to a node's CSS box, as described by the CSS2 spec. It includes **geometric information** like width, height and position.
+- The box type is affected by the `display` value of the style attribute that is relevant to the node.
+- The **element type** is also considered: for example, **form controls and tables have special frames.**
+
+## Relation with DOM Tree
+
+- The renderers correspond to DOM elements, but the relation is **not one to one**.
+- **Non-visual DOM elements** will not be inserted in the render tree.
+- An example is the `head` element.
+- Also elements whose `display` value was assigned to `none` **will not **appear in the tree.
+- Whereas elements with `hidden` visibility **will** appear in the tree.
+
+---
+
+- There are DOM elements which correspond to several visual objects.
+- These are usually elements with complex structure that cannot be described by a single rectangle.
+- For example, the `select` element has three renderers:
+  - one for the display area,
+  - one for the drop down list box
+  - and one for the button
+- Also when text is broken into multiple lines because the width is not sufficient for one line, the new lines will be added as extra renderers.
+
+---
+
+- Some render objects correspond to a DOM node but not in the same place in the tree.
+- **Floats** and **absolutely positioned elements** are out of flow, placed in a different part of the tree, and mapped to the real frame.
+- A placeholder frame is where they should have been.
+
+---
+
+- Processing the `html` and `body` tags results in the construction of the render tree root.
+- The root render object corresponds to what the CSS spec calls the containing block: the top most block that contains all other blocks.
+- Its dimensions are the `viewport`: the browser window display area dimensions.
+- Firefox calls it `ViewPortFrame` and WebKit calls it `RenderView`.
+- This is the render object that the `document` points to.
+- The rest of the tree is constructed as a DOM nodes insertion.
+
+## Style Computation
+
+- Building the render tree requires calculating the visual properties of **each** render object.
+- This is done by calculating the style properties of each element.
+- The style includes **style sheets** of various origins, **inline style** elements and **visual properties** in the HTML (like the "bgcolor" property).
+- The later is translated to matching CSS style properties.
+- The origins of style sheets are:
+  - the browser's default style sheets,
+  - the style sheets provided by the page author
+  - and user style sheets - these are style sheets provided by the browser user (browsers let you define your favorite styles. In Firefox, for instance, this is done by placing a style sheet in the "Firefox Profile" folder).
+
+Style computation brings up a few difficulties:
+
+1. **Memory**: Style data is a very large construct, holding the numerous style properties, this can cause memory problems.
+2. **Performance**:
+   1. Finding the matching rules for each element can cause performance issues if it's not optimized.
+   2. Traversing the entire rule list for each element to find matches is a heavy task.
+   3. Selectors can have complex structure that can cause the matching process to start on a seemingly promising path that is proven to be futile and another path has to be tried.
+3. **Cascading**: Applying the rules involves quite complex cascade rules that define the hierarchy of the rules.
