@@ -9,6 +9,9 @@
   - [Global Scope](#global-scope)
 - [Variable Definitions (var, let, const)](#variable-definitions-var-let-const)
   - [TDZ - Temporal Dead Zone](#tdz---temporal-dead-zone)
+- [Inheritance and The Prototype Chain](#inheritance-and-the-prototype-chain)
+  - [Inheriting Properties](#inheriting-properties)
+  - [Inheriting Methods](#inheriting-methods)
 - [Closures](#closures)
   - [Lexical Scoping](#lexical-scoping)
   - [Closure](#closure)
@@ -18,6 +21,18 @@
     - [For Functions](#for-functions)
     - [For Modules](#for-modules)
     - [For Classes](#for-classes)
+- [Event Loop](#event-loop)
+  - [Call Stack](#call-stack)
+  - [Web API](#web-api)
+  - [Queue](#queue)
+  - [Move Task from Queue to Call Stack](#move-task-from-queue-to-call-stack)
+  - [Microtask Queue vs (Macro)task Queue](#microtask-queue-vs-macrotask-queue)
+- [Generator Functions and Iterators](#generator-functions-and-iterators)
+  - [`yield` Keyword](#yield-keyword)
+  - [Generator Object](#generator-object)
+  - [Iterators](#iterators)
+  - [Generator Functions as Obeserver](#generator-functions-as-obeserver)
+- [Reflect API](#reflect-api)
 - [Currying](#currying)
 - [Modules](#modules)
 
@@ -184,6 +199,30 @@ console.log(pi); // throws ReferenceError
 }
 ```
 
+# Inheritance and The Prototype Chain
+
+- When it comes to inheritance, JavaScript only has one construct: `objects`.
+- Each object has a private property which holds a link to another object called its `prototype`.
+- That prototype object has a prototype of its own, and so on until an object is reached with `null` as its prototype.
+- By definition, `null` has no prototype, and acts as the **final link in this prototype chain.**
+- It is possible to mutate any member of the prototype chain.
+- Although **classes** are now widely adopted and have become a new paradigm in JavaScript
+- Classes do not bring a new inheritance pattern.
+- While classes **abstract most of the prototypical mechanism away**, understanding how prototypes work under the hood is still useful.
+
+## Inheriting Properties
+
+- JavaScript objects are dynamic "bags" of properties (referred to as `own properties`).
+- JavaScript objects have a link to a `prototype` object.
+- When trying to access a property of an object, the property will not only be sought on the object, but on the prototype of the object, the prototype of the prototype, and so on until either a property with a matching name is found or the end of the prototype chain is reached.
+
+## Inheriting Methods
+
+- JavaScript does not have "methods" in the form that class-based languages define them.
+- In JavaScript, any function can be added to an object in the form of a **property**.
+- An inherited function acts just as any other property, including property shadowing (a form of method overriding).
+- When an inherited function is executed, the value of `this` points to the **inheriting object**, **not to the prototype object** where the function is an own property.
+
 # Closures
 
 - A **closure** is the combination of a function bundled together (enclosed) with references to its surrounding state (the **lexical environment**).
@@ -288,6 +327,241 @@ export default myStrictFunction;
 ### For Classes
 
 - All parts of ECMAScript **classes are strict mode code**, including both class declarations and class expressions — and so also including all parts of class bodies.
+
+# Event Loop
+
+![](./event-loop.png)
+
+- JavaScript is **single-threaded**: only one task can run at a time.
+- The browser gives us some features that the JavaScript engine itself doesn’t provide: a **Web API**. - This includes the `DOM API`, `setTimeout`, `HTTP requests`, and so on.
+- This can help us create some async, non-blocking behavior.
+
+## Call Stack
+
+- When we invoke a function, it gets added to the **call stack**.
+- The call stack is part of the JS engine, this **isn’t browser specific**.
+- It’s a stack, meaning that it’s first in, last out.
+- When a function returns a value, it gets popped off the stack.
+
+![](./call-stack.gif)
+
+## Web API
+
+- The respond function returns a `setTimeout` function.
+- The `setTimeout` is provided to us by the **Web API**: it lets us delay tasks without blocking the main thread.
+- The callback function that we passed to the `setTimeout` function, the arrow function `() => { return 'Hey' }` gets added to the **Web API**.
+- In the meantime, the `setTimeout` function and the `respond` function get popped off the stack, they both returned their values.
+
+![](./settimeout.gif)
+
+## Queue
+
+- In the Web API, a timer runs for as long as the second argument we passed to it, 1000ms.
+- The callback **doesn’t immediately get added to the call stack**, instead it’s passed to the **queue**.
+- This can be a confusing part: it doesn't mean that the callback function gets added to the callstack(thus returns a value) after 1000ms!
+- It simply gets added to the **queue** after 1000ms.
+- But it’s a queue, the function has got to wait for its turn!
+
+![](./queue.gif)
+
+## Move Task from Queue to Call Stack
+
+- Time for the **event loop** to do its only task: connecting the queue with the call stack!
+- If the **call stack is empty**, so if all previously invoked functions have returned their values and have been popped off the stack, **the first item in the queue gets added to the call stack**.
+- In this case, no other functions were invoked, meaning that the call stack was empty by the time the callback function was the first item in the queue.
+
+![](./from-queue-to-call-stack.gif)
+
+- The callback is **added to the call stack**, **gets invoked**, and **returns a value**, and **gets popped off the stack**.
+
+![](./callback-executed.gif)
+
+## Microtask Queue vs (Macro)task Queue
+
+- Within the Event Loop, there are actually **two types of queues**:
+  - the `(macro)task queue` (or just called the `task queue`),
+  - and the `microtask` queue
+- **(Macro)tasks**:
+  - `setTimeout`
+  - `setInterval`
+  - `setImmediate`
+- **Microtasks**:
+  - `process.nextTick`
+  - Promise callback
+  - `queueMicrotask`
+- When a Promise resolves and calls its `then()`, `catch()` or `finally()` method, the callback within the method gets added to the **microtask queue**
+- This means that the callback within the `then()`, `catch()` or `finally()` method **isn't executed immediately**, essentially adding some async behavior to our JavaScript code.
+- The event loop gives a different priority to the tasks:
+  - All functions in that are currently in the **call stack** get executed. When they returned a value, they get popped off the stack.
+  - When the **call stack** is empty, all queued up **microtasks are popped onto the callstack** one by one, and get executed!
+  - If both the **call stack and microtask queue** are empty, the event loop checks if there are tasks left on the **(macro)task queue**. The tasks get popped onto the callstack, executed, and popped off!
+
+![](./micro-macro-tasks.gif)
+
+# Generator Functions and Iterators
+
+- Regular functions follow something called a `run-to-completion` model: when we invoke a function, it will always run until it completes (unless there's an error somewhere).
+- We can't just randomly pause a function somewhere in the middle whenever we want to.
+- **Generator functions** don't follow the `run-to-completion` model!
+- We create a generator function by writing an asterisk `*` after the `function` keyword.
+- One of the biggest advantages of generators is the fact that they are **lazily evaluated.**
+- This means that the value that gets returned after invoking the `next` method, is only computed after we specifically asked for it.
+
+```ts
+function* generatorFunction() {
+  // ...
+}
+```
+
+- But that's not all we have to do to use generator functions!
+- Generator functions actually work in a completely different way compared to regular functions:
+  - Invoking a generator function returns a **generator object**, which is an `iterator`.
+  - We can use the `yield` keyword in a generator function to "**pause**" the execution.
+
+## `yield` Keyword
+
+```ts
+function* generatorFunction() {
+  yield "1";
+  console.log("First log");
+  yield "2";
+  console.log("Second log");
+
+  return "Done";
+}
+```
+
+- The execution of the generator gets "**paused**" when it encounters a `yield` keyword.
+- And the next time we run the function, it remembered where it previously paused, and runs from there.
+- Flow:
+  - The first time it runs, it "pauses" on the first line and yields the string value `'1'`
+  - The second time it runs, it starts on the line of the previous yield keyword. It then runs all the way down till the second `yield` keyword and yields the value `'2'`.
+  - The third time it runs, it start on the line of the previous `yield` keyword. It runs all the way down until it encounters the `return` keyword, and **returns** the value `'Done'`.
+- How can we invoke the function again? This is where the generator object comes into play!
+
+## Generator Object
+
+- The generator object contains a `next` method (on the prototype chain).
+- This method is what we'll use to **iterate** the generator object.
+- However, in order to remember the state of where it previously left off after yielding a value, we need to assign the generator object to a variable.
+
+```ts
+function* generatorFunction() {
+  yield "1";
+  console.log("First log");
+  yield "2";
+  console.log("Second log");
+
+  return "Done";
+}
+
+const genObj = generatorFunction();
+genObj.next(); // returns { value: '1', done: false }
+genObj.next(); // logs "First log" and returns { value: '2', done: false }
+genObj.next(); // logs "Secong log" and returns { value: 'Done', done: true }
+```
+
+- The generator ran until it encountered the first `yield` keyword.
+- It yielded an object containing a `value` property, and a `done` property. `{ value: ... , done: ... }`
+  - The `value` property is equal to the value that we **yielded**.
+  - The `done` property is a `boolean` value, which is only set to `true` once the generator function returned a value (not yielded)
+- **We can only iterate a generator object once!**
+
+## Iterators
+
+- A generator function returns an `iterator` (the generator object).
+- We can use `for of` loops, and the `spread operator` on the returned object.
+
+```ts
+function* generatorFunction() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+
+const genObj1 = generatorFunction();
+console.log([...genObj1]); // [1, 2, 3]
+
+const genObj2 = generatorFunction();
+for (let item of genObj2) {
+  console.log(item);
+}
+// prints 1, 2, 3
+```
+
+- We can also use `for-of` loops and the `spread` syntax with `arrays`, `strings`, `maps`, and `sets`.
+- It's because they implement the **iterator** protocol: the `[Symbol.iterator]`
+- We can simply just add the `[Symbol.iterator]` property manually, and make non-iterables iterable.
+- `[Symbol.iterator]` has to return an **iterator**, containing a `next` method which returns an object: `{ value: '...', done: false/true }`
+- We can simply set the value of `[Symbol.iterator]` equal to a `generator function`, as this returns an iterator by default.
+
+```ts
+const object = {
+  name: "Yigit",
+  [Symbol.iterator]: function* () {
+    yield this;
+  },
+};
+
+console.log([...object]); // [{ name: 'Yigit' }]
+```
+
+- What if only wants to get field names?
+
+```ts
+const object = {
+  name: "Yigit",
+  surname: "Yigit",
+  [Symbol.iterator]: function* () {
+    yield Object.keys(this);
+  },
+};
+
+console.log([...object]); // [[ 'name', 'surname' ]]
+```
+
+- `Object.keys(this)` is an `array`, so the value that got yielded is an array.
+- Then we spread this yielded array into another array, resulting in a nested array.
+- We can yield individual values from iterators within a generator using the `yield*` keyword, so the **yield with an asterisk**
+
+```ts
+const object = {
+  name: "Yigit",
+  surname: "Yigit",
+  [Symbol.iterator]: function* () {
+    yield* Object.keys(this);
+  },
+};
+
+console.log([...object]); // [ 'name', 'surname' ]
+```
+
+## Generator Functions as Obeserver
+
+- Another use of generator functions, is that we can use them as **observer functions**.
+- A generator can wait for incoming data, and only if that data is passed, it will process it. An example:
+
+```ts
+function* generatorFunction() {
+  const second = yield 1;
+  console.log(second);
+
+  return "Done";
+}
+
+const genObj = generatorFunction();
+genObj.next(); // returns { value: '1', done: false }
+genObj.next("Some text"); // logs "Some text" and returns { value: 'Done', done: true }
+```
+
+- A big difference here is that we don't just have `yield [value]`.
+- Instead, we assign a value called `second`, and yield value.
+- The `second` variable value will be the value that we pass to the `next` method the next time.
+- It's important to see here that the first invocation of the next method doesn't keep track of any input yet.
+- We simply start the observer by invoking it the first time.
+- The generator waits for our input, before it continues, and possibly processes the value that we pass to the next method.
+
+# Reflect API
 
 # Currying
 
