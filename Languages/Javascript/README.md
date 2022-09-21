@@ -12,15 +12,15 @@
 - [Inheritance and The Prototype Chain](#inheritance-and-the-prototype-chain)
   - [Inheriting Properties](#inheriting-properties)
   - [Inheriting Methods](#inheriting-methods)
+- [Event Bubbling and Capturing](#event-bubbling-and-capturing)
+  - [Bubbling](#bubbling)
+    - [`event.target`](#eventtarget)
+    - [Stop Bubbling](#stop-bubbling)
+  - [Capturing](#capturing)
+    - [Stop Capturing](#stop-capturing)
 - [Closures](#closures)
   - [Lexical Scoping](#lexical-scoping)
   - [Closure](#closure)
-- [Strict Mode](#strict-mode)
-  - [Invoking strict mode](#invoking-strict-mode)
-    - [For Scripts](#for-scripts)
-    - [For Functions](#for-functions)
-    - [For Modules](#for-modules)
-    - [For Classes](#for-classes)
 - [Event Loop](#event-loop)
   - [Call Stack](#call-stack)
   - [Web API](#web-api)
@@ -35,6 +35,16 @@
 - [Reflect API](#reflect-api)
 - [Currying](#currying)
 - [Modules](#modules)
+- [Strict Mode](#strict-mode)
+  - [Invoking strict mode](#invoking-strict-mode)
+    - [For Scripts](#for-scripts)
+    - [For Functions](#for-functions)
+    - [For Modules](#for-modules)
+    - [For Classes](#for-classes)
+
+<br />
+<br />
+<br />
 
 # Hoisting
 
@@ -79,6 +89,10 @@ let num;
 console.log(num); // Throws ReferenceError
 num = 6;
 ```
+
+<br />
+<br />
+<br />
 
 # Scope
 
@@ -199,6 +213,10 @@ console.log(pi); // throws ReferenceError
 }
 ```
 
+<br />
+<br />
+<br />
+
 # Inheritance and The Prototype Chain
 
 - When it comes to inheritance, JavaScript only has one construct: `objects`.
@@ -222,6 +240,121 @@ console.log(pi); // throws ReferenceError
 - In JavaScript, any function can be added to an object in the form of a **property**.
 - An inherited function acts just as any other property, including property shadowing (a form of method overriding).
 - When an inherited function is executed, the value of `this` points to the **inheriting object**, **not to the prototype object** where the function is an own property.
+
+// TODO: add more content
+
+<br />
+<br />
+<br />
+
+# Event Bubbling and Capturing
+
+## Bubbling
+
+- When an event happens on an element, it first runs the handlers on it, then on its parent, then all the way up on other ancestors.
+
+![](./event-order-bubbling.svg)
+
+```html
+<form onclick="alert('form')">
+  FORM
+  <div onclick="alert('div')">
+    DIV
+    <p onclick="alert('p')">P</p>
+  </div>
+</form>
+```
+
+- A click on the inner `<p>` first runs onclick:
+  - On that `<p>`
+  - Then on the outer `<div>`
+  - Then on the outer `<form>`
+  - And so on upwards till the `document` object.
+- The process is called **“bubbling”**, because events “bubble” from the inner element up through parents like a bubble in the water.
+- Almost all events bubble.
+  - For instance, a `focus` event does not bubble.
+  - There are other examples too.
+  - But still it’s an exception, rather than a rule, most events do bubble.
+
+### `event.target`
+
+- A **handler on a parent element** can always get the details about where it actually happened.
+- **The most deeply nested element that caused the event is called a target element**, accessible as `event.target`.
+- Differences from `this` or `event.currentTarget`
+  - `event.target` is the **“target”** element that initiated the event, it **doesn’t change through the bubbling process**
+  - `this` is the **“current”** element, the one that has a currently running handler on it
+
+### Stop Bubbling
+
+- A bubbling event goes from the target element straight up.
+- Normally it goes upwards till `<html>`, and then to `document` object, and some events even reach `window`, calling all handlers on the path.
+- But any handler may decide that the event **has been fully processed and stop the bubbling**.
+- The method for it is `event.stopPropagation()`.
+- If an element has multiple event handlers on a single event, then **even if one of them stops the bubbling, the other ones still execute.**
+- In other words, `event.stopPropagation()` **stops the move upwards**, but on the current element all other handlers will run.
+- To stop the bubbling and prevent handlers on the current element from running, there’s a method `event.stopImmediatePropagation()`.
+- After it no other handlers execute.
+
+> **Bubbling is convenient. Don’t stop it without a real need: obvious and architecturally well thought out.**
+
+## Capturing
+
+- There’s another phase of event processing called **“capturing”**.
+- It is rarely used in real code, but sometimes can be useful.
+- The standard DOM Events describes 3 phases of event propagation:
+  - **Capturing phase**: the event goes down to the element.
+  - **Target phase**: the event reached the target element.
+  - **Bubbling phase**: the event bubbles up from the element.
+
+![](./eventflow.svg)
+
+- A click on `<td>` the event:
+  - first goes through the ancestors chain down to the element (**capturing phase**),
+  - then it reaches the target and triggers there (**target phase**),
+  - and then it goes up (**bubbling phase**), calling handlers on its way.
+- Capturing phase was invisible for us, because handlers added using `on<event>` don’t know anything about capturing, they only run on the 2nd and 3rd phases.
+- To catch an event on the **capturing phase**, we need to set the handler `capture` option to `true`:
+
+```ts
+elem.addEventListener(..., {capture: true});
+elem.addEventListener(..., true) // or, just "true" is an alias to {capture: true}
+```
+
+```html
+<form>
+  <div>
+    <p>text</p>
+  </div>
+</form>
+
+<script>
+  for (let elem of document.querySelectorAll("*")) {
+    elem.addEventListener(
+      "click",
+      (e) => console.log(`Capturing: ${elem.tagName}`),
+      true
+    );
+    elem.addEventListener("click", (e) =>
+      console.log(`Bubbling: ${elem.tagName}`)
+    );
+  }
+</script>
+```
+
+- If you click on `<p>`, then the sequence is:
+  - `HTML` → `BODY` → `FORM` → `DIV` -> `P` (**capturing phase**, the first listener)
+  - `P` → `DIV` → `FORM` → `BODY` → `HTML` (**bubbling phase**, the second listener)
+
+### Stop Capturing
+
+- The `event.stopPropagation()` method and its sibling `event.stopImmediatePropagation()` can also be called on the capturing phase.
+- **Then not only the futher capturing is stopped, but the bubbling as well.**
+- In other words, normally the event goes first down (**“capturing”**) and then up (**“bubbling”**).
+- But if `event.stopPropagation()` is called during the capturing phase, then the **event travel stops**, no bubbling will occur.
+
+<br />
+<br />
+<br />
 
 # Closures
 
@@ -273,60 +406,9 @@ myFunc();
 - The instance of `displayName` maintains a reference to its lexical environment, within which the variable name exists.
 - For this reason, when `myFunc` is invoked, the variable name remains available for use.
 
-# Strict Mode
-
-- JavaScript's strict mode is a way to **opt in** to a restricted variant of JavaScript, thereby implicitly **opting-out** of "**sloppy mode**" (normal mode).
-- Strict mode isn't just a subset: it intentionally has different semantics from normal code.
-- Strict mode code and non-strict mode code **can coexist**, so scripts can opt into strict mode incrementally.
-- Strict mode makes several changes to normal JavaScript semantics:
-  - Eliminates some JavaScript silent errors by changing them to throw **errors**.
-  - Fixes mistakes that make it difficult for JavaScript engines to perform optimizations: strict mode code can sometimes be made to run faster than identical code that's not strict mode.
-  - Prohibits some syntax likely to be defined in future versions of ECMAScript
-
-## Invoking strict mode
-
-- Strict mode applies to entire **scripts** or to individual **functions**.
-- It **doesn't apply** to block statements enclosed in {} braces; attempting to apply it to such contexts does nothing.
-
-### For Scripts
-
-```ts
-// Whole-script strict mode syntax
-"use strict";
-const v = "Hi! I'm a strict mode script!";
-```
-
-### For Functions
-
-```ts
-function myStrictFunction() {
-  // Function-level strict mode syntax
-  "use strict";
-  function nested() {
-    return "And so am I!";
-  }
-  return `Hi! I'm a strict mode function! ${nested()}`;
-}
-
-function myNotStrictFunction() {
-  return "I'm not strict.";
-}
-```
-
-### For Modules
-
-- ECMAScript 2015 introduced JavaScript modules and therefore a 3rd way to enter strict mode. - The entire contents of JavaScript modules are **automatically in strict mode**, with no statement needed to initiate it.
-
-```ts
-function myStrictFunction() {
-  // because this is a module, I'm strict by default
-}
-export default myStrictFunction;
-```
-
-### For Classes
-
-- All parts of ECMAScript **classes are strict mode code**, including both class declarations and class expressions — and so also including all parts of class bodies.
+<br />
+<br />
+<br />
 
 # Event Loop
 
@@ -397,6 +479,10 @@ export default myStrictFunction;
   - If both the **call stack and microtask queue** are empty, the event loop checks if there are tasks left on the **(macro)task queue**. The tasks get popped onto the callstack, executed, and popped off!
 
 ![](./micro-macro-tasks.gif)
+
+<br />
+<br />
+<br />
 
 # Generator Functions and Iterators
 
@@ -561,8 +647,83 @@ genObj.next("Some text"); // logs "Some text" and returns { value: 'Done', done:
 - We simply start the observer by invoking it the first time.
 - The generator waits for our input, before it continues, and possibly processes the value that we pass to the next method.
 
+<br />
+<br />
+<br />
+
 # Reflect API
+
+<br />
+<br />
+<br />
 
 # Currying
 
+<br />
+<br />
+<br />
+
 # Modules
+
+<br />
+<br />
+<br />
+
+# Strict Mode
+
+- JavaScript's strict mode is a way to **opt in** to a restricted variant of JavaScript, thereby implicitly **opting-out** of "**sloppy mode**" (normal mode).
+- Strict mode isn't just a subset: it intentionally has different semantics from normal code.
+- Strict mode code and non-strict mode code **can coexist**, so scripts can opt into strict mode incrementally.
+- Strict mode makes several changes to normal JavaScript semantics:
+  - Eliminates some JavaScript silent errors by changing them to throw **errors**.
+  - Fixes mistakes that make it difficult for JavaScript engines to perform optimizations: strict mode code can sometimes be made to run faster than identical code that's not strict mode.
+  - Prohibits some syntax likely to be defined in future versions of ECMAScript
+
+## Invoking strict mode
+
+- Strict mode applies to entire **scripts** or to individual **functions**.
+- It **doesn't apply** to block statements enclosed in {} braces; attempting to apply it to such contexts does nothing.
+
+### For Scripts
+
+```ts
+// Whole-script strict mode syntax
+"use strict";
+const v = "Hi! I'm a strict mode script!";
+```
+
+### For Functions
+
+```ts
+function myStrictFunction() {
+  // Function-level strict mode syntax
+  "use strict";
+  function nested() {
+    return "And so am I!";
+  }
+  return `Hi! I'm a strict mode function! ${nested()}`;
+}
+
+function myNotStrictFunction() {
+  return "I'm not strict.";
+}
+```
+
+### For Modules
+
+- ECMAScript 2015 introduced JavaScript modules and therefore a 3rd way to enter strict mode. - The entire contents of JavaScript modules are **automatically in strict mode**, with no statement needed to initiate it.
+
+```ts
+function myStrictFunction() {
+  // because this is a module, I'm strict by default
+}
+export default myStrictFunction;
+```
+
+### For Classes
+
+- All parts of ECMAScript **classes are strict mode code**, including both class declarations and class expressions — and so also including all parts of class bodies.
+
+<br />
+<br />
+<br />
