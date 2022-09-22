@@ -9,18 +9,20 @@
   - [Global Scope](#global-scope)
 - [Variable Definitions (var, let, const)](#variable-definitions-var-let-const)
   - [TDZ - Temporal Dead Zone](#tdz---temporal-dead-zone)
+- [Closures](#closures)
 - [Inheritance and The Prototype Chain](#inheritance-and-the-prototype-chain)
-  - [Inheriting Properties](#inheriting-properties)
-  - [Inheriting Methods](#inheriting-methods)
+  - [From the Book (Boring)](#from-the-book-boring)
+    - [Inheriting Properties](#inheriting-properties)
+    - [Inheriting Methods](#inheriting-methods)
+  - [Step-by-step Explanation](#step-by-step-explanation)
+    - [Constructor Function](#constructor-function)
+    - [ES6 Classes](#es6-classes)
 - [Event Bubbling and Capturing](#event-bubbling-and-capturing)
   - [Bubbling](#bubbling)
     - [`event.target`](#eventtarget)
     - [Stop Bubbling](#stop-bubbling)
   - [Capturing](#capturing)
     - [Stop Capturing](#stop-capturing)
-- [Closures](#closures)
-  - [Lexical Scoping](#lexical-scoping)
-  - [Closure](#closure)
 - [Event Loop](#event-loop)
   - [Call Stack](#call-stack)
   - [Web API](#web-api)
@@ -217,7 +219,69 @@ console.log(pi); // throws ReferenceError
 <br />
 <br />
 
+# Closures
+
+- A closure is a function that gives you an access to **variables in the outer scope** from its **inner scope**.
+- In JavaScript, closures are created every time a function is created, at function creation time.
+- To understand the closures, you need to know how the `lexical scoping` works first.
+  - Lexical scoping defines the **scope of a variable** by the **position** of that variable declared in the source code.
+  - JavaScript engine uses the **scope** to manage the variable **accessibility**.
+  - According to `lexical scoping`, the scopes can be nested and the inner function can access the variables declared in its outer scope.
+
+> Another Definition: A **closure** is the combination of a function bundled together (enclosed) with references to its surrounding state (the **lexical environment**).
+
+```ts
+function init() {
+  var name = "Yigit"; // local variable
+
+  // displayName() is the inner function, a closure
+  function displayName() {
+    console.log(name); // use variable declared in the parent function
+  }
+  displayName();
+}
+init();
+```
+
+- `init()` creates a local variable called `name` and a function called `displayName()`.
+- The `displayName()` function:
+  - is an **inner function** that is defined inside `init()`
+  - and is available **only** within the body of the `init()` function
+  - it has no local variables of its own
+  - it can access the variable `name` declared in the parent function
+
+```ts
+function makeFunc() {
+  const name = "Yigit"; // local variable
+
+  // displayName() is the inner function, a closure
+  function displayName() {
+    console.log(name); // use variable declared in the parent function
+  }
+  return displayName;
+}
+
+const myFunc = makeFunc();
+myFunc();
+```
+
+- Running this code has exactly the same effect as the previous example of the `init()` function above.
+- What's different (and interesting) is that the `displayName()` inner function is returned from the outer function before being executed.
+- In some programming languages, the local variables within a function exist for just the duration of that function's execution. Once `makeFunc()` finishes executing, you might expect that the name variable would no longer be accessible.
+- The reason is that functions in JavaScript form **closures**.
+- A closure is the combination of a function and the lexical environment within which that function was declared.
+- This environment consists of any local variables that were in-scope at the time the closure was created.
+- In this case, `myFunc` is a **reference** to the instance of the function `displayName` that is created when `makeFunc` is run.
+- The instance of `displayName` maintains a reference to its lexical environment, within which the variable name exists.
+- For this reason, when `myFunc` is invoked, the variable name remains available for use.
+
+<br />
+<br />
+<br />
+
 # Inheritance and The Prototype Chain
+
+## From the Book (Boring)
 
 - When it comes to inheritance, JavaScript only has one construct: `objects`.
 - Each object has a private property which holds a link to another object called its `prototype`.
@@ -228,20 +292,113 @@ console.log(pi); // throws ReferenceError
 - Classes do not bring a new inheritance pattern.
 - While classes **abstract most of the prototypical mechanism away**, understanding how prototypes work under the hood is still useful.
 
-## Inheriting Properties
+### Inheriting Properties
 
 - JavaScript objects are dynamic "bags" of properties (referred to as `own properties`).
 - JavaScript objects have a link to a `prototype` object.
 - When trying to access a property of an object, the property will not only be sought on the object, but on the prototype of the object, the prototype of the prototype, and so on until either a property with a matching name is found or the end of the prototype chain is reached.
 
-## Inheriting Methods
+### Inheriting Methods
 
 - JavaScript does not have "methods" in the form that class-based languages define them.
 - In JavaScript, any function can be added to an object in the form of a **property**.
 - An inherited function acts just as any other property, including property shadowing (a form of method overriding).
 - When an inherited function is executed, the value of `this` points to the **inheriting object**, **not to the prototype object** where the function is an own property.
 
-// TODO: add more content
+<br />
+
+## Step-by-step Explanation
+
+### Constructor Function
+
+- We often have to create many objects of the same type.
+- Say we have a website where people can browse dogs!
+- For every dog, we need object that represents that dog!
+- Instead of writing a new object each time, I'll use a `constructor function` from which we can create Dog instances using the `new` keyword
+
+```ts
+function Dog(name, bread, color) {
+  this.name = name;
+  this.bread = bread;
+  this.color = color;
+  this.bark = function () {
+    return "woof!";
+  };
+}
+```
+
+- When we created the Dog constructor function, it wasn't the only object we created.
+- Automatically, we also created another object, called the `prototype`!
+- By default, this object contains a `constructor` property, which is simply a reference to the original constructor function.
+
+```ts
+{
+  prototype: {
+    constructor: function Dog(name, bread, color) {...}
+  }
+}
+```
+
+- The `prototype` property in the constructor function is `non-enumerable`, meaning that **it doesn't show up when we try to access the objects properties.**
+- Let's create some dogs that we want to show.
+
+```ts
+const dog1 = new Dog("Daisy", "Labrador", "black");
+const dog2 = new Dog("Jack", "Jack Russell", "white");
+
+console.log(dog1);
+// Dog {
+//   name: 'Daisy',
+//   bread: 'Labrador',
+//   color: 'black',
+//   bark: f,
+//   __proto__: {
+//     constructor: function Dog(name, bread, color) {...}
+//   }
+// }
+```
+
+- `__proto__` is a reference to the `Dog.prototype` object.
+- This is what **prototypal inheritance** is all about: each instance of the constructor has access to the prototype of the constructor
+
+![](./prototype-chain-step-3.gif)
+
+- Sometimes we have properties that **all instances share**.
+- For example the `bark` function in this case: it's the exact same for every instance.
+- Why create a new function each time we create a new dog, consuming memory each time?
+- Instead, we can add it to the `Dog.prototype` object!
+
+```ts
+function Dog(name, bread, color) {
+  this.name = name;
+  this.bread = bread;
+  this.color = color;
+}
+
+Dog.prototype.bark = function () {
+  return "woof!";
+};
+```
+
+![](./prototype-chain-step-4.gif)
+
+- Whenever we try to access a property on the instance:
+  - the engine **first searches locally to see if the property is defined** on the object itself.
+  - However, if it can't find the property we're trying to access, the engine **walks down the prototype chain through** the `__proto__` property!
+
+![](./prototype-chain-step-5.gif)
+
+- `Dog.prototype` itself is an object, meaning that it's actually an instance of the `Object constructor`!
+- That means that `Dog.prototype` also contains a `__proto__` property, which is a reference to `Object.prototype`!
+- This is where all the built-in methods (like `toString` and so on) come from: they're on the prototype chain!
+- The prototype chain doesn't go on forever.
+- Eventually there's an object which prototype is equal to `null`: the `Object.prototype` object in general!
+- If we try to access a property that's nowhere to be found locally or on the prototype chain, `undefined` gets returned.
+
+### ES6 Classes
+
+- ES6 introduced an easier syntax for constructor functions and working with prototypes: **classes**!
+- Classes are only **syntactical sugar** for constructor functions. Everything still works the same way!
 
 <br />
 <br />
@@ -257,9 +414,7 @@ console.log(pi); // throws ReferenceError
 
 ```html
 <form onclick="alert('form')">
-  FORM
   <div onclick="alert('div')">
-    DIV
     <p onclick="alert('p')">P</p>
   </div>
 </form>
@@ -351,60 +506,6 @@ elem.addEventListener(..., true) // or, just "true" is an alias to {capture: tru
 - **Then not only the futher capturing is stopped, but the bubbling as well.**
 - In other words, normally the event goes first down (**“capturing”**) and then up (**“bubbling”**).
 - But if `event.stopPropagation()` is called during the capturing phase, then the **event travel stops**, no bubbling will occur.
-
-<br />
-<br />
-<br />
-
-# Closures
-
-- A **closure** is the combination of a function bundled together (enclosed) with references to its surrounding state (the **lexical environment**).
-- In other words, a closure gives you access to an outer function's scope from an inner function.
-- In JavaScript, closures are created every time a function is created, at function creation time.
-
-## Lexical Scoping
-
-```ts
-function init() {
-  var name = "Yigit"; // name is a local variable created by init
-  function displayName() {
-    // displayName() is the inner function, a closure
-    console.log(name); // use variable declared in the parent function
-  }
-  displayName();
-}
-init();
-```
-
-- `init()` creates a local variable called name and a function called `displayName()`.
-- The `displayName()` function is an **inner function** that is defined inside init() and is available only within the body of the init() function.
-- Note that the `displayName()` function has no local variables of its own.
-- However, since inner functions have access to the variables of **outer functions**, `displayName()` can access the variable name declared in the parent function, `init()`
-
-## Closure
-
-```ts
-function makeFunc() {
-  const name = "Yigit";
-  function displayName() {
-    console.log(name);
-  }
-  return displayName;
-}
-
-const myFunc = makeFunc();
-myFunc();
-```
-
-- Running this code has exactly the same effect as the previous example of the `init()` function above.
-- What's different (and interesting) is that the `displayName()` inner function is returned from the outer function before being executed.
-- In some programming languages, the local variables within a function exist for just the duration of that function's execution. Once `makeFunc()` finishes executing, you might expect that the name variable would no longer be accessible.
-- The reason is that functions in JavaScript form **closures**.
-- A closure is the combination of a function and the lexical environment within which that function was declared.
-- This environment consists of any local variables that were in-scope at the time the closure was created.
-- In this case, `myFunc` is a **reference** to the instance of the function `displayName` that is created when `makeFunc` is run.
-- The instance of `displayName` maintains a reference to its lexical environment, within which the variable name exists.
-- For this reason, when `myFunc` is invoked, the variable name remains available for use.
 
 <br />
 <br />
