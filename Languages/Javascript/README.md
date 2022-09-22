@@ -10,6 +10,10 @@
 - [Variable Definitions (var, let, const)](#variable-definitions-var-let-const)
   - [TDZ - Temporal Dead Zone](#tdz---temporal-dead-zone)
 - [Closures](#closures)
+- [Function Declaration (Function Statement) vs Function Expression](#function-declaration-function-statement-vs-function-expression)
+  - [Name](#name)
+  - [Hoisting](#hoisting-1)
+  - [Benefits of Function Expressions](#benefits-of-function-expressions)
 - [Inheritance and The Prototype Chain](#inheritance-and-the-prototype-chain)
   - [From the Book (Boring)](#from-the-book-boring)
     - [Inheriting Properties](#inheriting-properties)
@@ -34,7 +38,8 @@
   - [Generator Object](#generator-object)
   - [Iterators](#iterators)
   - [Generator Functions as Obeserver](#generator-functions-as-obeserver)
-- [Reflect API](#reflect-api)
+- [Proxy & Reflect API](#proxy--reflect-api)
+- [Symbol Primitive Type](#symbol-primitive-type)
 - [Currying](#currying)
 - [Modules](#modules)
 - [Strict Mode](#strict-mode)
@@ -274,6 +279,66 @@ myFunc();
 - In this case, `myFunc` is a **reference** to the instance of the function `displayName` that is created when `makeFunc` is run.
 - The instance of `displayName` maintains a reference to its lexical environment, within which the variable name exists.
 - For this reason, when `myFunc` is invoked, the variable name remains available for use.
+
+<br />
+<br />
+<br />
+
+# Function Declaration (Function Statement) vs Function Expression
+
+- **Function statement**:
+  - The **function statement** declares a function.
+  - A declared function is “**saved for later use**”, and will be executed later, when it is invoked (called).
+
+```ts
+function bar() {
+  return 3;
+}
+```
+
+- **Function expression**:
+  - A JavaScript function can also be defined using an **expression**.
+  - A function expression can be stored in a **variable**.
+  - After a function expression has been stored in a variable, the variable can be used as a function.
+  - Functions stored in variables do not need function names.
+
+```ts
+var x = function (a, b) {
+  return a * b;
+};
+```
+
+## Name
+
+- When you create a function with a name, that is a **function declaration**.
+- The name may be omitted in **function expressions**, making that function `anonymous`.
+
+```ts
+function doStuff() {} // declaration
+const doStuff = () => {}; // expression
+```
+
+## Hoisting
+
+- **Function declarations** are hoisted but **function expressions** are not.
+
+```ts
+doStuff(); // it works because of the function hoisting
+function doStuff() {}
+```
+
+```ts
+doStuff(); // it throws error
+const doStuff = () => {};
+```
+
+## Benefits of Function Expressions
+
+There are several different ways that function expressions become more useful than function declarations:
+
+- As **closures**
+- As arguments to other functions (**callbacks**)
+- As Immediately Invoked Function Expressions (**IIFE**)
 
 <br />
 <br />
@@ -752,7 +817,13 @@ genObj.next("Some text"); // logs "Some text" and returns { value: 'Done', done:
 <br />
 <br />
 
-# Reflect API
+# Proxy & Reflect API
+
+<br />
+<br />
+<br />
+
+# Symbol Primitive Type
 
 <br />
 <br />
