@@ -15,6 +15,10 @@ Notes to myself about technology stack.
 - Frontend
   - Fundamentals
     - [Browsers](Frontend/Fundamentals/Browsers)
+    - [DOM Types](Frontend/Fundamentals/DomTypes)
+    - [CSS](Frontend/Fundamentals/CSS)
+    - [Performance](Frontend/Fundamentals/Performance)
+    - [Web Security](Frontend/Fundamentals/WebSecurity)
     - NPM
   - Frameworks
     - [Angular](Frontend/Frameworks/Angular)

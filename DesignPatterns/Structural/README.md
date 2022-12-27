@@ -1,6 +1,6 @@
 # Adapter
 
-- Adapter is a structural design pattern that allows objects with incompatible interfaces to collaborate.
+- Allows objects with incompatible interfaces to collaborate.
 
 ### Problem
 
@@ -85,9 +85,16 @@ const adapter = new Adapter(adaptee);
 clientCode(adapter);
 ```
 
+<br />
+<br />
+<br />
+<br />
+<br />
+
+
 # Bridge
 
-- Bridge is a structural design pattern that lets you split a large class or a set of closely related classes into two separate hierarchies—abstraction and implementation—which can be developed independently of each other.
+- Lets you split a large class or a set of closely related classes into two separate hierarchies (abstraction and implementation) which can be developed independently of each other.
 
 ### Problem
 
@@ -95,5 +102,17 @@ clientCode(adapter);
 - You want to extend this class hierarchy to incorporate colors, so you plan to create `Red` and `Blue` shape subclasses.
 - However, since you already have two subclasses, you’ll need to create four class combinations such as `BlueCircle` and `RedSquare`.
 - Adding new shape types and colors to the hierarchy will grow it **exponentially**.
+- This problem occurs because we’re trying to extend the shape classes in two independent **dimensions**: by form and by color. 
 
 ![](bridge-1.png)
+
+### Solution
+- The Bridge pattern solves this problem by switching from inheritance to the **object composition**.
+- This means, you extract one of the dimensions into a separate class hierarchy, so that the original classes will reference an object of the new hierarchy.
+- With this approach, we can extract the color-related code into its own class with two subclasses: `Red` and `Blue`. 
+- The `Shape` class then has a reference field pointing to one of the color objects. 
+- That reference will act as a **bridge** between the `Shape` and `Color` classes. 
+- From now on, adding new colors won’t require changing the shape hierarchy, and vice versa.
+
+
+![](bridge-solution.png)
